@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理 - 搭配详情</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .device-frame {
+            width: 393px;
+            height: 852px;
+            background: linear-gradient(180deg, #848489 0%, #3A3A3C 50%, #1C1C1E 100%);
+            border-radius: 55px;
+            padding: 3px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .side-buttons {
+            position: absolute;
+            left: -3px;
+            top: 150px;
+        }
+
+        .mute-switch, .volume-up, .volume-down {
+            width: 3px;
+            background: #2C2C2E;
+            margin-bottom: 12px;
+        }
+
+        .mute-switch {
+            height: 28px;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .volume-up, .volume-down {
+            height: 56px;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .power-button {
+            position: absolute;
+            right: -3px;
+            top: 200px;
+            width: 3px;
+            height: 98px;
+            background: #2C2C2E;
+            border-radius: 2px 0 0 2px;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #F2F2F7;
+            border-radius: 52px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 126px;
+            height: 37.5px;
+            background: #000;
+            border-radius: 19px;
+            z-index: 101;
+        }
+
+        /* 顶部导航栏 */
+        .top-nav {
+            height: 59px;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            padding-top: 12px;
+            border-bottom: 0.33px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button, .more-button {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .nav-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1C1C1E;
+        }
+
+        /* 滚动内容 */
+        .scroll-content {
+            height: calc(100% - 59px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .scroll-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* 搭配预览 */
+        .outfit-preview {
+            background: #fff;
+            padding: 20px;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .preview-title {
+            flex: 1;
+        }
+
+        .outfit-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1C1C1E;
+            margin-bottom: 8px;
+        }
+
+        .outfit-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .tag.style {
+            background: linear-gradient(135deg, #F0EFFF 0%, #E8E6FF 100%);
+            color: #6C63FF;
+        }
+
+        .tag.occasion {
+            background: #F2F2F7;
+            color: #3A3A3C;
+        }
+
+        .like-count {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #8E8E93;
+            font-size: 13px;
+        }
+
+        .outfit-items-preview {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .item-preview {
+            flex: 1;
+            aspect-ratio: 3/4;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            padding: 8px;
+        }
+
+        .item-preview.top {
+            background: linear-gradient(135deg, #FFE5E5 0%, #FFD6D6 100%);
+            color: #FF6B9D;
+        }
+
+        .item-preview.bottom {
+            background: linear-gradient(135deg, #E5F0FF 0%, #D6E7FF 100%);
+            color: #6C63FF;
+        }
+
+        .item-preview.accessory {
+            background: linear-gradient(135deg, #FFF5E5 0%, #FFE5CC 100%);
+            color: #FF9500;
+        }
+
+        /* 配色理论 */
+        .theory-section {
+            background: #fff;
+            padding: 24px 20px;
+            margin-top: 8px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1C1C1E;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #6C63FF 0%, #7B72FF 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 配色卡片 */
+        .color-cards {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .color-card {
+            flex: 1;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .color-card.primary {
+            background: linear-gradient(135deg, #FFFFFF 0%, #F5F5F5 100%);
+            border: 2px solid #E5E5EA;
+        }
+
+        .color-card.secondary {
+            background: linear-gradient(135deg, #1C1C1E 0%, #2C2C2E 100%);
+        }
+
+        .color-swatch {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin: 0 auto 8px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .color-card.primary .color-swatch {
+            background: #FFFFFF;
+            border-color: #E5E5EA;
+        }
+
+        .color-card.secondary .color-swatch {
+            background: #1C1C1E;
+        }
+
+        .color-name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .color-card.primary .color-name {
+            color: #1C1C1E;
+        }
+
+        .color-card.secondary .color-name {
+            color: #fff;
+        }
+
+        .color-theory {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        .color-card.primary .color-theory {
+            color: #8E8E93;
+        }
+
+        .color-card.secondary .color-theory {
+            color: #fff;
+        }
+
+        /* 色轮 */
+        .color-wheel {
+            width: 160px;
+            height: 160px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+
+        .wheel-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 理论解析 */
+        .theory-text {
+            background: #F9F9F9;
+            border-radius: 12px;
+            padding: 16px;
+            line-height: 1.6;
+            color: #3A3A3C;
+            font-size: 15px;
+        }
+
+        /* 搭配依据 */
+        .basis-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .basis-card {
+            background: #F9F9F9;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .basis-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #F0EFFF 0%, #E8E6FF 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .basis-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1C1C1E;
+            margin-bottom: 4px;
+        }
+
+        .basis-desc {
+            font-size: 12px;
+            color: #8E8E93;
+            line-height: 1.4;
+        }
+
+        /* 操作按钮 */
+        .actions-section {
+            background: #fff;
+            padding: 20px;
+            margin-top: 8px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            flex: 1;
+            height: 52px;
+            border-radius: 12px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .action-btn:active {
+            transform: scale(0.96);
+        }
+
+        .share-btn {
+            background: linear-gradient(135deg, #6C63FF 0%, #7B72FF 100%);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
+        }
+
+        .save-btn {
+            background: #F2F2F7;
+            color: #1C1C1E;
+        }
+
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 134px;
+            height: 5px;
+            background: #1C1C1E;
+            border-radius: 3px;
+            z-index: 102;
+        }
+    </style>
+</head>
+<body>
+    <div class="device-frame">
+        <div class="side-buttons">
+            <div class="mute-switch"></div>
+            <div class="volume-up"></div>
+            <div class="volume-down"></div>
+        </div>
+        <div class="power-button"></div>
+
+        <div class="screen">
+            <div class="dynamic-island"></div>
+
+            <!-- 顶部导航 -->
+            <div class="top-nav">
+                <div class="back-button">
+                    <svg width="24" height="24" fill="none" stroke="#1C1C1E" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                </div>
+                <div class="nav-title">搭配详情</div>
+                <div class="more-button">
+                    <svg width="24" height="24" fill="#1C1C1E" viewBox="0 0 24 24">
+                        <circle cx="12" cy="5" r="2"/>
+                        <circle cx="12" cy="12" r="2"/>
+                        <circle cx="12" cy="19" r="2"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- 滚动内容 -->
+            <div class="scroll-content">
+                <!-- 搭配预览 -->
+                <div class="outfit-preview">
+                    <div class="preview-header">
+                        <div class="preview-title">
+                            <h2 class="outfit-name">职场优雅风</h2>
+                            <div class="outfit-tags">
+                                <span class="tag style">简约</span>
+                                <span class="tag occasion">通勤</span>
+                            </div>
+                        </div>
+                        <div class="like-count">
+                            <svg width="16" height="16" fill="#FF6B9D" viewBox="0 0 24 24">
+                                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                            </svg>
+                            128
+                        </div>
+                    </div>
+
+                    <div class="outfit-items-preview">
+                        <div class="item-preview top">白色<br>衬衫</div>
+                        <div class="item-preview bottom">黑色<br>阔腿裤</div>
+                        <div class="item-preview accessory">棕色<br>手提包</div>
+                    </div>
+                </div>
+
+                <!-- 配色理论 -->
+                <div class="theory-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">
+                            <svg width="14" height="14" fill="#fff" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10"/>
+                            </svg>
+                        </span>
+                        配色理论
+                    </h3>
+
+                    <!-- 配色卡片 -->
+                    <div class="color-cards">
+                        <div class="color-card primary">
+                            <div class="color-swatch"></div>
+                            <div class="color-name">白色</div>
+                            <div class="color-theory">主色调</div>
+                        </div>
+                        <div class="color-card secondary">
+                            <div class="color-swatch"></div>
+                            <div class="color-name">黑色</div>
+                            <div class="color-theory">对比色</div>
+                        </div>
+                    </div>
+
+                    <!-- 色轮可视化 -->
+                    <div class="color-wheel">
+                        <svg class="wheel-svg" viewBox="0 0 200 200">
+                            <!-- 色轮背景 -->
+                            <circle cx="100" cy="100" r="80" fill="none" stroke="#E5E5EA" stroke-width="20"/>
+
+                            <!-- 高亮区域 -->
+                            <path d="M 100 100 L 180 100 A 80 80 0 0 1 100 180 Z" fill="#1C1C1E" opacity="0.9"/>
+                            <path d="M 100 100 L 100 20 A 80 80 0 0 1 180 100 Z" fill="#FFFFFF" opacity="0.9"/>
+
+                            <!-- 中心圆 -->
+                            <circle cx="100" cy="100" r="40" fill="#F9F9F9" stroke="#6C63FF" stroke-width="2"/>
+
+                            <!-- 标注 -->
+                            <circle cx="140" cy="60" r="6" fill="#6C63FF"/>
+                            <circle cx="140" cy="140" r="6" fill="#6C63FF"/>
+                            <line x1="100" y1="100" x2="140" y2="60" stroke="#6C63FF" stroke-width="2" stroke-dasharray="3,3"/>
+                            <line x1="100" y1="100" x2="140" y2="140" stroke="#6C63FF" stroke-width="2" stroke-dasharray="3,3"/>
+                        </svg>
+                    </div>
+
+                    <!-- 理论解析 -->
+                    <div class="theory-text">
+                        <strong>经典黑白配色</strong>营造职场专业感，白色衬衫提亮肤色，黑色阔腿裤修饰腿型。棕色手提包作为点缀色，增添温暖气质，整体呈现简约而不失优雅的通勤风格。
+                    </div>
+                </div>
+
+                <!-- 搭配依据 -->
+                <div class="theory-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">
+                            <svg width="14" height="14" fill="#fff" viewBox="0 0 24 24">
+                                <path d="M9 11l3 3L22 4"/>
+                                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                            </svg>
+                        </span>
+                        搭配依据
+                    </h3>
+
+                    <div class="basis-grid">
+                        <div class="basis-card">
+                            <div class="basis-icon">
+                                <svg width="18" height="18" fill="#6C63FF" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"/>
+                                </svg>
+                            </div>
+                            <div class="basis-title">配色原理</div>
+                            <div class="basis-desc">经典黑白对比色</div>
+                        </div>
+
+                        <div class="basis-card">
+                            <div class="basis-icon">
+                                <svg width="18" height="18" fill="#6C63FF" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                            </div>
+                            <div class="basis-title">风格分析</div>
+                            <div class="basis-desc">简约通勤风格</div>
+                        </div>
+
+                        <div class="basis-card">
+                            <div class="basis-icon">
+                                <svg width="18" height="18" fill="#6C63FF" viewBox="0 0 24 24">
+                                    <path d="M21 10H3M16 6H3M19 14H3M18 18H3"/>
+                                </svg>
+                            </div>
+                            <div class="basis-title">场合适配</div>
+                            <div class="basis-desc">职场会议、商务洽谈</div>
+                        </div>
+
+                        <div class="basis-card">
+                            <div class="basis-icon">
+                                <svg width="18" height="18" fill="#6C63FF" viewBox="0 0 24 24">
+                                    <path d="M12 2a7 7 0 017 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 017-7z"/>
+                                    <circle cx="12" cy="9" r="3"/>
+                                </svg>
+                            </div>
+                            <div class="basis-title">身材优化</div>
+                            <div class="basis-desc">阔腿裤拉长腿部线条</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="actions-section">
+                    <button class="action-btn save-btn">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                        </svg>
+                        保存到衣橱
+                    </button>
+                    <button class="action-btn share-btn">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
+                            <path d="M16 6l-4-4-4 4"/>
+                            <path d="M12 2v13"/>
+                        </svg>
+                        分享
+                    </button>
+                </div>
+            </div>
+
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+</body>
+</html>

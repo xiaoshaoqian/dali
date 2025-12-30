@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理 - 分享搭配</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .device-frame {
+            width: 393px;
+            height: 852px;
+            background: linear-gradient(180deg, #848489 0%, #3A3A3C 50%, #1C1C1E 100%);
+            border-radius: 55px;
+            padding: 3px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .side-buttons {
+            position: absolute;
+            left: -3px;
+            top: 150px;
+        }
+
+        .mute-switch, .volume-up, .volume-down {
+            width: 3px;
+            background: #2C2C2E;
+            margin-bottom: 12px;
+        }
+
+        .mute-switch {
+            height: 28px;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .volume-up, .volume-down {
+            height: 56px;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .power-button {
+            position: absolute;
+            right: -3px;
+            top: 200px;
+            width: 3px;
+            height: 98px;
+            background: #2C2C2E;
+            border-radius: 2px 0 0 2px;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 52px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 126px;
+            height: 37.5px;
+            background: #000;
+            border-radius: 19px;
+            z-index: 101;
+        }
+
+        /* Modal 内容 */
+        .modal-content {
+            width: 100%;
+            background: #fff;
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px;
+            padding-bottom: 40px;
+            max-height: 85%;
+            overflow-y: auto;
+            animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        .modal-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* 拖动条 */
+        .drag-indicator {
+            width: 36px;
+            height: 5px;
+            background: #D1D1D6;
+            border-radius: 3px;
+            margin: 0 auto 20px;
+        }
+
+        .modal-header {
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1C1C1E;
+            margin-bottom: 8px;
+        }
+
+        .modal-subtitle {
+            font-size: 15px;
+            color: #8E8E93;
+            line-height: 1.4;
+        }
+
+        /* 模板选择 */
+        .templates-section {
+            margin-bottom: 24px;
+        }
+
+        .section-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1C1C1E;
+            margin-bottom: 12px;
+        }
+
+        .templates-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .template-card {
+            aspect-ratio: 9/16;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 3px solid transparent;
+        }
+
+        .template-card:active {
+            transform: scale(0.95);
+        }
+
+        .template-card.selected {
+            border-color: #6C63FF;
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
+        }
+
+        .template-preview {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            justify-content: space-between;
+        }
+
+        .template-card.minimal .template-preview {
+            background: #fff;
+            color: #1C1C1E;
+        }
+
+        .template-card.fashion .template-preview {
+            background: linear-gradient(135deg, #6C63FF 0%, #8B7FFF 100%);
+            color: #fff;
+        }
+
+        .template-card.artistic .template-preview {
+            background: linear-gradient(135deg, #FFF5E5 0%, #FFE5CC 100%);
+            color: #3A3A3C;
+        }
+
+        .template-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .template-watermark {
+            font-size: 9px;
+            opacity: 0.7;
+            text-align: center;
+        }
+
+        .template-name {
+            position: absolute;
+            bottom: -24px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1C1C1E;
+        }
+
+        .selected-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            background: #6C63FF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 预览区域 */
+        .preview-section {
+            margin-bottom: 24px;
+            margin-top: 32px;
+        }
+
+        .preview-card {
+            aspect-ratio: 9/16;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            margin: 0 auto;
+            max-width: 280px;
+        }
+
+        .preview-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            justify-content: space-between;
+        }
+
+        .preview-card.minimal .preview-content {
+            background: #fff;
+            color: #1C1C1E;
+        }
+
+        .preview-header {
+            text-align: center;
+        }
+
+        .preview-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .preview-tags {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .preview-tag {
+            padding: 4px 12px;
+            background: rgba(108, 99, 255, 0.1);
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #6C63FF;
+        }
+
+        .preview-items {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .preview-item {
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #F2F2F7 0%, #E5E5EA 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #8E8E93;
+        }
+
+        .preview-footer {
+            text-align: center;
+        }
+
+        .preview-watermark {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .preview-logo {
+            font-size: 16px;
+            font-weight: 700;
+            color: #6C63FF;
+        }
+
+        /* 分享平台 */
+        .platforms-section {
+            margin-bottom: 24px;
+        }
+
+        .platforms-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .platform-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .platform-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            transition: transform 0.2s;
+        }
+
+        .platform-item:active .platform-icon {
+            transform: scale(0.9);
+        }
+
+        .platform-icon.wechat {
+            background: linear-gradient(135deg, #09BB07 0%, #00C800 100%);
+        }
+
+        .platform-icon.moments {
+            background: linear-gradient(135deg, #0A8CFF 0%, #0080FF 100%);
+        }
+
+        .platform-icon.xiaohongshu {
+            background: linear-gradient(135deg, #FF2442 0%, #FF0044 100%);
+        }
+
+        .platform-icon.douyin {
+            background: linear-gradient(135deg, #000 0%, #2C2C2E 100%);
+        }
+
+        .platform-label {
+            font-size: 12px;
+            color: #3A3A3C;
+            font-weight: 500;
+        }
+
+        /* 操作按钮 */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            flex: 1;
+            height: 52px;
+            border-radius: 12px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .action-btn:active {
+            transform: scale(0.96);
+        }
+
+        .save-btn {
+            background: #F2F2F7;
+            color: #1C1C1E;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #6C63FF 0%, #7B72FF 100%);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
+        }
+
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 134px;
+            height: 5px;
+            background: #1C1C1E;
+            border-radius: 3px;
+            z-index: 102;
+        }
+    </style>
+</head>
+<body>
+    <div class="device-frame">
+        <div class="side-buttons">
+            <div class="mute-switch"></div>
+            <div class="volume-up"></div>
+            <div class="volume-down"></div>
+        </div>
+        <div class="power-button"></div>
+
+        <div class="screen">
+            <div class="dynamic-island"></div>
+
+            <!-- Modal 内容 -->
+            <div class="modal-content">
+                <!-- 拖动条 -->
+                <div class="drag-indicator"></div>
+
+                <!-- 标题 -->
+                <div class="modal-header">
+                    <h2 class="modal-title">分享搭配</h2>
+                    <p class="modal-subtitle">选择一个模板，生成精美的分享图片</p>
+                </div>
+
+                <!-- 模板选择 -->
+                <div class="templates-section">
+                    <div class="section-label">选择分享模板</div>
+                    <div class="templates-grid">
+                        <div class="template-card minimal selected" data-template="minimal">
+                            <div class="template-preview">
+                                <div class="template-content">简约</div>
+                                <div class="template-watermark">搭理</div>
+                            </div>
+                            <div class="selected-badge">
+                                <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path d="M20 6L9 17l-5-5"/>
+                                </svg>
+                            </div>
+                            <div class="template-name">简约</div>
+                        </div>
+
+                        <div class="template-card fashion" data-template="fashion">
+                            <div class="template-preview">
+                                <div class="template-content">时尚</div>
+                                <div class="template-watermark">搭理</div>
+                            </div>
+                            <div class="template-name">时尚</div>
+                        </div>
+
+                        <div class="template-card artistic" data-template="artistic">
+                            <div class="template-preview">
+                                <div class="template-content">文艺</div>
+                                <div class="template-watermark">搭理</div>
+                            </div>
+                            <div class="template-name">文艺</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 预览区域 -->
+                <div class="preview-section">
+                    <div class="section-label">分享预览</div>
+                    <div class="preview-card minimal">
+                        <div class="preview-content">
+                            <div class="preview-header">
+                                <div class="preview-title">职场优雅风</div>
+                                <div class="preview-tags">
+                                    <span class="preview-tag">简约</span>
+                                    <span class="preview-tag">通勤</span>
+                                </div>
+                            </div>
+
+                            <div class="preview-items">
+                                <div class="preview-item">上衣</div>
+                                <div class="preview-item">下装</div>
+                                <div class="preview-item">配饰</div>
+                            </div>
+
+                            <div class="preview-footer">
+                                <div class="preview-watermark">AI 穿搭顾问</div>
+                                <div class="preview-logo">搭理</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分享平台 -->
+                <div class="platforms-section">
+                    <div class="section-label">分享到</div>
+                    <div class="platforms-grid">
+                        <div class="platform-item">
+                            <div class="platform-icon wechat">💬</div>
+                            <div class="platform-label">微信</div>
+                        </div>
+                        <div class="platform-item">
+                            <div class="platform-icon moments">📷</div>
+                            <div class="platform-label">朋友圈</div>
+                        </div>
+                        <div class="platform-item">
+                            <div class="platform-icon xiaohongshu">📕</div>
+                            <div class="platform-label">小红书</div>
+                        </div>
+                        <div class="platform-item">
+                            <div class="platform-icon douyin">🎵</div>
+                            <div class="platform-label">抖音</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="action-buttons">
+                    <button class="action-btn save-btn">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                            <path d="M17 21v-8H7v8"/>
+                            <path d="M7 3v5h8"/>
+                        </svg>
+                        保存图片
+                    </button>
+                    <button class="action-btn generate-btn">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="18" cy="5" r="3"/>
+                            <circle cx="6" cy="12" r="3"/>
+                            <circle cx="18" cy="19" r="3"/>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                        </svg>
+                        立即分享
+                    </button>
+                </div>
+            </div>
+
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+
+    <script>
+        // 模板选择交互
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // 移除所有选中状态
+                document.querySelectorAll('.template-card').forEach(c => {
+                    c.classList.remove('selected');
+                    const badge = c.querySelector('.selected-badge');
+                    if (badge) badge.remove();
+                });
+
+                // 添加选中状态
+                this.classList.add('selected');
+                const badge = document.createElement('div');
+                badge.className = 'selected-badge';
+                badge.innerHTML = '<svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>';
+                this.appendChild(badge);
+
+                // 更新预览
+                const template = this.dataset.template;
+                const previewCard = document.querySelector('.preview-card');
+                previewCard.className = 'preview-card ' + template;
+            });
+        });
+    </script>
+</body>
+</html>

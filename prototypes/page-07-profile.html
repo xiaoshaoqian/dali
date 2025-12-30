@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理 - 我的</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .device-frame {
+            width: 393px;
+            height: 852px;
+            background: linear-gradient(180deg, #848489 0%, #3A3A3C 50%, #1C1C1E 100%);
+            border-radius: 55px;
+            padding: 3px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .side-buttons {
+            position: absolute;
+            left: -3px;
+            top: 150px;
+        }
+
+        .mute-switch, .volume-up, .volume-down {
+            width: 3px;
+            background: #2C2C2E;
+            margin-bottom: 12px;
+        }
+
+        .mute-switch {
+            height: 28px;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .volume-up, .volume-down {
+            height: 56px;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .power-button {
+            position: absolute;
+            right: -3px;
+            top: 200px;
+            width: 3px;
+            height: 98px;
+            background: #2C2C2E;
+            border-radius: 2px 0 0 2px;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #F2F2F7;
+            border-radius: 52px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 126px;
+            height: 37.5px;
+            background: #000;
+            border-radius: 19px;
+            z-index: 101;
+        }
+
+        /* 紫色渐变头部 */
+        .header-gradient {
+            background: linear-gradient(180deg, #6C63FF 0%, #8578FF 100%);
+            padding: 0 20px;
+            padding-top: 59px;
+            padding-bottom: 80px;
+            position: relative;
+        }
+
+        .status-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 59px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0 24px;
+            padding-top: 16px;
+        }
+
+        .status-left {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+
+        .status-right {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .status-icon {
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .settings-button {
+            position: absolute;
+            top: 59px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #fff 0%, #F9F9F9 100%);
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .username {
+            font-size: 24px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .user-bio {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 白色内容卡片 */
+        .content-card {
+            background: #fff;
+            border-radius: 24px 24px 0 0;
+            margin-top: -60px;
+            position: relative;
+            z-index: 10;
+            padding: 24px 20px 100px;
+        }
+
+        /* 统计卡片 */
+        .stats-card {
+            background: linear-gradient(135deg, #F0EFFF 0%, #E8E6FF 100%);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .stats-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #6C63FF;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .stats-label {
+            font-size: 15px;
+            color: #6C63FF;
+            font-weight: 600;
+        }
+
+        /* AI学习进度 */
+        .learning-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1C1C1E;
+            margin-bottom: 16px;
+        }
+
+        .progress-circle {
+            width: 160px;
+            height: 160px;
+            margin: 0 auto 16px;
+            position: relative;
+        }
+
+        .progress-svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-bg {
+            fill: none;
+            stroke: #E5E5EA;
+            stroke-width: 12;
+        }
+
+        .progress-fill {
+            fill: none;
+            stroke: url(#gradient);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 377;
+            stroke-dashoffset: 94;
+            transition: stroke-dashoffset 1s;
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .progress-percent {
+            font-size: 36px;
+            font-weight: 700;
+            color: #6C63FF;
+            line-height: 1;
+        }
+
+        .progress-label {
+            font-size: 13px;
+            color: #8E8E93;
+            margin-top: 4px;
+        }
+
+        /* 偏好标签云 */
+        .preference-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .preference-tag {
+            padding: 8px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #F0EFFF 0%, #E8E6FF 100%);
+            color: #6C63FF;
+        }
+
+        .preference-tag.large {
+            font-size: 18px;
+            padding: 12px 20px;
+        }
+
+        .preference-tag.medium {
+            font-size: 16px;
+            padding: 10px 18px;
+        }
+
+        /* 风格档案 */
+        .style-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .style-bar {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .style-bar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .style-name {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1C1C1E;
+        }
+
+        .style-percent {
+            font-size: 14px;
+            color: #6C63FF;
+            font-weight: 600;
+        }
+
+        .style-bar-track {
+            height: 8px;
+            background: #F2F2F7;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .style-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6C63FF 0%, #8B7FFF 100%);
+            border-radius: 4px;
+            transition: width 1s;
+        }
+
+        /* 菜单列表 */
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            background: #fff;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #E5E5EA;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 0.5px solid #E5E5EA;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:active {
+            background: #F9F9F9;
+        }
+
+        .menu-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #F0EFFF 0%, #E8E6FF 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+        }
+
+        .menu-text {
+            flex: 1;
+            font-size: 16px;
+            color: #1C1C1E;
+            font-weight: 500;
+        }
+
+        .menu-arrow {
+            color: #C7C7CC;
+        }
+
+        /* Tab Bar */
+        .tab-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 83px;
+            background: rgba(242, 242, 247, 0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-top: 0.33px solid rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding-top: 8px;
+        }
+
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 4px 0;
+            text-decoration: none;
+        }
+
+        .tab-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tab-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .tab-item.active .tab-label {
+            color: #6C63FF;
+        }
+
+        .tab-item:not(.active) .tab-label {
+            color: #8E8E93;
+        }
+
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 134px;
+            height: 5px;
+            background: #1C1C1E;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="device-frame">
+        <div class="side-buttons">
+            <div class="mute-switch"></div>
+            <div class="volume-up"></div>
+            <div class="volume-down"></div>
+        </div>
+        <div class="power-button"></div>
+
+        <div class="screen">
+            <div class="dynamic-island"></div>
+
+            <!-- 紫色渐变头部 -->
+            <div class="header-gradient">
+                <!-- 状态栏 -->
+                <div class="status-bar">
+                    <div class="status-left">9:41</div>
+                    <div class="status-right">
+                        <span class="status-icon">📶</span>
+                        <span class="status-icon">📡</span>
+                        <span class="status-icon">🔋</span>
+                    </div>
+                </div>
+
+                <!-- 设置按钮 -->
+                <div class="settings-button">
+                    <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v6m0 6v6m-9-9h6m6 0h6"/>
+                    </svg>
+                </div>
+
+                <!-- 个人信息 -->
+                <div class="profile-header">
+                    <div class="avatar">👤</div>
+                    <div class="username">小邵</div>
+                    <div class="user-bio">穿搭新手 · 风格探索中</div>
+                </div>
+            </div>
+
+            <!-- 白色内容卡片 -->
+            <div class="content-card">
+                <!-- 统计卡片 -->
+                <div class="stats-card">
+                    <div class="stats-number">28</div>
+                    <div class="stats-label">已生成搭配方案</div>
+                </div>
+
+                <!-- AI学习进度 -->
+                <div class="learning-section">
+                    <h3 class="section-title">AI 学习进度</h3>
+                    <div class="progress-circle">
+                        <svg class="progress-svg" width="160" height="160" viewBox="0 0 160 160">
+                            <defs>
+                                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#6C63FF"/>
+                                    <stop offset="100%" stop-color="#8B7FFF"/>
+                                </linearGradient>
+                            </defs>
+                            <circle class="progress-bg" cx="80" cy="80" r="60"/>
+                            <circle class="progress-fill" cx="80" cy="80" r="60"/>
+                        </svg>
+                        <div class="progress-text">
+                            <div class="progress-percent">75%</div>
+                            <div class="progress-label">AI 越来越懂你了</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 风格偏好 -->
+                <div class="learning-section">
+                    <h3 class="section-title">你的风格偏好</h3>
+                    <div class="preference-cloud">
+                        <span class="preference-tag large">简约</span>
+                        <span class="preference-tag medium">通勤</span>
+                        <span class="preference-tag">时尚</span>
+                        <span class="preference-tag medium">休闲</span>
+                        <span class="preference-tag">甜美</span>
+                        <span class="preference-tag">约会</span>
+                    </div>
+                </div>
+
+                <!-- 风格档案 -->
+                <div class="learning-section">
+                    <h3 class="section-title">风格分布</h3>
+                    <div class="style-bars">
+                        <div class="style-bar">
+                            <div class="style-bar-header">
+                                <span class="style-name">简约风</span>
+                                <span class="style-percent">45%</span>
+                            </div>
+                            <div class="style-bar-track">
+                                <div class="style-bar-fill" style="width: 45%"></div>
+                            </div>
+                        </div>
+                        <div class="style-bar">
+                            <div class="style-bar-header">
+                                <span class="style-name">时尚感</span>
+                                <span class="style-percent">30%</span>
+                            </div>
+                            <div class="style-bar-track">
+                                <div class="style-bar-fill" style="width: 30%"></div>
+                            </div>
+                        </div>
+                        <div class="style-bar">
+                            <div class="style-bar-header">
+                                <span class="style-name">甜美风</span>
+                                <span class="style-percent">15%</span>
+                            </div>
+                            <div class="style-bar-track">
+                                <div class="style-bar-fill" style="width: 15%"></div>
+                            </div>
+                        </div>
+                        <div class="style-bar">
+                            <div class="style-bar-header">
+                                <span class="style-name">知性风</span>
+                                <span class="style-percent">10%</span>
+                            </div>
+                            <div class="style-bar-track">
+                                <div class="style-bar-fill" style="width: 10%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 菜单列表 -->
+                <div class="learning-section">
+                    <h3 class="section-title">更多</h3>
+                    <div class="menu-list">
+                        <div class="menu-item">
+                            <div class="menu-icon">
+                                <svg width="18" height="18" fill="#6C63FF" viewBox="0 0 24 24">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                            <span class="menu-text">编辑资料</span>
+                            <svg class="menu-arrow" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-icon">
+                                <svg width="18" height="18" fill="#6C63FF" viewBox="0 0 24 24">
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                                </svg>
+                            </div>
+                            <span class="menu-text">我的收藏</span>
+                            <svg class="menu-arrow" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                        <div class="menu-item">
+                            <div class="menu-icon">
+                                <svg width="18" height="18" fill="#6C63FF" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                                </svg>
+                            </div>
+                            <span class="menu-text">设置</span>
+                            <svg class="menu-arrow" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M9 18l6-6-6-6"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Bar -->
+            <div class="tab-bar">
+                <a href="#" class="tab-item">
+                    <div class="tab-icon">
+                        <svg class="icon" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                        </svg>
+                    </div>
+                    <span class="tab-label">首页</span>
+                </a>
+                <a href="#" class="tab-item">
+                    <div class="tab-icon">
+                        <svg class="icon" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24">
+                            <rect x="3" y="3" width="7" height="18" rx="1"/>
+                            <rect x="14" y="3" width="7" height="18" rx="1"/>
+                            <line x1="6" y1="12" x2="7" y2="12"/>
+                            <line x1="17" y1="12" x2="18" y2="12"/>
+                        </svg>
+                    </div>
+                    <span class="tab-label">衣橱</span>
+                </a>
+                <a href="#" class="tab-item active">
+                    <div class="tab-icon">
+                        <svg class="icon" fill="#6C63FF" viewBox="0 0 24 24">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <span class="tab-label">我的</span>
+                </a>
+            </div>
+
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+</body>
+</html>

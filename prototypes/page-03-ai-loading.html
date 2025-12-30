@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理 - AI 生成中</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* iPhone 15 Pro 设备框架 */
+        .device-frame {
+            width: 393px;
+            height: 852px;
+            background: linear-gradient(180deg, #848489 0%, #3A3A3C 50%, #1C1C1E 100%);
+            border-radius: 55px;
+            padding: 3px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        /* 侧边按钮 */
+        .side-buttons {
+            position: absolute;
+            left: -3px;
+            top: 150px;
+        }
+
+        .mute-switch {
+            width: 3px;
+            height: 28px;
+            background: #2C2C2E;
+            border-radius: 0 2px 2px 0;
+            margin-bottom: 12px;
+        }
+
+        .volume-up {
+            width: 3px;
+            height: 56px;
+            background: #2C2C2E;
+            border-radius: 0 2px 2px 0;
+            margin-bottom: 12px;
+        }
+
+        .volume-down {
+            width: 3px;
+            height: 56px;
+            background: #2C2C2E;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .power-button {
+            position: absolute;
+            right: -3px;
+            top: 200px;
+            width: 3px;
+            height: 98px;
+            background: #2C2C2E;
+            border-radius: 2px 0 0 2px;
+        }
+
+        /* 屏幕内容 */
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #F2F2F7;
+            border-radius: 52px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            height: 59px;
+            background: #fff;
+            position: relative;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0 24px;
+            padding-top: 16px;
+        }
+
+        .status-left {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1C1C1E;
+            letter-spacing: -0.3px;
+        }
+
+        .status-right {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .status-icon {
+            color: #1C1C1E;
+            font-size: 14px;
+        }
+
+        /* 灵动岛 */
+        .dynamic-island {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 126px;
+            height: 37.5px;
+            background: #000;
+            border-radius: 19px;
+            z-index: 101;
+        }
+
+        /* 内容区域 */
+        .content {
+            padding: 20px;
+            padding-top: 80px;
+        }
+
+        /* 加载提示 */
+        .loading-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .loading-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #6C63FF 0%, #7B72FF 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
+                opacity: 0.9;
+            }
+        }
+
+        .loading-icon svg {
+            width: 40px;
+            height: 40px;
+            color: #fff;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1C1C1E;
+            margin-bottom: 12px;
+        }
+
+        .loading-message {
+            font-size: 16px;
+            color: #8E8E93;
+            line-height: 1.4;
+            min-height: 44px;
+            animation: fadeInOut 1.5s ease-in-out infinite;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% {
+                opacity: 0.7;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* 进度条 */
+        .progress-container {
+            margin-bottom: 32px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #E5E5EA;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6C63FF 0%, #8B7FFF 100%);
+            border-radius: 3px;
+            animation: progress 5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes progress {
+            from {
+                width: 0%;
+            }
+            to {
+                width: 100%;
+            }
+        }
+
+        .progress-text {
+            font-size: 13px;
+            color: #8E8E93;
+            text-align: center;
+        }
+
+        /* 骨架屏卡片 */
+        .skeleton-cards {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .skeleton-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .skeleton-items {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .skeleton-item {
+            flex: 1;
+            aspect-ratio: 3/4;
+            background: linear-gradient(90deg, #E5E5EA 0%, #F2F2F7 50%, #E5E5EA 100%);
+            background-size: 200% 100%;
+            border-radius: 12px;
+            animation: shimmer 1.5s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        .skeleton-tags {
+            display: flex;
+            gap: 8px;
+        }
+
+        .skeleton-tag {
+            width: 60px;
+            height: 24px;
+            background: linear-gradient(90deg, #E5E5EA 0%, #F2F2F7 50%, #E5E5EA 100%);
+            background-size: 200% 100%;
+            border-radius: 12px;
+            animation: shimmer 1.5s ease-in-out infinite;
+            animation-delay: 0.1s;
+        }
+
+        .skeleton-tag:nth-child(2) {
+            width: 80px;
+            animation-delay: 0.2s;
+        }
+
+        /* Home Indicator */
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 134px;
+            height: 5px;
+            background: #1C1C1E;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="device-frame">
+        <!-- 侧边按钮 -->
+        <div class="side-buttons">
+            <div class="mute-switch"></div>
+            <div class="volume-up"></div>
+            <div class="volume-down"></div>
+        </div>
+        <div class="power-button"></div>
+
+        <!-- 屏幕内容 -->
+        <div class="screen">
+            <!-- 灵动岛 -->
+            <div class="dynamic-island"></div>
+
+            <!-- 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left">9:41</div>
+                <div class="status-right">
+                    <span class="status-icon">📶</span>
+                    <span class="status-icon">📡</span>
+                    <span class="status-icon">🔋</span>
+                </div>
+            </div>
+
+            <!-- 内容区域 -->
+            <div class="content">
+                <!-- 加载提示 -->
+                <div class="loading-header">
+                    <div class="loading-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/>
+                        </svg>
+                    </div>
+                    <h2 class="loading-title">AI 正在创作中</h2>
+                    <p class="loading-message" id="loadingMessage">AI 正在为你挑选最佳搭配...</p>
+                </div>
+
+                <!-- 进度条 -->
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <p class="progress-text">预计还需 <span id="countdown">5</span> 秒</p>
+                </div>
+
+                <!-- 骨架屏卡片 -->
+                <div class="skeleton-cards">
+                    <div class="skeleton-card">
+                        <div class="skeleton-items">
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                        </div>
+                        <div class="skeleton-tags">
+                            <div class="skeleton-tag"></div>
+                            <div class="skeleton-tag"></div>
+                        </div>
+                    </div>
+
+                    <div class="skeleton-card">
+                        <div class="skeleton-items">
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                        </div>
+                        <div class="skeleton-tags">
+                            <div class="skeleton-tag"></div>
+                            <div class="skeleton-tag"></div>
+                        </div>
+                    </div>
+
+                    <div class="skeleton-card">
+                        <div class="skeleton-items">
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                            <div class="skeleton-item"></div>
+                        </div>
+                        <div class="skeleton-tags">
+                            <div class="skeleton-tag"></div>
+                            <div class="skeleton-tag"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Home Indicator -->
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+
+    <script>
+        // 文案轮播
+        const messages = [
+            "AI 正在为你挑选最佳搭配...",
+            "分析配色原理中...",
+            "匹配你的风格偏好...",
+            "马上就好，请稍等~"
+        ];
+
+        let messageIndex = 0;
+        const messageEl = document.getElementById('loadingMessage');
+
+        setInterval(() => {
+            messageIndex = (messageIndex + 1) % messages.length;
+            messageEl.style.opacity = '0';
+            setTimeout(() => {
+                messageEl.textContent = messages[messageIndex];
+                messageEl.style.opacity = '1';
+            }, 200);
+        }, 1500);
+
+        // 倒计时
+        let countdown = 5;
+        const countdownEl = document.getElementById('countdown');
+
+        setInterval(() => {
+            countdown--;
+            if (countdown >= 0) {
+                countdownEl.textContent = countdown;
+            }
+        }, 1000);
+
+        // 添加淡入淡出效果
+        messageEl.style.transition = 'opacity 0.2s ease-in-out';
+    </script>
+</body>
+</html>
