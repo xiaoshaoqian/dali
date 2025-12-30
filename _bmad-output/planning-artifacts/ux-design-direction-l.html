@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理App - Direction L: 层叠卡片</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+            background: linear-gradient(180deg, #E8E7FF 0%, #F5F4FF 100%);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(108, 99, 255, 0.15);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1C1C1E;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            color: #3A3A3C;
+            line-height: 1.6;
+        }
+
+        .mockup-section {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(108, 99, 255, 0.1);
+        }
+
+        .mockup-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1C1C1E;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #E8E7FF;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: linear-gradient(180deg, #6C63FF 0%, #9D94FF 100%);
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(108, 99, 255, 0.3);
+            margin: 0 auto;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .notch {
+            width: 209px;
+            height: 30px;
+            background: black;
+            border-radius: 0 0 20px 20px;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #6C63FF 0%, #9D94FF 100%);
+            padding-top: 44px;
+            position: relative;
+        }
+
+        .status-bar {
+            height: 44px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 15px;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Direction L: 层叠卡片 - 紫色顶部 + 白色卡片 */
+        .purple-header {
+            padding: 20px 24px 60px;
+            color: white;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .greeting {
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .header-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .friendly-message {
+            font-size: 15px;
+            color: rgba(255,255,255,0.9);
+            line-height: 1.6;
+        }
+
+        .main-card-container {
+            position: absolute;
+            top: 180px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            border-radius: 32px 32px 0 0;
+            padding: 24px;
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.1);
+        }
+
+        .action-card {
+            background: linear-gradient(135deg, #F8F7FF 0%, #FFFFFF 100%);
+            border-radius: 24px;
+            padding: 28px;
+            margin-bottom: 20px;
+            border: 2px solid #E8E7FF;
+            box-shadow: 0 4px 16px rgba(108, 99, 255, 0.08);
+        }
+
+        .action-top {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .action-icon-box {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #6C63FF 0%, #9D94FF 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            box-shadow: 0 8px 20px rgba(108, 99, 255, 0.25);
+        }
+
+        .action-text {
+            flex: 1;
+        }
+
+        .action-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1C1C1E;
+            margin-bottom: 4px;
+        }
+
+        .action-subtitle {
+            font-size: 13px;
+            color: #6C63FF;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-main {
+            flex: 1;
+            background: linear-gradient(135deg, #6C63FF 0%, #9D94FF 100%);
+            color: white;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-main:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-sub {
+            flex: 1;
+            background: white;
+            color: #6C63FF;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            border: 2px solid #E8E7FF;
+            cursor: pointer;
+        }
+
+        .tips-bar {
+            background: linear-gradient(135deg, #F0EFFF 0%, #F8F7FF 100%);
+            border-radius: 16px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tips-icon {
+            font-size: 24px;
+        }
+
+        .tips-text {
+            font-size: 13px;
+            color: #3A3A3C;
+            flex: 1;
+        }
+
+        .recent-section {
+            margin-top: 8px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #1C1C1E;
+        }
+
+        .view-all {
+            font-size: 14px;
+            color: #6C63FF;
+            font-weight: 600;
+        }
+
+        .outfit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .outfit-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px;
+            background: #FAFAFF;
+            border-radius: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .outfit-item:hover {
+            background: #F0EFFF;
+        }
+
+        .outfit-thumb {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #E8E7FF 0%, #F0EFFF 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .outfit-info {
+            flex: 1;
+        }
+
+        .outfit-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1C1C1E;
+            margin-bottom: 3px;
+        }
+
+        .outfit-comment {
+            font-size: 12px;
+            color: #6C63FF;
+        }
+
+        .outfit-tag {
+            background: #6C63FF;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 83px;
+            background: white;
+            border-top: 1px solid #F0F0F5;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 34px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            opacity: 0.4;
+        }
+
+        .nav-item.active .nav-icon {
+            opacity: 1;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            color: #8E8E93;
+        }
+
+        .nav-item.active .nav-label {
+            color: #6C63FF;
+            font-weight: 600;
+        }
+
+        .principles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .principle-card {
+            background: linear-gradient(135deg, #F0EFFF 0%, #FFFFFF 100%);
+            padding: 24px;
+            border-radius: 20px;
+            border: 2px solid #E8E7FF;
+        }
+
+        .principle-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1C1C1E;
+            margin-bottom: 12px;
+        }
+
+        .principle-card ul {
+            margin-top: 12px;
+            padding-left: 20px;
+        }
+
+        .principle-card li {
+            font-size: 14px;
+            color: #3A3A3C;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Direction L: 层叠卡片</h1>
+            <p>紫色品牌头部 + 白色圆角卡片层叠，营造现代感层次</p>
+        </div>
+
+        <div class="mockup-section">
+            <div class="mockup-title">首页设计</div>
+
+            <div class="phone-frame">
+                <div class="notch"></div>
+                <div class="screen">
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>●●●●●</span>
+                    </div>
+
+                    <div class="purple-header">
+                        <div class="header-row">
+                            <div class="greeting">👋 嗨，小雅</div>
+                            <div class="header-icon">⚙️</div>
+                        </div>
+                        <div class="friendly-message">今天想穿什么风格？让我来帮你~</div>
+                    </div>
+
+                    <div class="main-card-container">
+                        <div class="action-card">
+                            <div class="action-top">
+                                <div class="action-icon-box">✨</div>
+                                <div class="action-text">
+                                    <div class="action-title">智能搭配</div>
+                                    <div class="action-subtitle">AI为你推荐最佳方案</div>
+                                </div>
+                            </div>
+                            <div class="button-row">
+                                <div class="btn-main">📷 拍照</div>
+                                <div class="btn-sub">🖼️ 相册</div>
+                            </div>
+                        </div>
+
+                        <div class="tips-bar">
+                            <div class="tips-icon">💡</div>
+                            <div class="tips-text">光线充足时拍摄，AI识别更准确哦~</div>
+                        </div>
+
+                        <div class="recent-section">
+                            <div class="section-header">
+                                <div class="section-title">最近搭配</div>
+                                <div class="view-all">全部 →</div>
+                            </div>
+
+                            <div class="outfit-list">
+                                <div class="outfit-item">
+                                    <div class="outfit-thumb">👗</div>
+                                    <div class="outfit-info">
+                                        <div class="outfit-name">职场优雅</div>
+                                        <div class="outfit-comment">非常适合重要会议</div>
+                                    </div>
+                                    <div class="outfit-tag">通勤</div>
+                                </div>
+
+                                <div class="outfit-item">
+                                    <div class="outfit-thumb">👔</div>
+                                    <div class="outfit-info">
+                                        <div class="outfit-name">约会造型</div>
+                                        <div class="outfit-comment">温柔有气质</div>
+                                    </div>
+                                    <div class="outfit-tag">约会</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bottom-nav">
+                        <div class="nav-item active">
+                            <div class="nav-icon">🏠</div>
+                            <div class="nav-label">首页</div>
+                        </div>
+                        <div class="nav-item">
+                            <div class="nav-icon">👗</div>
+                            <div class="nav-label">衣橱</div>
+                        </div>
+                        <div class="nav-item">
+                            <div class="nav-icon">👤</div>
+                            <div class="nav-label">我的</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mockup-section">
+            <div class="mockup-title">设计特点</div>
+            <div class="principles">
+                <div class="principle-card">
+                    <h3>📚 层叠布局</h3>
+                    <ul>
+                        <li>紫色渐变顶部区域</li>
+                        <li>白色卡片上浮覆盖</li>
+                        <li>视觉层次分明</li>
+                        <li>现代感强烈</li>
+                    </ul>
+                </div>
+                <div class="principle-card">
+                    <h3>💜 品牌紫强调</h3>
+                    <ul>
+                        <li>顶部大面积品牌色</li>
+                        <li>按钮和标签使用紫色</li>
+                        <li>品牌识别度高</li>
+                        <li>科技感与温暖兼具</li>
+                    </ul>
+                </div>
+                <div class="principle-card">
+                    <h3>💬 友好引导</h3>
+                    <ul>
+                        <li>保留问候和友好语气</li>
+                        <li>小贴士引导</li>
+                        <li>AI评论反馈</li>
+                        <li>情感化体验</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

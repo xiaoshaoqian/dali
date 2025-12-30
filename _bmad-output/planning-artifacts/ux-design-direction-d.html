@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理App - Direction D: 简约优雅</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+            background: #FAFAFA;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #E8E8E8;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 300;
+            color: #1C1C1E;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 18px;
+            color: #6C6C6C;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        .mockup-section {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            border: 1px solid #E8E8E8;
+        }
+
+        .mockup-title {
+            font-size: 24px;
+            font-weight: 300;
+            color: #1C1C1E;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #E8E8E8;
+            letter-spacing: -0.5px;
+        }
+
+        .phone-frame {
+            width: 375px;
+            height: 812px;
+            background: #FAFAFA;
+            border-radius: 40px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+            margin: 0 auto;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid #E0E0E0;
+        }
+
+        .notch {
+            width: 209px;
+            height: 30px;
+            background: black;
+            border-radius: 0 0 20px 20px;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #FFFFFF;
+            padding-top: 44px;
+        }
+
+        .status-bar {
+            height: 44px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            font-size: 15px;
+            color: #1C1C1E;
+            font-weight: 400;
+        }
+
+        /* Direction D: 简约优雅风格 */
+        .app-header {
+            padding: 60px 32px 40px;
+            background: transparent;
+            text-align: center;
+        }
+
+        .brand-name {
+            font-size: 32px;
+            font-weight: 200;
+            letter-spacing: 8px;
+            color: #1C1C1E;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .divider {
+            width: 60px;
+            height: 1px;
+            background: #1C1C1E;
+            margin: 0 auto 12px;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            color: #8E8E93;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        .main-content {
+            padding: 0 32px;
+            margin-top: 60px;
+        }
+
+        .cta-section {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .cta-title {
+            font-size: 20px;
+            font-weight: 300;
+            color: #1C1C1E;
+            margin-bottom: 24px;
+            letter-spacing: -0.3px;
+        }
+
+        .action-button {
+            width: 100%;
+            height: 56px;
+            background: #1C1C1E;
+            color: white;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-button:hover {
+            background: #000000;
+        }
+
+        .secondary-button {
+            width: 100%;
+            height: 56px;
+            background: white;
+            color: #1C1C1E;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .collection-section {
+            padding: 0 32px;
+            margin-top: 40px;
+        }
+
+        .section-header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 300;
+            color: #1C1C1E;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .outfit-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .outfit-item {
+            background: white;
+            border: 1px solid #E8E8E8;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .outfit-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .outfit-image {
+            width: 100%;
+            height: 180px;
+            background: #FAFAFA;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            border-bottom: 1px solid #E8E8E8;
+        }
+
+        .outfit-details {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .outfit-title {
+            font-size: 14px;
+            font-weight: 400;
+            color: #1C1C1E;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .outfit-category {
+            font-size: 11px;
+            color: #8E8E93;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 83px;
+            background: white;
+            border-top: 1px solid #E8E8E8;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 34px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            color: #8E8E93;
+            font-size: 20px;
+        }
+
+        .nav-item.active .nav-icon {
+            color: #1C1C1E;
+        }
+
+        .nav-label {
+            font-size: 9px;
+            color: #8E8E93;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        .nav-item.active .nav-label {
+            color: #1C1C1E;
+        }
+
+        .principles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .principle-card {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid #E8E8E8;
+        }
+
+        .principle-card h3 {
+            font-size: 18px;
+            font-weight: 400;
+            color: #1C1C1E;
+            margin-bottom: 12px;
+            letter-spacing: -0.3px;
+        }
+
+        .principle-card p {
+            font-size: 15px;
+            color: #6C6C6C;
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        .principle-card ul {
+            margin-top: 12px;
+            padding-left: 20px;
+        }
+
+        .principle-card li {
+            font-size: 14px;
+            color: #6C6C6C;
+            line-height: 1.8;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤍 Direction D: 简约优雅</h1>
+            <p>留白丰富，高端品质感，用克制的设计语言传递优雅气质</p>
+        </div>
+
+        <div class="mockup-section">
+            <div class="mockup-title">首页设计</div>
+
+            <div class="phone-frame">
+                <div class="notch"></div>
+                <div class="screen">
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>●●●●●</span>
+                    </div>
+
+                    <div class="app-header">
+                        <div class="brand-name">DALI</div>
+                        <div class="divider"></div>
+                        <div class="subtitle">Personal Stylist</div>
+                    </div>
+
+                    <div class="main-content">
+                        <div class="cta-section">
+                            <div class="cta-title">创建你的风格</div>
+                            <div class="action-button">拍摄单品</div>
+                            <div class="secondary-button">选择照片</div>
+                        </div>
+                    </div>
+
+                    <div class="collection-section">
+                        <div class="section-header">
+                            <div class="section-title">Collection</div>
+                        </div>
+
+                        <div class="outfit-list">
+                            <div class="outfit-item">
+                                <div class="outfit-image">👗</div>
+                                <div class="outfit-details">
+                                    <div class="outfit-title">优雅通勤</div>
+                                    <div class="outfit-category">Office</div>
+                                </div>
+                            </div>
+
+                            <div class="outfit-item">
+                                <div class="outfit-image">👔</div>
+                                <div class="outfit-details">
+                                    <div class="outfit-title">浪漫晚宴</div>
+                                    <div class="outfit-category">Evening</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bottom-nav">
+                        <div class="nav-item active">
+                            <div class="nav-icon">○</div>
+                            <div class="nav-label">Home</div>
+                        </div>
+                        <div class="nav-item">
+                            <div class="nav-icon">○</div>
+                            <div class="nav-label">Style</div>
+                        </div>
+                        <div class="nav-item">
+                            <div class="nav-icon">○</div>
+                            <div class="nav-label">Profile</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mockup-section">
+            <div class="mockup-title">设计原则</div>
+
+            <div class="principles">
+                <div class="principle-card">
+                    <h3>⬜ 极致留白</h3>
+                    <p>大量留白营造呼吸感：</p>
+                    <ul>
+                        <li>页面边距加大至 32px（vs. 标准 24px）</li>
+                        <li>元素间距宽松，避免拥挤</li>
+                        <li>单屏展示内容极少，专注核心</li>
+                        <li>垂直滚动体验舒适</li>
+                        <li>留白本身成为设计元素</li>
+                    </ul>
+                </div>
+
+                <div class="principle-card">
+                    <h3>🎨 克制的配色</h3>
+                    <p>黑白灰为主，极简配色：</p>
+                    <ul>
+                        <li>主要使用黑 (#1C1C1E) 和白 (#FFFFFF)</li>
+                        <li>中性灰 (#8E8E93, #6C6C6C) 作为辅助</li>
+                        <li>背景浅灰 (#FAFAFA) 柔和视觉</li>
+                        <li>品牌色仅在必要时出现</li>
+                        <li>避免鲜艳色彩，保持克制</li>
+                    </ul>
+                </div>
+
+                <div class="principle-card">
+                    <h3>✍️ 优雅字体排印</h3>
+                    <p>精致的排版细节：</p>
+                    <ul>
+                        <li>字重偏轻（Light/Regular），避免粗体</li>
+                        <li>大字号标题 + 宽松字距</li>
+                        <li>全大写英文增加仪式感</li>
+                        <li>中文字号适中，强调易读性</li>
+                        <li>行高宽松（1.6-1.8）</li>
+                    </ul>
+                </div>
+
+                <div class="principle-card">
+                    <h3>📐 精准对齐与网格</h3>
+                    <p>严格的网格系统：</p>
+                    <ul>
+                        <li>所有元素中心对齐或左右对齐</li>
+                        <li>垂直节奏一致（60px/40px/20px）</li>
+                        <li>细节对齐到像素级别</li>
+                        <li>对称美感优先</li>
+                        <li>视觉平衡感极强</li>
+                    </ul>
+                </div>
+
+                <div class="principle-card">
+                    <h3>🖼️ 高品质视觉</h3>
+                    <p>每个细节都追求品质：</p>
+                    <ul>
+                        <li>边框细而清晰（1px）</li>
+                        <li>圆角极小（4px）或直角</li>
+                        <li>阴影极轻（0 1px 3px）</li>
+                        <li>图片高清无损，排版精致</li>
+                        <li>去除多余装饰，简洁纯粹</li>
+                    </ul>
+                </div>
+
+                <div class="principle-card">
+                    <h3>🕊️ 静谧的交互</h3>
+                    <p>克制而优雅的动效：</p>
+                    <ul>
+                        <li>过渡动画缓慢柔和（0.3s ease）</li>
+                        <li>Hover效果微妙（轻微阴影）</li>
+                        <li>避免跳跃式动画</li>
+                        <li>保持宁静感，不打扰用户</li>
+                        <li>交互反馈含蓄但清晰</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="mockup-section">
+            <div class="mockup-title">适用场景</div>
+            <div class="principles">
+                <div class="principle-card" style="border-color: #34C759;">
+                    <h3>✅ 适合</h3>
+                    <ul>
+                        <li>高端品牌定位，追求品质感</li>
+                        <li>目标用户为成熟、有品味的女性（30-38岁）</li>
+                        <li>强调"少即是多"的设计哲学</li>
+                        <li>产品本身内容高质量，不需要装饰</li>
+                        <li>奢侈品、艺术、设计类领域</li>
+                        <li>注重用户体验的宁静感</li>
+                    </ul>
+                </div>
+
+                <div class="principle-card" style="border-color: #FF9500;">
+                    <h3>⚠️ 权衡</h3>
+                    <ul>
+                        <li>可能过于"冷淡"，缺乏亲和力</li>
+                        <li>年轻用户可能觉得"太性冷淡"</li>
+                        <li>缺少情感化表达和温度</li>
+                        <li>品牌个性不够鲜明，辨识度低</li>
+                        <li>可能被认为"装腔作势"或"过度设计"</li>
+                        <li>不适合需要活跃氛围的产品</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

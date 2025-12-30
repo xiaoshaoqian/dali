@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理App - Direction L4</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", sans-serif;
+            background: linear-gradient(180deg, #E8E8ED 0%, #D1D1D6 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* iPhone 15 Pro - 精确还原 */
+        .iphone {
+            width: 393px;
+            height: 852px;
+            background: #1A1A1C;
+            border-radius: 55px;
+            padding: 5px;
+            position: relative;
+            box-shadow:
+                inset 0 0 0 1px rgba(255,255,255,0.1),
+                0 60px 120px -30px rgba(0,0,0,0.5),
+                0 20px 60px -20px rgba(0,0,0,0.3);
+        }
+
+        /* 钛金属边框效果 */
+        .iphone::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 56px;
+            background: linear-gradient(180deg, #4A4A4C 0%, #2A2A2C 50%, #3A3A3C 100%);
+            z-index: -1;
+        }
+
+        /* 侧边按键 */
+        .side-button {
+            position: absolute;
+            background: #2A2A2C;
+            border-radius: 2px;
+        }
+
+        .btn-silent {
+            left: -2px;
+            top: 120px;
+            width: 3px;
+            height: 28px;
+        }
+
+        .btn-volume-up {
+            left: -2px;
+            top: 175px;
+            width: 3px;
+            height: 52px;
+        }
+
+        .btn-volume-down {
+            left: -2px;
+            top: 235px;
+            width: 3px;
+            height: 52px;
+        }
+
+        .btn-power {
+            right: -2px;
+            top: 190px;
+            width: 3px;
+            height: 85px;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            border-radius: 50px;
+            overflow: hidden;
+            position: relative;
+            background: linear-gradient(180deg, #6C63FF 0%, #7B72FF 100%);
+        }
+
+        /* 灵动岛 */
+        .dynamic-island {
+            width: 126px;
+            height: 37.5px;
+            background: #000;
+            border-radius: 22px;
+            position: absolute;
+            top: 11px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            height: 54px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 36px 4px;
+            position: relative;
+            z-index: 50;
+        }
+
+        .status-time {
+            font-size: 17px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 顶部内容区 */
+        .header-area {
+            padding: 4px 24px 76px;
+            color: #fff;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .greeting {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            line-height: 1.15;
+        }
+
+        .greeting-sub {
+            font-size: 17px;
+            color: rgba(255,255,255,0.8);
+            margin-top: 6px;
+            font-weight: 400;
+        }
+
+        .avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            padding: 3px;
+        }
+
+        .avatar-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #FFE8D6 0%, #FFCBA4 100%);
+        }
+
+        /* 内容面板 */
+        .content-panel {
+            position: absolute;
+            top: 195px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #F2F2F7;
+            border-radius: 24px 24px 0 0;
+            padding: 20px 16px 90px;
+        }
+
+        /* 主卡片 */
+        .action-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 10px;
+        }
+
+        .action-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #000;
+            letter-spacing: -0.4px;
+        }
+
+        .action-desc {
+            font-size: 14px;
+            color: #86868B;
+            margin-top: 3px;
+            margin-bottom: 16px;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            height: 48px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .btn:hover {
+            transform: scale(1.02);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(180deg, #7069FF 0%, #6C63FF 100%);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: #E5E5EA;
+            color: #1C1C1E;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* 提示条 */
+        .tip {
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 11px;
+        }
+
+        .tip-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .tip-icon svg {
+            width: 16px;
+            height: 16px;
+            color: #D97706;
+        }
+
+        .tip-text {
+            font-size: 13px;
+            color: #6B7280;
+            line-height: 1.35;
+        }
+
+        /* 列表 */
+        .section {
+            margin-top: 2px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 4px;
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #000;
+            letter-spacing: -0.3px;
+        }
+
+        .section-more {
+            font-size: 14px;
+            color: #6C63FF;
+            font-weight: 500;
+        }
+
+        .items {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .item {
+            background: #fff;
+            border-radius: 14px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+
+        .item:active {
+            background: #F9F9F9;
+            transform: scale(0.99);
+        }
+
+        .item-thumb {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            background: #F2F2F7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .thumb-color {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+        }
+
+        .color-purple {
+            background: linear-gradient(145deg, #8B83FF 0%, #6C63FF 100%);
+        }
+
+        .color-pink {
+            background: linear-gradient(145deg, #FEB2B2 0%, #FC8181 100%);
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #000;
+            letter-spacing: -0.2px;
+        }
+
+        .item-desc {
+            font-size: 13px;
+            color: #86868B;
+            margin-top: 1px;
+        }
+
+        .item-tag {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6C63FF;
+            background: rgba(108, 99, 255, 0.1);
+            padding: 5px 10px;
+            border-radius: 6px;
+        }
+
+        /* Tab Bar */
+        .tab-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 85px;
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            display: flex;
+            justify-content: space-around;
+            padding-top: 6px;
+            border-top: 0.33px solid rgba(0,0,0,0.12);
+        }
+
+        .tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            padding: 4px 24px;
+            cursor: pointer;
+        }
+
+        .tab-icon {
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tab-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .tab-label {
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .tab-active .tab-icon svg {
+            color: #6C63FF;
+        }
+
+        .tab-active .tab-label {
+            color: #6C63FF;
+            font-weight: 600;
+        }
+
+        .tab-inactive .tab-icon svg {
+            color: #999;
+        }
+
+        .tab-inactive .tab-label {
+            color: #999;
+        }
+
+        /* Home Indicator */
+        .home-indicator {
+            position: absolute;
+            bottom: 9px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 5px;
+            background: #000;
+            border-radius: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div class="iphone">
+        <!-- 侧边按键 -->
+        <div class="side-button btn-silent"></div>
+        <div class="side-button btn-volume-up"></div>
+        <div class="side-button btn-volume-down"></div>
+        <div class="side-button btn-power"></div>
+
+        <div class="screen">
+            <div class="dynamic-island"></div>
+
+            <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="status-right">
+                    <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
+                        <rect y="6" width="3" height="6" rx="1" fill="white"/>
+                        <rect x="5" y="4" width="3" height="8" rx="1" fill="white"/>
+                        <rect x="10" y="1" width="3" height="11" rx="1" fill="white"/>
+                        <rect x="15" y="0" width="3" height="12" rx="1" fill="white" fill-opacity="0.35"/>
+                    </svg>
+                    <svg width="16" height="12" viewBox="0 0 16 12" fill="white">
+                        <path d="M8 3C5.8 3 3.8 3.8 2.3 5.2L3.7 6.6C4.9 5.5 6.4 4.8 8 4.8C9.6 4.8 11.1 5.5 12.3 6.6L13.7 5.2C12.2 3.8 10.2 3 8 3ZM8 0C4.9 0 2.1 1.2 0 3.2L1.4 4.6C3.2 2.9 5.5 1.8 8 1.8C10.5 1.8 12.8 2.9 14.6 4.6L16 3.2C13.9 1.2 11.1 0 8 0ZM8 6C6.8 6 5.7 6.4 4.8 7.1L8 10.5L11.2 7.1C10.3 6.4 9.2 6 8 6Z"/>
+                    </svg>
+                    <svg width="27" height="13" viewBox="0 0 27 13" fill="none">
+                        <rect x="0.5" y="0.833" width="23" height="11.33" rx="3" stroke="white" stroke-opacity="0.35"/>
+                        <rect x="2" y="2.33" width="18" height="8.33" rx="1.5" fill="white"/>
+                        <path d="M25 4.5v4a2 2 0 002-2v0a2 2 0 00-2-2z" fill="white" fill-opacity="0.35"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="header-area">
+                <div class="header-content">
+                    <div>
+                        <div class="greeting">嗨，小雅</div>
+                        <div class="greeting-sub">今天想穿什么风格？</div>
+                    </div>
+                    <div class="avatar">
+                        <div class="avatar-inner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-panel">
+                <div class="action-card">
+                    <div class="action-title">智能搭配</div>
+                    <div class="action-desc">拍下单品，AI 为你推荐最佳搭配</div>
+                    <div class="buttons">
+                        <div class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                                <circle cx="12" cy="13" r="4"/>
+                            </svg>
+                            拍照
+                        </div>
+                        <div class="btn btn-secondary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <path d="M21 15l-5-5L5 21"/>
+                            </svg>
+                            相册
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tip">
+                    <div class="tip-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                        </svg>
+                    </div>
+                    <div class="tip-text">光线充足时拍摄，识别更准确</div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">最近搭配</div>
+                        <div class="section-more">查看全部</div>
+                    </div>
+
+                    <div class="items">
+                        <div class="item">
+                            <div class="item-thumb">
+                                <div class="thumb-color color-purple"></div>
+                            </div>
+                            <div class="item-info">
+                                <div class="item-name">职场优雅风</div>
+                                <div class="item-desc">适合正式商务场合</div>
+                            </div>
+                            <div class="item-tag">通勤</div>
+                        </div>
+
+                        <div class="item">
+                            <div class="item-thumb">
+                                <div class="thumb-color color-pink"></div>
+                            </div>
+                            <div class="item-info">
+                                <div class="item-name">约会甜美风</div>
+                                <div class="item-desc">温柔浪漫的气质</div>
+                            </div>
+                            <div class="item-tag">约会</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-bar">
+                <div class="tab tab-active">
+                    <div class="tab-icon">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                        </svg>
+                    </div>
+                    <span class="tab-label">首页</span>
+                </div>
+                <div class="tab tab-inactive">
+                    <div class="tab-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <line x1="12" y1="3" x2="12" y2="21"/>
+                            <circle cx="8" cy="12" r="1" fill="currentColor"/>
+                            <circle cx="16" cy="12" r="1" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <span class="tab-label">衣橱</span>
+                </div>
+                <div class="tab tab-inactive">
+                    <div class="tab-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <circle cx="12" cy="8" r="4"/>
+                            <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+                        </svg>
+                    </div>
+                    <span class="tab-label">我的</span>
+                </div>
+                <div class="home-indicator"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
