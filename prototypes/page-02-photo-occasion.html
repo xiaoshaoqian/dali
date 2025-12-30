@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理 - 选择场合</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .device-frame {
+            width: 393px;
+            height: 852px;
+            background: linear-gradient(180deg, #848489 0%, #3A3A3C 50%, #1C1C1E 100%);
+            border-radius: 55px;
+            padding: 3px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .side-buttons {
+            position: absolute;
+            left: -3px;
+            top: 150px;
+        }
+
+        .mute-switch, .volume-up, .volume-down {
+            width: 3px;
+            background: #2C2C2E;
+            margin-bottom: 12px;
+        }
+
+        .mute-switch {
+            height: 28px;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .volume-up, .volume-down {
+            height: 56px;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .power-button {
+            position: absolute;
+            right: -3px;
+            top: 200px;
+            width: 3px;
+            height: 98px;
+            background: #2C2C2E;
+            border-radius: 2px 0 0 2px;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #F2F2F7;
+            border-radius: 52px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 126px;
+            height: 37.5px;
+            background: #000;
+            border-radius: 19px;
+            z-index: 101;
+        }
+
+        /* 导航栏 */
+        .nav-bar {
+            height: 59px;
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 16px 12px;
+            position: relative;
+            z-index: 100;
+        }
+
+        .nav-back {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .nav-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #1C1C1E;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 12px;
+        }
+
+        .nav-placeholder {
+            width: 40px;
+        }
+
+        /* 状态栏 */
+        .status-bar {
+            height: 59px;
+            background: #fff;
+            position: relative;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0 24px;
+            padding-top: 16px;
+        }
+
+        .status-left {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1C1C1E;
+            letter-spacing: -0.3px;
+        }
+
+        .status-right {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        /* 可滚动内容 */
+        .scrollable-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            background: #fff;
+        }
+
+        .scrollable-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* 内容区域 */
+        .content {
+            padding: 0 20px 120px;
+        }
+
+        /* 照片预览区域 */
+        .photo-section {
+            margin-bottom: 24px;
+        }
+
+        .section-label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1C1C1E;
+            margin-bottom: 12px;
+        }
+
+        .photo-preview {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: linear-gradient(135deg, #E8E6FF 0%, #F0EFFF 100%);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 模拟衣服图片 */
+        .clothing-placeholder {
+            width: 160px;
+            height: 200px;
+            background: linear-gradient(180deg, #6C63FF 0%, #8B7FFF 100%);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 8px 24px rgba(108, 99, 255, 0.3);
+        }
+
+        .clothing-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .clothing-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* 重新选择按钮 */
+        .reselect-btn {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            padding: 8px 14px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: none;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .reselect-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 场合选择区域 */
+        .occasion-section {
+            margin-bottom: 24px;
+        }
+
+        .occasion-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .occasion-item {
+            aspect-ratio: 1;
+            background: #F2F2F7;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .occasion-item:active {
+            transform: scale(0.95);
+        }
+
+        .occasion-item.selected {
+            background: linear-gradient(135deg, #F0EFFF 0%, #E8E6FF 100%);
+            border-color: #6C63FF;
+            box-shadow: 0 4px 12px rgba(108, 99, 255, 0.2);
+        }
+
+        .occasion-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .occasion-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1C1C1E;
+        }
+
+        .occasion-item.selected .occasion-name {
+            color: #6C63FF;
+            font-weight: 600;
+        }
+
+        /* 风格偏好（可选） */
+        .style-section {
+            margin-bottom: 24px;
+        }
+
+        .style-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .style-optional {
+            font-size: 13px;
+            color: #8E8E93;
+        }
+
+        .style-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .style-tag {
+            padding: 10px 16px;
+            background: #F2F2F7;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #3A3A3C;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .style-tag:active {
+            transform: scale(0.95);
+        }
+
+        .style-tag.selected {
+            background: linear-gradient(135deg, #F0EFFF 0%, #E8E6FF 100%);
+            border-color: #6C63FF;
+            color: #6C63FF;
+            font-weight: 600;
+        }
+
+        /* 底部操作栏 */
+        .bottom-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 20px;
+            padding-bottom: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: saturate(180%) blur(20px);
+            -webkit-backdrop-filter: saturate(180%) blur(20px);
+            border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .generate-btn {
+            width: 100%;
+            height: 52px;
+            background: linear-gradient(135deg, #6C63FF 0%, #7B72FF 100%);
+            border: none;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 17px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(108, 99, 255, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .generate-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
+        }
+
+        .generate-btn:disabled {
+            background: #C7C7CC;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Home Indicator */
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 134px;
+            height: 5px;
+            background: #1C1C1E;
+            border-radius: 3px;
+            z-index: 102;
+        }
+    </style>
+</head>
+<body>
+    <div class="device-frame">
+        <div class="side-buttons">
+            <div class="mute-switch"></div>
+            <div class="volume-up"></div>
+            <div class="volume-down"></div>
+        </div>
+        <div class="power-button"></div>
+
+        <div class="screen">
+            <div class="dynamic-island"></div>
+
+            <!-- 状态栏 -->
+            <div class="status-bar">
+                <div class="status-left">9:41</div>
+                <div class="status-right">
+                    <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+                        <rect x="0" y="10" width="3" height="4" rx="0.5" fill="#1C1C1E"/>
+                        <rect x="5" y="7" width="3" height="7" rx="0.5" fill="#1C1C1E"/>
+                        <rect x="10" y="4" width="3" height="10" rx="0.5" fill="#1C1C1E"/>
+                        <rect x="15" y="0" width="3" height="14" rx="0.5" fill="#1C1C1E"/>
+                    </svg>
+                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+                        <path d="M8 9.5C8.83 9.5 9.5 10.17 9.5 11S8.83 12.5 8 12.5 6.5 11.83 6.5 11 7.17 9.5 8 9.5Z" fill="#1C1C1E"/>
+                        <path d="M8 6.5C9.93 6.5 11.68 7.29 12.95 8.55L11.54 9.96C10.59 9.01 9.35 8.5 8 8.5S5.41 9.01 4.46 9.96L3.05 8.55C4.32 7.29 6.07 6.5 8 6.5Z" fill="#1C1C1E"/>
+                        <path d="M8 3C11 3 13.71 4.18 15.66 6.13L14.24 7.55C12.66 5.96 10.44 5 8 5S3.34 5.96 1.76 7.55L0.34 6.13C2.29 4.18 5 3 8 3Z" fill="#1C1C1E"/>
+                    </svg>
+                    <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+                        <rect x="0.5" y="0.5" width="21" height="11" rx="2.5" stroke="#1C1C1E" stroke-opacity="0.35"/>
+                        <rect x="2" y="2" width="18" height="8" rx="1.5" fill="#1C1C1E"/>
+                        <path d="M23 4V8C23.83 7.67 24.5 6.91 24.5 6C24.5 5.09 23.83 4.33 23 4Z" fill="#1C1C1E" fill-opacity="0.4"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- 导航栏 -->
+            <div class="nav-bar">
+                <div class="nav-back">
+                    <svg width="24" height="24" fill="none" stroke="#1C1C1E" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M15 18l-6-6 6-6"/>
+                    </svg>
+                </div>
+                <span class="nav-title">选择场合</span>
+                <div class="nav-placeholder"></div>
+            </div>
+
+            <!-- 可滚动内容 -->
+            <div class="scrollable-content">
+                <div class="content">
+                    <!-- 照片预览 -->
+                    <div class="photo-section">
+                        <div class="section-label">已选衣物</div>
+                        <div class="photo-preview">
+                            <div class="clothing-placeholder">
+                                <div class="clothing-icon">
+                                    <svg width="24" height="24" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.47a1 1 0 00.99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.84l.58-3.47a2 2 0 00-1.34-2.23z"/>
+                                    </svg>
+                                </div>
+                                <span class="clothing-text">白色T恤</span>
+                            </div>
+                            <button class="reselect-btn">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                                    <circle cx="12" cy="13" r="4"/>
+                                </svg>
+                                重新选择
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 场合选择 -->
+                    <div class="occasion-section">
+                        <div class="section-label">今天的场合是？</div>
+                        <div class="occasion-grid">
+                            <div class="occasion-item selected" data-occasion="work">
+                                <div class="occasion-icon">
+                                    <svg width="28" height="28" fill="none" stroke="#6C63FF" stroke-width="2" viewBox="0 0 24 24">
+                                        <rect x="2" y="7" width="20" height="14" rx="2"/>
+                                        <path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+                                    </svg>
+                                </div>
+                                <span class="occasion-name">通勤</span>
+                            </div>
+                            <div class="occasion-item" data-occasion="date">
+                                <div class="occasion-icon">
+                                    <svg width="28" height="28" fill="none" stroke="#3A3A3C" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                                    </svg>
+                                </div>
+                                <span class="occasion-name">约会</span>
+                            </div>
+                            <div class="occasion-item" data-occasion="casual">
+                                <div class="occasion-icon">
+                                    <svg width="28" height="28" fill="none" stroke="#3A3A3C" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M18 8h1a4 4 0 010 8h-1"/>
+                                        <path d="M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/>
+                                        <line x1="6" y1="1" x2="6" y2="4"/>
+                                        <line x1="10" y1="1" x2="10" y2="4"/>
+                                        <line x1="14" y1="1" x2="14" y2="4"/>
+                                    </svg>
+                                </div>
+                                <span class="occasion-name">休闲</span>
+                            </div>
+                            <div class="occasion-item" data-occasion="party">
+                                <div class="occasion-icon">
+                                    <svg width="28" height="28" fill="none" stroke="#3A3A3C" stroke-width="2" viewBox="0 0 24 24">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                    </svg>
+                                </div>
+                                <span class="occasion-name">聚会</span>
+                            </div>
+                            <div class="occasion-item" data-occasion="sport">
+                                <div class="occasion-icon">
+                                    <svg width="28" height="28" fill="none" stroke="#3A3A3C" stroke-width="2" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+                                        <path d="M2 12h20"/>
+                                    </svg>
+                                </div>
+                                <span class="occasion-name">运动</span>
+                            </div>
+                            <div class="occasion-item" data-occasion="home">
+                                <div class="occasion-icon">
+                                    <svg width="28" height="28" fill="none" stroke="#3A3A3C" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                                        <polyline points="9 22 9 12 15 12 15 22"/>
+                                    </svg>
+                                </div>
+                                <span class="occasion-name">居家</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 风格偏好 -->
+                    <div class="style-section">
+                        <div class="style-header">
+                            <span class="section-label">风格偏好</span>
+                            <span class="style-optional">可选</span>
+                        </div>
+                        <div class="style-tags">
+                            <div class="style-tag selected">简约</div>
+                            <div class="style-tag">时尚</div>
+                            <div class="style-tag">甜美</div>
+                            <div class="style-tag">知性</div>
+                            <div class="style-tag">休闲</div>
+                            <div class="style-tag">优雅</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部操作栏 -->
+            <div class="bottom-bar">
+                <button class="generate-btn">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                    </svg>
+                    生成搭配方案
+                </button>
+            </div>
+
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+
+    <script>
+        // 场合选择交互
+        document.querySelectorAll('.occasion-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.occasion-item').forEach(i => {
+                    i.classList.remove('selected');
+                    i.querySelector('.occasion-icon svg').setAttribute('stroke', '#3A3A3C');
+                });
+                this.classList.add('selected');
+                this.querySelector('.occasion-icon svg').setAttribute('stroke', '#6C63FF');
+            });
+        });
+
+        // 风格标签选择交互（多选）
+        document.querySelectorAll('.style-tag').forEach(tag => {
+            tag.addEventListener('click', function() {
+                this.classList.toggle('selected');
+            });
+        });
+    </script>
+</body>
+</html>
