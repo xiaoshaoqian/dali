@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(tree:*)",
+      "Bash(git restore:*)",
+      "Bash(dir /s /b *.md *.html)",
+      "WebFetch(domain:docs.expo.dev)"
     ]
   }
 }

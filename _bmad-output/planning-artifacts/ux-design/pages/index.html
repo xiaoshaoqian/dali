@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理App - 交互式原型导航</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        /* 顶部导航栏 */
+        .top-nav {
+            background: rgba(28, 28, 30, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            padding: 16px 20px;
+            flex-shrink: 0;
+        }
+
+        .nav-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .nav-title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-version {
+            font-size: 13px;
+            color: #8E8E93;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 8px 14px;
+            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            color: #8E8E93;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+
+        .nav-btn.active {
+            background: #6C63FF;
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(108, 99, 255, 0.4);
+        }
+
+        /* iframe 容器 - 固定尺寸，居中显示，不滚动 */
+        .iframe-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: none;
+        }
+
+        iframe.active {
+            display: block;
+        }
+
+        /* 底部信息栏 */
+        .bottom-info {
+            background: rgba(28, 28, 30, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #8E8E93;
+            flex-shrink: 0;
+        }
+
+        .page-info {
+            display: flex;
+            gap: 16px;
+        }
+
+        .page-info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .page-info-label {
+            color: #8E8E93;
+        }
+
+        .page-info-value {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .nav-buttons {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .nav-buttons::-webkit-scrollbar {
+                display: none;
+            }
+
+            .bottom-info {
+                flex-direction: column;
+                gap: 6px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="top-nav">
+        <div class="nav-header">
+            <div class="nav-title">搭理App - 交互式原型</div>
+            <div class="nav-version">v1.0</div>
+        </div>
+        <div class="nav-buttons">
+            <button class="nav-btn active" onclick="switchPage('welcome', this)">
+                <span>👋</span> 欢迎页
+            </button>
+            <button class="nav-btn" onclick="switchPage('home', this)">
+                <span>🏠</span> 首页
+            </button>
+            <button class="nav-btn" onclick="switchPage('home-empty', this)">
+                <span>📭</span> 首页空状态
+            </button>
+            <button class="nav-btn" onclick="switchPage('occasion', this)">
+                <span>🎯</span> 选择场合
+            </button>
+            <button class="nav-btn" onclick="switchPage('photo', this)">
+                <span>📸</span> 拍照/场合
+            </button>
+            <button class="nav-btn" onclick="switchPage('loading', this)">
+                <span>⏳</span> AI生成中
+            </button>
+            <button class="nav-btn" onclick="switchPage('results', this)">
+                <span>✨</span> 搭配方案
+            </button>
+            <button class="nav-btn" onclick="switchPage('detail', this)">
+                <span>🎨</span> 方案详情
+            </button>
+            <button class="nav-btn" onclick="switchPage('wardrobe', this)">
+                <span>👗</span> 衣橱
+            </button>
+            <button class="nav-btn" onclick="switchPage('profile', this)">
+                <span>👤</span> 个人页
+            </button>
+            <button class="nav-btn" onclick="switchPage('share', this)">
+                <span>🔗</span> 分享模板
+            </button>
+        </div>
+    </div>
+
+    <!-- iframe 容器 -->
+    <div class="iframe-container">
+        <iframe id="iframe-welcome" class="active" src="06-welcome-onboarding/welcome-onboarding-page.html"></iframe>
+        <iframe id="iframe-home" src="01-home/home-page.html"></iframe>
+        <iframe id="iframe-home-empty" src="01-home/home-page-empty.html"></iframe>
+        <iframe id="iframe-occasion" src="07-flow-pages/occasion-selector.html"></iframe>
+        <iframe id="iframe-photo" src="07-flow-pages/photo-occasion.html"></iframe>
+        <iframe id="iframe-loading" src="07-flow-pages/ai-loading.html"></iframe>
+        <iframe id="iframe-results" src="02-outfit-results/outfit-results-page.html"></iframe>
+        <iframe id="iframe-detail" src="03-outfit-detail/outfit-detail-page.html"></iframe>
+        <iframe id="iframe-wardrobe" src="04-wardrobe/wardrobe-page.html"></iframe>
+        <iframe id="iframe-profile" src="05-profile/profile-page.html"></iframe>
+        <iframe id="iframe-share" src="08-share/share-templates.html"></iframe>
+    </div>
+
+    <!-- 底部信息栏 -->
+    <div class="bottom-info">
+        <div class="page-info">
+            <div class="page-info-item">
+                <span class="page-info-label">当前:</span>
+                <span class="page-info-value" id="current-page-name">欢迎页</span>
+            </div>
+            <div class="page-info-item">
+                <span class="page-info-label">设备:</span>
+                <span class="page-info-value">iPhone 15 Pro (393×852)</span>
+            </div>
+        </div>
+        <div>
+            💡 提示: 使用 ← → 键切换页面
+        </div>
+    </div>
+
+    <script>
+        const pageNames = {
+            'welcome': '欢迎页',
+            'home': '首页',
+            'home-empty': '首页空状态',
+            'occasion': '选择场合',
+            'photo': '拍照/场合选择',
+            'loading': 'AI生成中',
+            'results': '搭配方案',
+            'detail': '方案详情',
+            'wardrobe': '衣橱',
+            'profile': '个人页',
+            'share': '分享模板'
+        };
+
+        function switchPage(pageId, btnElement) {
+            // 隐藏所有 iframe
+            document.querySelectorAll('iframe').forEach(iframe => {
+                iframe.classList.remove('active');
+            });
+
+            // 显示目标 iframe
+            const targetIframe = document.getElementById('iframe-' + pageId);
+            if (targetIframe) {
+                targetIframe.classList.add('active');
+            }
+
+            // 更新导航按钮状态
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (btnElement) {
+                btnElement.classList.add('active');
+            }
+
+            // 更新底部信息
+            document.getElementById('current-page-name').textContent = pageNames[pageId] || pageId;
+        }
+
+        // 键盘快捷键支持
+        document.addEventListener('keydown', function(e) {
+            const pages = ['welcome', 'home', 'home-empty', 'occasion', 'photo', 'loading', 'results', 'detail', 'wardrobe', 'profile', 'share'];
+            const currentIndex = pages.findIndex(p => {
+                const iframe = document.getElementById('iframe-' + p);
+                return iframe && iframe.classList.contains('active');
+            });
+
+            if (e.key === 'ArrowRight' && currentIndex < pages.length - 1) {
+                const nextPage = pages[currentIndex + 1];
+                const nextBtn = document.querySelectorAll('.nav-btn')[currentIndex + 1];
+                switchPage(nextPage, nextBtn);
+            } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                const prevPage = pages[currentIndex - 1];
+                const prevBtn = document.querySelectorAll('.nav-btn')[currentIndex - 1];
+                switchPage(prevPage, prevBtn);
+            }
+        });
+    </script>
+</body>
+</html>

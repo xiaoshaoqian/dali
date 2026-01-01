@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,7 +38,9 @@
             top: 150px;
         }
 
-        .mute-switch, .volume-up, .volume-down {
+        .mute-switch,
+        .volume-up,
+        .volume-down {
             width: 3px;
             background: #2C2C2E;
             margin-bottom: 12px;
@@ -48,7 +51,8 @@
             border-radius: 0 2px 2px 0;
         }
 
-        .volume-up, .volume-down {
+        .volume-up,
+        .volume-down {
             height: 56px;
             border-radius: 0 2px 2px 0;
         }
@@ -87,8 +91,11 @@
         /* 状态栏 */
         .status-bar {
             height: 59px;
-            background: #fff;
-            position: relative;
+            background: transparent;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
             z-index: 100;
             display: flex;
             justify-content: space-between;
@@ -100,7 +107,7 @@
         .status-left {
             font-size: 15px;
             font-weight: 600;
-            color: #1C1C1E;
+            color: #fff;
             letter-spacing: -0.3px;
         }
 
@@ -111,14 +118,14 @@
         }
 
         .status-icon {
-            color: #1C1C1E;
+            color: #fff;
             font-size: 14px;
         }
 
         /* 头部区域 */
         .header {
-            background: #fff;
-            padding: 0 20px 12px;
+            background: linear-gradient(180deg, #6C63FF 0%, #8578FF 100%);
+            padding: 59px 20px 20px;
         }
 
         .header-top {
@@ -131,13 +138,13 @@
         .page-title {
             font-size: 32px;
             font-weight: 700;
-            color: #1C1C1E;
+            color: #fff;
         }
 
         .filter-button {
             width: 36px;
             height: 36px;
-            background: #F2F2F7;
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -149,7 +156,7 @@
         .search-box {
             width: 100%;
             height: 40px;
-            background: #F2F2F7;
+            background: rgba(255, 255, 255, 0.15);
             border-radius: 10px;
             display: flex;
             align-items: center;
@@ -159,7 +166,7 @@
         }
 
         .search-icon {
-            color: #8E8E93;
+            color: rgba(255, 255, 255, 0.6);
             flex-shrink: 0;
         }
 
@@ -168,12 +175,12 @@
             background: transparent;
             border: none;
             font-size: 16px;
-            color: #1C1C1E;
+            color: #fff;
             outline: none;
         }
 
         .search-input::placeholder {
-            color: #8E8E93;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         /* 场合筛选标签 */
@@ -194,28 +201,37 @@
 
         .filter-tab {
             padding: 8px 16px;
-            background: #F2F2F7;
+            background: rgba(255, 255, 255, 0.15);
             border-radius: 16px;
             font-size: 14px;
             font-weight: 500;
-            color: #3A3A3C;
+            color: #fff;
             white-space: nowrap;
             cursor: pointer;
             transition: all 0.2s;
         }
 
         .filter-tab.active {
-            background: linear-gradient(135deg, #6C63FF 0%, #7B72FF 100%);
-            color: #fff;
-            box-shadow: 0 2px 8px rgba(108, 99, 255, 0.3);
+            background: #fff;
+            color: #6C63FF;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         /* 内容区域 */
         .content {
             padding: 16px 20px 100px;
             overflow-y: auto;
-            height: calc(100% - 59px - 200px - 83px);
+            height: calc(100% - 190px - 83px);
+            /* approx header height adjustment */
             -webkit-overflow-scrolling: touch;
+            background: #F2F2F7;
+            /* Ensure background is light for content */
+            border-radius: 24px 24px 0 0;
+            /* Card look */
+            margin-top: -20px;
+            /* Overlap slightly */
+            position: relative;
+            z-index: 10;
         }
 
         .content::-webkit-scrollbar {
@@ -406,8 +422,59 @@
             background: #1C1C1E;
             border-radius: 3px;
         }
+
+        /* 空状态样式 */
+        .empty-state {
+            background: #fff;
+            border-radius: 16px;
+            padding: 32px 24px;
+            text-align: center;
+            border: 2px dashed #E5E5EA;
+            margin-top: 20px;
+        }
+
+        .empty-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #F0EFFF 0%, #E8E6FF 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .empty-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1C1C1E;
+            margin-bottom: 8px;
+        }
+
+        .empty-desc {
+            font-size: 14px;
+            color: #8E8E93;
+            line-height: 1.4;
+            margin-bottom: 16px;
+        }
+
+        .empty-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #6C63FF 0%, #7B72FF 100%);
+            color: #fff;
+            border: none;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
     </style>
 </head>
+
 <body>
     <div class="device-frame">
         <div class="side-buttons">
@@ -426,22 +493,28 @@
                 <div class="status-right">
                     <!-- 信号强度 -->
                     <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
-                        <rect x="0" y="10" width="3" height="4" rx="0.5" fill="#1C1C1E"/>
-                        <rect x="5" y="7" width="3" height="7" rx="0.5" fill="#1C1C1E"/>
-                        <rect x="10" y="4" width="3" height="10" rx="0.5" fill="#1C1C1E"/>
-                        <rect x="15" y="0" width="3" height="14" rx="0.5" fill="#1C1C1E"/>
+                        <rect x="0" y="10" width="3" height="4" rx="0.5" fill="#fff" />
+                        <rect x="5" y="7" width="3" height="7" rx="0.5" fill="#fff" />
+                        <rect x="10" y="4" width="3" height="10" rx="0.5" fill="#fff" />
+                        <rect x="15" y="0" width="3" height="14" rx="0.5" fill="#fff" />
                     </svg>
                     <!-- WiFi -->
                     <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-                        <path d="M8 9.5C8.83 9.5 9.5 10.17 9.5 11S8.83 12.5 8 12.5 6.5 11.83 6.5 11 7.17 9.5 8 9.5Z" fill="#1C1C1E"/>
-                        <path d="M8 6.5C9.93 6.5 11.68 7.29 12.95 8.55L11.54 9.96C10.59 9.01 9.35 8.5 8 8.5S5.41 9.01 4.46 9.96L3.05 8.55C4.32 7.29 6.07 6.5 8 6.5Z" fill="#1C1C1E"/>
-                        <path d="M8 3C11 3 13.71 4.18 15.66 6.13L14.24 7.55C12.66 5.96 10.44 5 8 5S3.34 5.96 1.76 7.55L0.34 6.13C2.29 4.18 5 3 8 3Z" fill="#1C1C1E"/>
+                        <path d="M8 9.5C8.83 9.5 9.5 10.17 9.5 11S8.83 12.5 8 12.5 6.5 11.83 6.5 11 7.17 9.5 8 9.5Z"
+                            fill="#fff" />
+                        <path
+                            d="M8 6.5C9.93 6.5 11.68 7.29 12.95 8.55L11.54 9.96C10.59 9.01 9.35 8.5 8 8.5S5.41 9.01 4.46 9.96L3.05 8.55C4.32 7.29 6.07 6.5 8 6.5Z"
+                            fill="#fff" />
+                        <path
+                            d="M8 3C11 3 13.71 4.18 15.66 6.13L14.24 7.55C12.66 5.96 10.44 5 8 5S3.34 5.96 1.76 7.55L0.34 6.13C2.29 4.18 5 3 8 3Z"
+                            fill="#fff" />
                     </svg>
                     <!-- 电池 -->
                     <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
-                        <rect x="0.5" y="0.5" width="21" height="11" rx="2.5" stroke="#1C1C1E" stroke-opacity="0.35"/>
-                        <rect x="2" y="2" width="18" height="8" rx="1.5" fill="#1C1C1E"/>
-                        <path d="M23 4V8C23.83 7.67 24.5 6.91 24.5 6C24.5 5.09 23.83 4.33 23 4Z" fill="#1C1C1E" fill-opacity="0.4"/>
+                        <rect x="0.5" y="0.5" width="21" height="11" rx="2.5" stroke="#fff" stroke-opacity="0.35" />
+                        <rect x="2" y="2" width="18" height="8" rx="1.5" fill="#fff" />
+                        <path d="M23 4V8C23.83 7.67 24.5 6.91 24.5 6C24.5 5.09 23.83 4.33 23 4Z" fill="#fff"
+                            fill-opacity="0.4" />
                     </svg>
                 </div>
             </div>
@@ -451,19 +524,20 @@
                 <div class="header-top">
                     <h1 class="page-title">搭配</h1>
                     <div class="filter-button">
-                        <svg width="20" height="20" fill="none" stroke="#1C1C1E" stroke-width="2" viewBox="0 0 24 24">
-                            <line x1="4" y1="6" x2="20" y2="6"/>
-                            <line x1="4" y1="12" x2="20" y2="12"/>
-                            <line x1="4" y1="18" x2="20" y2="18"/>
+                        <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                            <line x1="4" y1="6" x2="20" y2="6" />
+                            <line x1="4" y1="12" x2="20" y2="12" />
+                            <line x1="4" y1="18" x2="20" y2="18" />
                         </svg>
                     </div>
                 </div>
 
                 <!-- 搜索框 -->
                 <div class="search-box">
-                    <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="M21 21l-4.35-4.35"/>
+                    <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="M21 21l-4.35-4.35" />
                     </svg>
                     <input type="text" class="search-input" placeholder="搜索搭配方案...">
                 </div>
@@ -488,8 +562,9 @@
                     <span class="count-text">共 28 套搭配方案</span>
                     <div class="sort-button">
                         <span>最新</span>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M6 9l6 6 6-6"/>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M6 9l6 6 6-6" />
                         </svg>
                     </div>
                 </div>
@@ -501,7 +576,7 @@
                             <span class="thumbnail-text">职场优雅风</span>
                             <div class="saved-badge">
                                 <svg width="14" height="14" fill="#FF6B9D" viewBox="0 0 24 24">
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                                 </svg>
                             </div>
                         </div>
@@ -538,7 +613,7 @@
                             <span class="thumbnail-text">气质约会风</span>
                             <div class="saved-badge">
                                 <svg width="14" height="14" fill="#FF6B9D" viewBox="0 0 24 24">
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                                 </svg>
                             </div>
                         </div>
@@ -591,7 +666,7 @@
                             <span class="thumbnail-text">运动活力风</span>
                             <div class="saved-badge">
                                 <svg width="14" height="14" fill="#FF6B9D" viewBox="0 0 24 24">
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                                 </svg>
                             </div>
                         </div>
@@ -614,7 +689,7 @@
                 <a href="#" class="tab-item">
                     <div class="tab-icon">
                         <svg class="icon" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
                         </svg>
                     </div>
                     <span class="tab-label">首页</span>
@@ -622,10 +697,10 @@
                 <a href="#" class="tab-item active">
                     <div class="tab-icon">
                         <svg class="icon" fill="#6C63FF" viewBox="0 0 24 24">
-                            <rect x="3" y="3" width="7" height="18" rx="1"/>
-                            <rect x="14" y="3" width="7" height="18" rx="1"/>
-                            <line x1="6" y1="12" x2="7" y2="12" stroke="#fff" stroke-width="2"/>
-                            <line x1="17" y1="12" x2="18" y2="12" stroke="#fff" stroke-width="2"/>
+                            <rect x="3" y="3" width="7" height="18" rx="1" />
+                            <rect x="14" y="3" width="7" height="18" rx="1" />
+                            <line x1="6" y1="12" x2="7" y2="12" stroke="#fff" stroke-width="2" />
+                            <line x1="17" y1="12" x2="18" y2="12" stroke="#fff" stroke-width="2" />
                         </svg>
                     </div>
                     <span class="tab-label">搭配</span>
@@ -633,8 +708,8 @@
                 <a href="#" class="tab-item">
                     <div class="tab-icon">
                         <svg class="icon" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                            <circle cx="12" cy="7" r="4"/>
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
                         </svg>
                     </div>
                     <span class="tab-label">我的</span>
@@ -648,11 +723,12 @@
     <script>
         // 筛选标签切换
         document.querySelectorAll('.filter-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
+            tab.addEventListener('click', function () {
                 document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
             });
         });
     </script>
 </body>
+
 </html>

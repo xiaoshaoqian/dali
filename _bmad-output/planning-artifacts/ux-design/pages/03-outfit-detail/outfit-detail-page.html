@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,7 +38,9 @@
             top: 150px;
         }
 
-        .mute-switch, .volume-up, .volume-down {
+        .mute-switch,
+        .volume-up,
+        .volume-down {
             width: 3px;
             background: #2C2C2E;
             margin-bottom: 12px;
@@ -48,7 +51,8 @@
             border-radius: 0 2px 2px 0;
         }
 
-        .volume-up, .volume-down {
+        .volume-up,
+        .volume-down {
             height: 56px;
             border-radius: 0 2px 2px 0;
         }
@@ -99,7 +103,8 @@
             border-bottom: 0.33px solid rgba(0, 0, 0, 0.1);
         }
 
-        .back-button, .more-button {
+        .back-button,
+        .more-button {
             width: 32px;
             height: 32px;
             display: flex;
@@ -420,6 +425,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="device-frame">
         <div class="side-buttons">
@@ -436,15 +442,15 @@
             <div class="top-nav">
                 <div class="back-button">
                     <svg width="24" height="24" fill="none" stroke="#1C1C1E" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path d="M15 18l-6-6 6-6"/>
+                        <path d="M15 18l-6-6 6-6" />
                     </svg>
                 </div>
                 <div class="nav-title">搭配详情</div>
                 <div class="more-button">
                     <svg width="24" height="24" fill="#1C1C1E" viewBox="0 0 24 24">
-                        <circle cx="12" cy="5" r="2"/>
-                        <circle cx="12" cy="12" r="2"/>
-                        <circle cx="12" cy="19" r="2"/>
+                        <circle cx="12" cy="5" r="2" />
+                        <circle cx="12" cy="12" r="2" />
+                        <circle cx="12" cy="19" r="2" />
                     </svg>
                 </div>
             </div>
@@ -463,7 +469,8 @@
                         </div>
                         <div class="like-count">
                             <svg width="16" height="16" fill="#FF6B9D" viewBox="0 0 24 24">
-                                <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                             </svg>
                             128
                         </div>
@@ -481,7 +488,7 @@
                     <h3 class="section-title">
                         <span class="section-icon">
                             <svg width="14" height="14" fill="#fff" viewBox="0 0 24 24">
-                                <circle cx="12" cy="12" r="10"/>
+                                <circle cx="12" cy="12" r="10" />
                             </svg>
                         </span>
                         配色理论
@@ -504,21 +511,59 @@
                     <!-- 色轮可视化 -->
                     <div class="color-wheel">
                         <svg class="wheel-svg" viewBox="0 0 200 200">
-                            <!-- 色轮背景 -->
-                            <circle cx="100" cy="100" r="80" fill="none" stroke="#E5E5EA" stroke-width="20"/>
+                            <!-- 外圈光晕 -->
+                            <circle cx="100" cy="100" r="90" fill="none" stroke="#6C63FF" stroke-width="0.5"
+                                stroke-opacity="0.2" />
+                            <circle cx="100" cy="100" r="85" fill="none" stroke="#6C63FF" stroke-width="0.5"
+                                stroke-opacity="0.1" />
 
-                            <!-- 高亮区域 -->
-                            <path d="M 100 100 L 180 100 A 80 80 0 0 1 100 180 Z" fill="#1C1C1E" opacity="0.9"/>
-                            <path d="M 100 100 L 100 20 A 80 80 0 0 1 180 100 Z" fill="#FFFFFF" opacity="0.9"/>
+                            <!-- 12色相环 -->
+                            <g transform="rotate(-15, 100, 100)">
+                                <!-- 红色 -->
+                                <path d="M100 100 L100 20 A80 80 0 0 1 140 30.7 Z" fill="#FF3B30" />
+                                <!-- 橙色 -->
+                                <path d="M100 100 L140 30.7 A80 80 0 0 1 169.3 60 Z" fill="#FF9500" />
+                                <!-- 黄色 -->
+                                <path d="M100 100 L169.3 60 A80 80 0 0 1 180 100 Z" fill="#FFCC00" />
+                                <!-- 黄绿 -->
+                                <path d="M100 100 L180 100 A80 80 0 0 1 169.3 140 Z" fill="#AF52DE" opacity="0.1" />
+                                <!-- Placeholder color for visual balance -->
+                                <path d="M100 100 L180 100 A80 80 0 0 1 169.3 140 Z" fill="#88D600" />
+                                <!-- Chartreuse -->
+                                <!-- 绿色 -->
+                                <path d="M100 100 L169.3 140 A80 80 0 0 1 140 169.3 Z" fill="#34C759" />
+                                <!-- 青绿 -->
+                                <path d="M100 100 L140 169.3 A80 80 0 0 1 100 180 Z" fill="#00AA88" />
+                                <!-- 青色 -->
+                                <path d="M100 100 L100 180 A80 80 0 0 1 60 169.3 Z" fill="#5AC8FA" />
+                                <!-- 蓝色 -->
+                                <path d="M100 100 L60 169.3 A80 80 0 0 1 30.7 140 Z" fill="#007AFF" />
+                                <!-- 蓝紫 -->
+                                <path d="M100 100 L30.7 140 A80 80 0 0 1 20 100 Z" fill="#5856D6" />
+                                <!-- 紫色 -->
+                                <path d="M100 100 L20 100 A80 80 0 0 1 30.7 60 Z" fill="#AF52DE" />
+                                <!-- 紫红 -->
+                                <path d="M100 100 L30.7 60 A80 80 0 0 1 60 30.7 Z" fill="#FF2D55" />
+                                <!-- 红紫 -->
+                                <path d="M100 100 L60 30.7 A80 80 0 0 1 100 20 Z" fill="#FF375F" />
+                            </g>
 
-                            <!-- 中心圆 -->
-                            <circle cx="100" cy="100" r="40" fill="#F9F9F9" stroke="#6C63FF" stroke-width="2"/>
+                            <!-- 遮罩创造圆环效果 -->
+                            <circle cx="100" cy="100" r="50" fill="#FFFFFF" />
 
-                            <!-- 标注 -->
-                            <circle cx="140" cy="60" r="6" fill="#6C63FF"/>
-                            <circle cx="140" cy="140" r="6" fill="#6C63FF"/>
-                            <line x1="100" y1="100" x2="140" y2="60" stroke="#6C63FF" stroke-width="2" stroke-dasharray="3,3"/>
-                            <line x1="100" y1="100" x2="140" y2="140" stroke="#6C63FF" stroke-width="2" stroke-dasharray="3,3"/>
+                            <!-- 中性色装饰 -->
+                            <circle cx="100" cy="100" r="48" fill="#F9F9F9" stroke="#E5E5EA" stroke-width="1" />
+
+                            <!-- 连接线与高亮点 -->
+                            <!-- 黑白对比连接线 -->
+                            <line x1="100" y1="100" x2="100" y2="40" stroke="#1C1C1E" stroke-width="2"
+                                stroke-linecap="round" />
+                            <line x1="100" y1="100" x2="100" y2="160" stroke="#1C1C1E" stroke-width="2"
+                                stroke-dasharray="4,4" />
+
+                            <!-- 选重点 -->
+                            <circle cx="100" cy="40" r="8" fill="#FFFFFF" stroke="#1C1C1E" stroke-width="3" />
+                            <circle cx="100" cy="160" r="6" fill="#1C1C1E" />
                         </svg>
                     </div>
 
@@ -533,8 +578,8 @@
                     <h3 class="section-title">
                         <span class="section-icon">
                             <svg width="14" height="14" fill="#fff" viewBox="0 0 24 24">
-                                <path d="M9 11l3 3L22 4"/>
-                                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                                <path d="M9 11l3 3L22 4" />
+                                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
                             </svg>
                         </span>
                         搭配依据
@@ -544,7 +589,7 @@
                         <div class="basis-card">
                             <div class="basis-icon">
                                 <svg width="18" height="18" fill="#6C63FF" viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10"/>
+                                    <circle cx="12" cy="12" r="10" />
                                 </svg>
                             </div>
                             <div class="basis-title">配色原理</div>
@@ -554,7 +599,8 @@
                         <div class="basis-card">
                             <div class="basis-icon">
                                 <svg width="18" height="18" fill="#6C63FF" viewBox="0 0 24 24">
-                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                    <path
+                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                 </svg>
                             </div>
                             <div class="basis-title">风格分析</div>
@@ -564,7 +610,7 @@
                         <div class="basis-card">
                             <div class="basis-icon">
                                 <svg width="18" height="18" fill="#6C63FF" viewBox="0 0 24 24">
-                                    <path d="M21 10H3M16 6H3M19 14H3M18 18H3"/>
+                                    <path d="M21 10H3M16 6H3M19 14H3M18 18H3" />
                                 </svg>
                             </div>
                             <div class="basis-title">场合适配</div>
@@ -574,8 +620,8 @@
                         <div class="basis-card">
                             <div class="basis-icon">
                                 <svg width="18" height="18" fill="#6C63FF" viewBox="0 0 24 24">
-                                    <path d="M12 2a7 7 0 017 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 017-7z"/>
-                                    <circle cx="12" cy="9" r="3"/>
+                                    <path d="M12 2a7 7 0 017 7c0 5.25-7 13-7 13S5 14.25 5 9a7 7 0 017-7z" />
+                                    <circle cx="12" cy="9" r="3" />
                                 </svg>
                             </div>
                             <div class="basis-title">身材优化</div>
@@ -587,16 +633,18 @@
                 <!-- 操作按钮 -->
                 <div class="actions-section">
                     <button class="action-btn save-btn">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                         </svg>
                         保存到衣橱
                     </button>
                     <button class="action-btn share-btn">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
-                            <path d="M16 6l-4-4-4 4"/>
-                            <path d="M12 2v13"/>
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+                            <path d="M16 6l-4-4-4 4" />
+                            <path d="M12 2v13" />
                         </svg>
                         分享
                     </button>
@@ -607,4 +655,5 @@
         </div>
     </div>
 </body>
+
 </html>
