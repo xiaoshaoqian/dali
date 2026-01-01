@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3]
+stepsCompleted: [1, 2, 3, 4]
 inputDocuments:
   - product-brief-dali-2025-12-27.md
   - prd.md
@@ -391,4 +391,312 @@ Based on PRD functional requirements, these must be added during implementation:
 
 ---
 
-_Next: Core Architectural Decisions..._
+## Core Architectural Decisions
+
+_Decisions made collaboratively with Xiaoshaoqian on 2026-01-01._
+
+### Decision Priority Analysis
+
+**Critical Decisions (Block Implementation):**
+- Backend ORM selection (SQLAlchemy 2.0)
+- Mobile state management (Zustand)
+- Authentication strategy (Phone SMS + WeChat OAuth)
+- Cloud storage provider (Alibaba Cloud OSS)
+
+**Important Decisions (Shape Architecture):**
+- Data synchronization strategy (Last-Write-Wins)
+- API design pattern (RESTful)
+- Build strategy (EAS + Local dual support)
+- Animation library (Reanimated 3)
+
+**Deferred Decisions (Post-MVP):**
+- CDN optimization strategy
+- Advanced caching layers
+- Multi-region deployment
+- A/B testing infrastructure
+
+---
+
+### Data Architecture
+
+| Decision | Choice | Version | Rationale |
+|----------|--------|---------|-----------|
+| **Backend ORM** | SQLAlchemy | 2.0+ | Mature, async support, type-safe, FastAPI ecosystem first choice |
+| **Mobile Local Storage** | Expo SQLite | Latest | PRD specified, Expo native integration, meets <200ms query performance |
+| **Data Sync Strategy** | Last-Write-Wins + Soft Delete | - | Simple and effective for outfit data with low conflict rate, can iterate later |
+| **Cloud Storage** | Alibaba Cloud OSS | - | Same platform as Vision API, internal network interop, unified billing |
+
+**Data Model Overview:**
+
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│      User       │────▶│   Preference    │     │     Outfit      │
+│  (id, phone,    │     │ (body_type,     │     │ (id, user_id,   │
+│   wechat_id)    │     │  style, etc.)   │     │  occasion, etc.)│
+└─────────────────┘     └─────────────────┘     └────────┬────────┘
+                                                         │
+                              ┌──────────────────────────┼──────────────────────────┐
+                              ▼                          ▼                          ▼
+                    ┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
+                    │   OutfitItem    │       │     Theory      │       │   ShareRecord   │
+                    │ (garment info)  │       │ (color, style)  │       │ (platform, time)│
+                    └─────────────────┘       └─────────────────┘       └─────────────────┘
+```
+
+**Sync Architecture:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Mobile App                                │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐          │
+│  │   Zustand   │◀──▶│   SQLite    │◀──▶│ Sync Queue  │          │
+│  │   (State)   │    │  (Offline)  │    │  (Pending)  │          │
+│  └─────────────┘    └─────────────┘    └──────┬──────┘          │
+└─────────────────────────────────────────────────┼────────────────┘
+                                                  │ HTTPS
+                                                  ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        Backend API                               │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐          │
+│  │   FastAPI   │◀──▶│ SQLAlchemy  │◀──▶│ PostgreSQL  │          │
+│  │  (Routes)   │    │   (ORM)     │    │  (Cloud)    │          │
+│  └─────────────┘    └─────────────┘    └─────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Authentication & Security
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Primary Auth** | Phone + SMS Verification | PIPL compliant, phone number as unique identifier more reliable |
+| **Secondary Auth** | WeChat OAuth | Quick login for WeChat users, common in China market |
+| **Token Strategy** | JWT (Access + Refresh) | Access token 15min, Refresh token 30 days, security and UX balance |
+| **Token Storage** | expo-secure-store | iOS Keychain integration, encrypted storage |
+| **Transport Security** | HTTPS/TLS 1.2+ | All API communication encrypted (NFR-S1) |
+| **Storage Encryption** | OSS SSE (Server-Side) | Alibaba Cloud built-in AES-256 encryption (NFR-S2) |
+| **Sensitive Data** | expo-secure-store | Personal info (body type, preferences) encrypted locally (NFR-S3) |
+
+**Authentication Flow:**
+
+```
+┌─────────┐     ┌─────────┐     ┌─────────┐     ┌─────────┐
+│  User   │     │   App   │     │ Backend │     │ SMS/WX  │
+└────┬────┘     └────┬────┘     └────┬────┘     └────┬────┘
+     │               │               │               │
+     │  Enter Phone  │               │               │
+     │──────────────▶│  Request OTP  │               │
+     │               │──────────────▶│  Send SMS     │
+     │               │               │──────────────▶│
+     │               │               │               │
+     │  Enter OTP    │               │               │
+     │──────────────▶│  Verify OTP   │               │
+     │               │──────────────▶│               │
+     │               │  Access+Refresh Token         │
+     │               │◀──────────────│               │
+     │               │               │               │
+     │               │  Store in SecureStore         │
+     │               │───────────────────────────────│
+```
+
+---
+
+### API & Communication Patterns
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **API Style** | RESTful | Medium project scale, simple and intuitive, FastAPI native support |
+| **API Documentation** | FastAPI Auto-generated | Swagger UI + ReDoc out of box, code is documentation |
+| **HTTP Client** | Axios | Mature, interceptors for token refresh, wide ecosystem |
+| **Server State** | TanStack React Query | Caching, retry, offline support, background sync |
+| **Error Format** | Standardized JSON | `{code, message, details}` structure across all endpoints |
+| **Retry Strategy** | Exponential Backoff | 3 attempts, 1s→2s→4s delays (NFR-R10) |
+
+**API Endpoint Structure:**
+
+```
+/api/v1/
+├── /auth
+│   ├── POST /sms/send          # Send SMS verification code
+│   ├── POST /sms/verify        # Verify SMS and get tokens
+│   ├── POST /wechat/login      # WeChat OAuth login
+│   ├── POST /refresh           # Refresh access token
+│   └── POST /logout            # Invalidate tokens
+│
+├── /users
+│   ├── GET  /me                # Get current user profile
+│   ├── PUT  /me                # Update profile
+│   └── PUT  /me/preferences    # Update style preferences
+│
+├── /outfits
+│   ├── POST /generate          # Generate AI outfit recommendations
+│   ├── GET  /                  # List user's outfit history
+│   ├── GET  /:id               # Get outfit details
+│   ├── POST /:id/like          # Like/save an outfit
+│   └── DELETE /:id             # Delete from history
+│
+├── /wardrobe
+│   ├── POST /items             # Add clothing item
+│   ├── GET  /items             # List wardrobe items
+│   └── DELETE /items/:id       # Remove item
+│
+├── /share
+│   ├── POST /generate          # Generate share image
+│   └── POST /track             # Track share event
+│
+└── /context
+    ├── GET  /weather           # Get weather by location
+    └── GET  /occasions         # Get occasion options
+```
+
+---
+
+### Frontend Architecture
+
+| Decision | Choice | Version | Rationale |
+|----------|--------|---------|-----------|
+| **State Management** | Zustand | 4.x | Lightweight ~2KB, simple API, works well with React Query |
+| **Server State** | TanStack React Query | 5.x | Caching, background sync, offline support |
+| **Styling** | StyleSheet (Native) | - | Best performance, no extra dependencies, matches UX design system |
+| **Animation** | React Native Reanimated | 3.x | UI thread execution, complex animation support (card flip, theory viz) |
+| **SVG Support** | react-native-svg | Latest | Color theory wheel visualization (FR28-34) |
+
+**Component Architecture:**
+
+```
+src/
+├── app/                        # Expo Router file-based routing
+│   ├── (tabs)/                 # Tab navigation group
+│   │   ├── index.tsx           # Home screen
+│   │   ├── history.tsx         # Outfit history
+│   │   └── profile.tsx         # User profile
+│   ├── outfit/[id].tsx         # Outfit detail screen
+│   ├── onboarding/             # Onboarding flow
+│   └── _layout.tsx             # Root layout
+│
+├── components/
+│   ├── ui/                     # Base UI components
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   └── SkeletonLoader.tsx
+│   ├── outfit/                 # Outfit-specific components
+│   │   ├── OutfitCard.tsx
+│   │   ├── TheoryVisualization.tsx
+│   │   └── StyleTagChip.tsx
+│   └── share/                  # Share-related components
+│       └── ShareTemplate.tsx
+│
+├── services/                   # API and external services
+│   ├── api.ts                  # Axios instance configuration
+│   ├── auth.ts                 # Authentication service
+│   ├── outfit.ts               # Outfit API calls
+│   └── sync.ts                 # Offline sync service
+│
+├── stores/                     # Zustand stores
+│   ├── authStore.ts            # Auth state
+│   ├── userStore.ts            # User preferences
+│   └── offlineStore.ts         # Offline queue
+│
+├── hooks/                      # Custom React hooks
+│   ├── useAuth.ts
+│   ├── useOutfits.ts
+│   └── useOfflineSync.ts
+│
+├── utils/                      # Utility functions
+│   ├── storage.ts              # SQLite helpers
+│   ├── encryption.ts           # Secure store helpers
+│   └── validation.ts           # Input validation
+│
+└── constants/                  # App constants
+    ├── colors.ts               # UX color system (#6C63FF, #FF6B9D)
+    ├── typography.ts           # Font styles
+    └── api.ts                  # API endpoints
+```
+
+---
+
+### Infrastructure & Deployment
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| **Mobile Build** | EAS Build + Local Build | Flexibility: local for dev iteration, EAS for releases |
+| **Backend Hosting** | Self-managed Cloud Server (ECS/Lightweight) | Cost-effective, full control, sufficient for MVP |
+| **Database Hosting** | Self-hosted PostgreSQL (Docker) | Same server as backend, saves cloud DB costs |
+| **CI/CD Pipeline** | GitHub Actions | Free, good Expo/EAS integration, rich community resources |
+| **Error Tracking** | Sentry | Free tier sufficient for MVP, official Expo support |
+| **Logging** | Self-hosted (Docker) | Simple file-based or Loki stack, can upgrade later |
+| **Scaling Strategy** | Vertical first, then migrate | MVP validation first, optimize when needed |
+
+**Deployment Architecture:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                     Alibaba Cloud / Self-hosted                  │
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                    Cloud Server (ECS)                    │    │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐      │    │
+│  │  │   Nginx     │  │   FastAPI   │  │ PostgreSQL  │      │    │
+│  │  │  (Reverse   │─▶│  (Docker)   │─▶│  (Docker)   │      │    │
+│  │  │   Proxy)    │  │             │  │             │      │    │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘      │    │
+│  └─────────────────────────────────────────────────────────┘    │
+│                              │                                   │
+│                              ▼                                   │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
+│  │  Alibaba OSS   │  │  Alibaba Vision │  │ Tongyi Qianwen  │  │
+│  │  (Images)      │  │  (Recognition)  │  │  (AI Text)      │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────┐
+│                        External Services                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │   Sentry    │  │   GitHub    │  │  App Store  │              │
+│  │  (Errors)   │  │  Actions    │  │  Connect    │              │
+│  └─────────────┘  └─────────────┘  └─────────────┘              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Estimated MVP Cloud Costs (Annual):**
+
+| Service | Estimated Cost |
+|---------|---------------|
+| Cloud Server (2C4G) | ¥199-500/year |
+| Alibaba OSS (50GB) | ~¥100/year |
+| Alibaba Vision API | Free tier + pay-per-use |
+| Tongyi Qianwen API | Pay-per-token |
+| Domain + SSL | ~¥100/year |
+| **Total (excl. AI calls)** | **~¥500-800/year** |
+
+---
+
+### Decision Impact Analysis
+
+**Implementation Sequence:**
+
+1. **Project Setup** - Expo init, folder structure, base dependencies
+2. **Authentication** - Phone/WeChat login, token management
+3. **Core Data Layer** - SQLite setup, API client, sync foundation
+4. **Camera & Upload** - Photo capture, OSS upload with signed URLs
+5. **AI Integration** - Vision API + LLM for recommendations
+6. **UI Components** - OutfitCard, TheoryVisualization per UX spec
+7. **Offline Support** - Full offline history browsing
+8. **Sharing** - Template generation, social platform integration
+
+**Cross-Component Dependencies:**
+
+```
+Authentication ──────┬──────▶ All API Calls
+                     │
+SQLite + Sync ───────┼──────▶ History, Wardrobe, Preferences
+                     │
+Zustand Stores ──────┼──────▶ All UI Components
+                     │
+React Query ─────────┴──────▶ Server State Management
+```
+
+---
+
+_Next: Implementation Patterns..._
