@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -38,7 +39,9 @@
             top: 150px;
         }
 
-        .mute-switch, .volume-up, .volume-down {
+        .mute-switch,
+        .volume-up,
+        .volume-down {
             width: 3px;
             background: #2C2C2E;
             margin-bottom: 12px;
@@ -49,7 +52,8 @@
             border-radius: 0 2px 2px 0;
         }
 
-        .volume-up, .volume-down {
+        .volume-up,
+        .volume-down {
             height: 56px;
             border-radius: 0 2px 2px 0;
         }
@@ -182,12 +186,17 @@
 
         /* 搭配卡片容器 */
         .cards-container {
+            flex: 1;
+            /* Take remaining height */
             overflow-x: auto;
             overflow-y: hidden;
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
             padding: 0 20px 20px;
+            display: flex;
+            /* Ensure height stretches */
+            align-items: stretch;
         }
 
         .cards-container::-webkit-scrollbar {
@@ -197,6 +206,7 @@
         .cards-wrapper {
             display: flex;
             gap: 16px;
+            height: 100%;
         }
 
         /* 搭配卡片 */
@@ -206,8 +216,38 @@
             background: #fff;
             border-radius: 24px;
             padding: 20px;
-            scroll-snap-align: start;
+            scroll-snap-align: center;
+            /* Center snap feels better for full height */
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+            animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Stagger the animation for each card */
+        .outfit-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .outfit-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .outfit-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .card-header {
@@ -215,6 +255,7 @@
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 16px;
+            flex-shrink: 0;
         }
 
         .card-title {
@@ -263,47 +304,89 @@
             gap: 4px;
         }
 
-        /* 服装组合 */
-        .outfit-items {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .item {
-            flex: 1;
-            aspect-ratio: 3/4;
-            background: linear-gradient(135deg, #F2F2F7 0%, #E5E5EA 100%);
+        /* 主视觉区 (New) */
+        .main-look {
+            width: 100%;
+            height: 320px;
+            /* Taller main image */
+            background: #F2F2F7;
             border-radius: 16px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
-            color: #8E8E93;
+            cursor: pointer;
+            /* Add click affordance */
+        }
+
+        /* Placeholder styling for main look */
+        .main-look-placeholder {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Gradient to simulate a look */
+            background: linear-gradient(to bottom, #f0f0f0 0%, #e0e0e0 100%);
+        }
+
+        .view-detail-hint {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .main-look:hover .view-detail-hint {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        /* 搭配单品 (Smaller) */
+        .items-label {
+            font-size: 13px;
+            color: #8E8E93;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .outfit-items {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .item {
+            width: 80px;
+            height: 80px;
+            background: #F9F9F9;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #8E8E93;
             text-align: center;
-            padding: 8px;
-            position: relative;
-            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            flex-shrink: 0;
         }
 
-        .item.top {
-            background: linear-gradient(135deg, #FFE5E5 0%, #FFD6D6 100%);
-            color: #FF6B9D;
-        }
-
-        .item.bottom {
-            background: linear-gradient(135deg, #E5F0FF 0%, #D6E7FF 100%);
-            color: #6C63FF;
-        }
-
-        .item.accessory {
-            background: linear-gradient(135deg, #FFF5E5 0%, #FFE5CC 100%);
-            color: #FF9500;
-        }
-
-        /* 操作按钮 */
+        /* 操作按钮区 */
         .card-actions {
+            margin-top: auto;
+            /* Push to bottom */
             display: flex;
             gap: 12px;
         }
@@ -323,14 +406,9 @@
             transition: transform 0.2s;
         }
 
-        .action-button:active {
-            transform: scale(0.96);
-        }
-
         .like-button {
             background: #F2F2F7;
             color: #1C1C1E;
-            position: relative;
         }
 
         .like-button.liked {
@@ -344,24 +422,16 @@
             box-shadow: 0 4px 12px rgba(108, 99, 255, 0.3);
         }
 
-        .view-detail-button {
-            width: 100%;
-            height: 44px;
-            background: transparent;
-            color: #6C63FF;
-            border: 2px solid #6C63FF;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 12px;
-            transition: all 0.2s;
+        .action-button:active {
+            transform: scale(0.96);
         }
 
-        .view-detail-button:active {
-            transform: scale(0.98);
-            background: #F0EFFF;
+        /* Hide view detail button as actions are sufficient or use icon */
+        .view-detail-button {
+            display: none;
         }
+
+        /* Simplified for cleaner look per request */
 
         /* Home Indicator */
         .home-indicator {
@@ -376,6 +446,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="device-frame">
         <div class="side-buttons">
@@ -392,15 +463,15 @@
             <div class="top-nav">
                 <div class="back-button">
                     <svg width="24" height="24" fill="none" stroke="#1C1C1E" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path d="M15 18l-6-6 6-6"/>
+                        <path d="M15 18l-6-6 6-6" />
                     </svg>
                 </div>
                 <div class="nav-title">搭配方案</div>
                 <div class="share-button">
                     <svg width="22" height="22" fill="none" stroke="#1C1C1E" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
-                        <path d="M16 6l-4-4-4 4"/>
-                        <path d="M12 2v13"/>
+                        <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+                        <path d="M16 6l-4-4-4 4" />
+                        <path d="M12 2v13" />
                     </svg>
                 </div>
             </div>
@@ -409,7 +480,7 @@
             <div class="success-banner">
                 <div class="success-icon">
                     <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path d="M20 6L9 17l-5-5"/>
+                        <path d="M20 6L9 17l-5-5" />
                     </svg>
                 </div>
                 <div class="success-text">
@@ -440,34 +511,56 @@
                             </div>
                             <div class="ai-badge">
                                 <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                                 </svg>
                                 AI 推荐
                             </div>
                         </div>
 
+                        <!-- 主视觉图 -->
+                        <div class="main-look" onclick="parent.switchPage('detail')">
+                            <!-- 模拟AI生成的模特图，使用渐变代表 -->
+                            <div class="main-look-placeholder"
+                                style="background: linear-gradient(180deg, #E0E7FF 0%, #F5F3FF 100%); display: flex; align-items: center; justify-content: center; color: #6C63FF; font-weight: 500;">
+                                <div style="text-align: center;">
+                                    <span style="font-size: 40px; display: block; margin-bottom: 10px;">👩🏻‍💼</span>
+                                    AI 模特由<br>Dali 生成
+                                </div>
+                            </div>
+                            <!-- 仅保留这一个提示 -->
+                            <div class="view-detail-hint">
+                                查看详情
+                                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path d="M9 18l6-6-6-6" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="items-label">包含单品</div>
                         <div class="outfit-items">
-                            <div class="item top">白色<br>衬衫</div>
-                            <div class="item bottom">黑色<br>阔腿裤</div>
-                            <div class="item accessory">棕色<br>手提包</div>
+                            <div class="item">白色<br>真丝衬衫</div>
+                            <div class="item">黑色<br>西装裤</div>
+                            <div class="item">经典<br>手提包</div>
                         </div>
 
                         <div class="card-actions">
                             <button class="action-button like-button">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                                 </svg>
                                 点赞
                             </button>
                             <button class="action-button save-button">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                                 </svg>
                                 收藏
                             </button>
                         </div>
-
-                        <button class="view-detail-button">查看搭配详情</button>
                     </div>
 
                     <!-- 方案 2 -->
@@ -477,39 +570,54 @@
                                 <h3 class="outfit-name">休闲时尚风</h3>
                                 <div class="outfit-tags">
                                     <span class="tag style">时尚</span>
-                                    <span class="tag occasion">休闲</span>
+                                    <span class="tag occasion">周末</span>
                                 </div>
                             </div>
-                            <div class="ai-badge">
-                                <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            <div class="ai-badge">创意</div>
+                        </div>
+
+                        <!-- 主视觉图 -->
+                        <div class="main-look" onclick="parent.switchPage('detail')">
+                            <div class="main-look-placeholder"
+                                style="background: linear-gradient(180deg, #FFF7ED 0%, #FFEDD5 100%); display: flex; align-items: center; justify-content: center; color: #F97316; font-weight: 500;">
+                                <div style="text-align: center;">
+                                    <span style="font-size: 40px; display: block; margin-bottom: 10px;">💃🏻</span>
+                                    AI 模特由<br>Dali 生成
+                                </div>
+                            </div>
+                            <div class="view-detail-hint">
+                                查看详情
+                                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path d="M9 18l6-6-6-6" />
                                 </svg>
-                                创意
                             </div>
                         </div>
 
+                        <div class="items-label">包含单品</div>
                         <div class="outfit-items">
-                            <div class="item top">米色<br>针织衫</div>
-                            <div class="item bottom">牛仔<br>直筒裤</div>
-                            <div class="item accessory">白色<br>小白鞋</div>
+                            <div class="item">米色<br>针织衫</div>
+                            <div class="item">复古<br>牛仔裤</div>
+                            <div class="item">小白鞋</div>
                         </div>
 
                         <div class="card-actions">
                             <button class="action-button like-button">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                                 </svg>
                                 点赞
                             </button>
                             <button class="action-button save-button">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                                 </svg>
                                 收藏
                             </button>
                         </div>
-
-                        <button class="view-detail-button">查看搭配详情</button>
                     </div>
 
                     <!-- 方案 3 -->
@@ -522,36 +630,51 @@
                                     <span class="tag occasion">约会</span>
                                 </div>
                             </div>
-                            <div class="ai-badge">
-                                <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            <div class="ai-badge">惊喜</div>
+                        </div>
+
+                        <!-- 主视觉图 -->
+                        <div class="main-look" onclick="parent.switchPage('detail')">
+                            <div class="main-look-placeholder"
+                                style="background: linear-gradient(180deg, #FDF2F8 0%, #FCE7F3 100%); display: flex; align-items: center; justify-content: center; color: #EC4899; font-weight: 500;">
+                                <div style="text-align: center;">
+                                    <span style="font-size: 40px; display: block; margin-bottom: 10px;">🧚🏻‍♀️</span>
+                                    AI 模特由<br>Dali 生成
+                                </div>
+                            </div>
+                            <div class="view-detail-hint">
+                                查看详情
+                                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path d="M9 18l6-6-6-6" />
                                 </svg>
-                                惊喜
                             </div>
                         </div>
 
+                        <div class="items-label">包含单品</div>
                         <div class="outfit-items">
-                            <div class="item top">粉色<br>连衣裙</div>
-                            <div class="item bottom">白色<br>短外套</div>
-                            <div class="item accessory">米色<br>单肩包</div>
+                            <div class="item">粉色<br>连衣裙</div>
+                            <div class="item">短款<br>外套</div>
+                            <div class="item">珍珠<br>项链</div>
                         </div>
 
                         <div class="card-actions">
                             <button class="action-button like-button">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
                                 </svg>
                                 点赞
                             </button>
                             <button class="action-button save-button">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                                 </svg>
                                 收藏
                             </button>
                         </div>
-
-                        <button class="view-detail-button">查看搭配详情</button>
                     </div>
                 </div>
             </div>
@@ -577,7 +700,7 @@
 
         // 点赞按钮交互
         document.querySelectorAll('.like-button').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 this.classList.toggle('liked');
                 const text = this.querySelector('svg').nextSibling;
                 if (this.classList.contains('liked')) {
@@ -589,4 +712,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4]
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 inputDocuments:
   - product-brief-dali-2025-12-27.md
   - prd.md
@@ -9,6 +9,9 @@ workflowType: 'architecture'
 project_name: 'dali'
 user_name: 'Xiaoshaoqian'
 date: '2025-12-31'
+lastStep: 8
+status: 'complete'
+completedAt: '2026-01-03'
 ---
 
 # Architecture Decision Document - 搭理app
@@ -699,4 +702,955 @@ React Query ─────────┴──────▶ Server State Man
 
 ---
 
-_Next: Implementation Patterns..._
+## Implementation Patterns & Consistency Rules
+
+_These patterns ensure all AI agents and developers write consistent, compatible code._
+
+### Naming Patterns
+
+#### Database Naming (PostgreSQL/SQLAlchemy)
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| Table names | snake_case, plural | `users`, `outfit_items`, `user_preferences` |
+| Column names | snake_case | `user_id`, `created_at`, `is_deleted` |
+| Foreign keys | `{referenced_table_singular}_id` | `user_id`, `outfit_id` |
+| Indexes | `idx_{table}_{column}` | `idx_users_email`, `idx_outfits_user_id` |
+| Primary keys | `id` (UUID or auto-increment) | `id` |
+
+#### API Naming
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| Endpoints | plural nouns, kebab-case | `/api/v1/outfits`, `/api/v1/wardrobe-items` |
+| Path params | camelCase | `/outfits/:outfitId` |
+| Query params | camelCase | `?userId=1&pageSize=10&sortBy=createdAt` |
+| Headers | Title-Case | `Authorization`, `Content-Type` |
+
+#### Frontend Code (TypeScript/React)
+
+| Element | Convention | Example |
+|---------|------------|---------|
+| Components | PascalCase file & export | `OutfitCard.tsx`, `export function OutfitCard` |
+| Hooks | camelCase with `use` prefix | `useAuth.ts`, `useOutfits.ts` |
+| Stores | camelCase with `Store` suffix | `authStore.ts`, `userStore.ts` |
+| Services | camelCase | `auth.ts`, `outfit.ts` |
+| Utils | camelCase | `formatDate.ts`, `validation.ts` |
+| Constants | UPPER_SNAKE_CASE | `API_BASE_URL`, `MAX_RETRY_COUNT` |
+| Types/Interfaces | PascalCase | `OutfitData`, `UserPreference`, `ApiResponse` |
+| Enums | PascalCase name, UPPER_SNAKE values | `enum Occasion { ROMANTIC_DATE, BUSINESS }` |
+
+---
+
+### API Response Patterns
+
+#### Success Response Format
+
+Direct data return (no wrapper):
+
+```json
+// Single resource
+{ "id": "uuid", "name": "Summer Outfit", "items": [...] }
+
+// Collection with pagination
+{
+  "items": [...],
+  "total": 100,
+  "page": 1,
+  "pageSize": 20
+}
+```
+
+#### Error Response Format
+
+Standardized structure for all errors:
+
+```json
+{
+  "code": "AUTH_INVALID_TOKEN",
+  "message": "Token 已过期，请重新登录",
+  "details": {
+    "expiredAt": "2026-01-01T00:00:00Z"
+  }
+}
+```
+
+**Error Code Conventions:**
+- Format: `{DOMAIN}_{ERROR_TYPE}`
+- Examples: `AUTH_INVALID_TOKEN`, `OUTFIT_NOT_FOUND`, `VALIDATION_FAILED`, `AI_SERVICE_TIMEOUT`
+
+#### JSON Field Naming
+
+All JSON fields use **camelCase**:
+
+```json
+{
+  "userId": "uuid",
+  "createdAt": "2026-01-01T00:00:00Z",
+  "outfitItems": [...],
+  "isLiked": true
+}
+```
+
+**Date/Time Format:** ISO 8601 strings (`2026-01-01T00:00:00Z`)
+
+---
+
+### State Management Patterns
+
+#### Zustand Store Structure
+
+```typescript
+// stores/authStore.ts
+import { create } from 'zustand';
+
+interface AuthState {
+  // State
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+
+  // Actions
+  setUser: (user: User) => void;
+  login: (tokens: TokenPair) => Promise<void>;
+  logout: () => void;
+  refreshToken: () => Promise<boolean>;
+}
+
+export const useAuthStore = create<AuthState>((set, get) => ({
+  // Initial state
+  user: null,
+  isAuthenticated: false,
+  isLoading: false,
+
+  // Action implementations
+  setUser: (user) => set({ user, isAuthenticated: true }),
+  login: async (tokens) => { /* ... */ },
+  logout: () => set({ user: null, isAuthenticated: false }),
+  refreshToken: async () => { /* ... */ },
+}));
+```
+
+**Rules:**
+- One store per domain (auth, user, offline)
+- State and actions in same interface
+- Export as `use{Domain}Store`
+- Use `immer` middleware only if nested state updates are frequent
+
+#### React Query Patterns
+
+```typescript
+// hooks/useOutfits.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+// Query keys as constants
+export const outfitKeys = {
+  all: ['outfits'] as const,
+  lists: () => [...outfitKeys.all, 'list'] as const,
+  list: (filters: OutfitFilters) => [...outfitKeys.lists(), filters] as const,
+  details: () => [...outfitKeys.all, 'detail'] as const,
+  detail: (id: string) => [...outfitKeys.details(), id] as const,
+};
+
+// Query hook
+export function useOutfits(filters: OutfitFilters) {
+  return useQuery({
+    queryKey: outfitKeys.list(filters),
+    queryFn: () => outfitService.list(filters),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+// Mutation hook
+export function useLikeOutfit() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: outfitService.like,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: outfitKeys.all });
+    },
+  });
+}
+```
+
+---
+
+### Error Handling Patterns
+
+#### Layered Error Handling
+
+| Layer | Responsibility | Implementation |
+|-------|---------------|----------------|
+| **API Layer** | Network errors, 401/403/500 | Axios interceptors |
+| **Service Layer** | Business logic errors | Throw typed errors |
+| **Hook Layer** | Query/mutation errors | React Query `onError` |
+| **Component Layer** | UI error display | ErrorBoundary + Toast |
+| **Global Layer** | Uncaught exceptions | Root ErrorBoundary |
+
+#### Axios Interceptor Pattern
+
+```typescript
+// services/api.ts
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      const refreshed = await useAuthStore.getState().refreshToken();
+      if (refreshed) {
+        return api.request(error.config);
+      }
+      useAuthStore.getState().logout();
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+#### User-Facing Error Display
+
+```typescript
+// Use Toast for recoverable errors
+showToast({ type: 'error', message: error.message });
+
+// Use ErrorBoundary for fatal errors
+throw new FatalError('Critical failure', error);
+```
+
+---
+
+### File Organization Patterns
+
+#### Test Files: Co-located
+
+```
+components/
+├── outfit/
+│   ├── OutfitCard.tsx
+│   ├── OutfitCard.test.tsx      # Unit tests next to component
+│   ├── OutfitCard.styles.ts     # Styles (if extracted)
+│   └── index.ts                 # Barrel export
+```
+
+#### Type Definitions
+
+```
+types/
+├── api.ts          # API request/response types
+├── models.ts       # Domain models (User, Outfit, etc.)
+├── navigation.ts   # Navigation params
+└── index.ts        # Re-exports
+```
+
+#### Environment Configuration
+
+```
+.env.development    # Dev environment
+.env.staging        # Staging environment
+.env.production     # Production environment
+app.config.ts       # Expo config (reads from env)
+```
+
+---
+
+### Code Style Enforcement
+
+#### All AI Agents MUST:
+
+1. **Follow naming conventions** exactly as specified above
+2. **Use TypeScript strict mode** - no `any` types without explicit reason
+3. **Write tests** for new components and services (co-located)
+4. **Use existing patterns** - check similar files before creating new patterns
+5. **Document deviations** - if breaking a pattern, add comment explaining why
+
+#### Linting & Formatting
+
+- **ESLint**: Expo default + React hooks rules
+- **Prettier**: Default config, 100 char line width
+- **TypeScript**: Strict mode enabled
+
+#### Import Order
+
+```typescript
+// 1. React/React Native
+import React from 'react';
+import { View, Text } from 'react-native';
+
+// 2. External libraries
+import { useQuery } from '@tanstack/react-query';
+
+// 3. Internal: absolute imports
+import { useAuthStore } from '@/stores/authStore';
+import { OutfitCard } from '@/components/outfit';
+
+// 4. Internal: relative imports
+import { styles } from './styles';
+import type { Props } from './types';
+```
+
+---
+
+### Anti-Patterns to Avoid
+
+| Anti-Pattern | Correct Approach |
+|--------------|------------------|
+| `any` type everywhere | Define proper types or use `unknown` |
+| Inline styles in components | Use StyleSheet or extracted styles file |
+| Direct API calls in components | Use services + React Query hooks |
+| Console.log in production | Use proper logging service |
+| Hardcoded strings | Use constants or i18n |
+| Nested ternaries | Extract to helper function or early returns |
+| Giant components (>300 lines) | Split into smaller focused components |
+
+---
+
+## Project Structure & Boundaries
+
+### Requirements to Structure Mapping
+
+| PRD Category | Primary Directories |
+|--------------|---------------------|
+| User Account (FR1-8) | `app/(auth)/`, `stores/authStore.ts`, `services/auth.ts` |
+| Photography (FR9-17) | `components/camera/`, `services/upload.ts`, `app/camera.tsx` |
+| AI Recommendations (FR18-27) | `services/outfit.ts`, `components/outfit/`, `app/generating.tsx` |
+| Knowledge Education (FR28-34) | `components/theory/` |
+| History Management (FR35-42) | `app/(tabs)/history.tsx`, `utils/storage.ts`, `services/sync.ts` |
+| Sharing (FR43-49) | `components/share/`, `services/share.ts` |
+| Occasion-Based (FR50-57) | `components/occasion/`, `services/context.ts`, `app/occasion-select.tsx` |
+| System Capabilities (FR58-65) | `hooks/usePermissions.ts`, `stores/offlineStore.ts` |
+
+---
+
+### Mobile Project Structure (dali-mobile)
+
+```
+dali-mobile/
+├── README.md
+├── package.json
+├── tsconfig.json
+├── app.json                          # Expo configuration
+├── app.config.ts                     # Dynamic Expo config
+├── babel.config.js
+├── metro.config.js
+├── .env.development
+├── .env.staging
+├── .env.production
+├── .env.example
+├── .gitignore
+├── .eslintrc.js
+├── .prettierrc
+│
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                    # PR checks
+│       └── eas-build.yml             # EAS build triggers
+│
+├── app/                              # Expo Router (file-based routing)
+│   ├── _layout.tsx                   # Root layout with providers
+│   ├── index.tsx                     # Entry redirect
+│   │
+│   ├── (auth)/                       # Unauthenticated routes
+│   │   ├── _layout.tsx
+│   │   ├── welcome.tsx               # Welcome screen
+│   │   ├── login.tsx                 # Phone/WeChat login
+│   │   └── onboarding/               # Onboarding questionnaire
+│   │       ├── body-type.tsx
+│   │       ├── style-preference.tsx
+│   │       └── occasions.tsx
+│   │
+│   ├── (tabs)/                       # Main tab navigation
+│   │   ├── _layout.tsx               # Tab bar configuration
+│   │   ├── index.tsx                 # Home (camera entry)
+│   │   ├── history.tsx               # Outfit history
+│   │   └── profile.tsx               # User profile & settings
+│   │
+│   ├── outfit/
+│   │   └── [id].tsx                  # Outfit detail screen
+│   │
+│   ├── camera.tsx                    # Camera capture
+│   ├── occasion-select.tsx           # Occasion selection
+│   └── generating.tsx                # AI generation loading
+│
+├── src/
+│   ├── components/
+│   │   ├── ui/                       # Base UI components
+│   │   │   ├── Button.tsx
+│   │   │   ├── Button.test.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── Input.tsx
+│   │   │   ├── Toast.tsx
+│   │   │   ├── SkeletonLoader.tsx
+│   │   │   ├── ProgressCircle.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── outfit/                   # Outfit-related components
+│   │   │   ├── OutfitCard.tsx
+│   │   │   ├── OutfitCard.test.tsx
+│   │   │   ├── OutfitGrid.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── theory/                   # Theory visualization
+│   │   │   ├── ColorWheel.tsx
+│   │   │   ├── StyleTagChip.tsx
+│   │   │   ├── TheoryVisualization.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── share/                    # Share functionality
+│   │   │   ├── ShareTemplate.tsx
+│   │   │   ├── SharePreview.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   ├── camera/                   # Camera components
+│   │   │   ├── CameraView.tsx
+│   │   │   ├── PhotoPreview.tsx
+│   │   │   └── index.ts
+│   │   │
+│   │   └── occasion/                 # Occasion selection
+│   │       ├── OccasionCard.tsx
+│   │       ├── OccasionGrid.tsx
+│   │       └── index.ts
+│   │
+│   ├── services/                     # API & external services
+│   │   ├── api.ts                    # Axios instance + interceptors
+│   │   ├── auth.ts                   # Authentication API
+│   │   ├── outfit.ts                 # Outfit generation API
+│   │   ├── upload.ts                 # OSS image upload
+│   │   ├── share.ts                  # Share tracking API
+│   │   ├── context.ts                # Weather/occasion API
+│   │   └── sync.ts                   # Offline sync service
+│   │
+│   ├── stores/                       # Zustand state management
+│   │   ├── authStore.ts              # Auth state + tokens
+│   │   ├── userStore.ts              # User preferences
+│   │   ├── offlineStore.ts           # Offline queue
+│   │   └── index.ts
+│   │
+│   ├── hooks/                        # Custom React hooks
+│   │   ├── useAuth.ts                # Auth logic
+│   │   ├── useOutfits.ts             # Outfit queries/mutations
+│   │   ├── useOfflineSync.ts         # Sync management
+│   │   ├── usePermissions.ts         # Camera/location permissions
+│   │   ├── useCamera.ts              # Camera control
+│   │   └── index.ts
+│   │
+│   ├── utils/                        # Utility functions
+│   │   ├── storage.ts                # SQLite helpers
+│   │   ├── secureStorage.ts          # SecureStore helpers
+│   │   ├── validation.ts             # Input validation
+│   │   ├── formatters.ts             # Date/number formatting
+│   │   └── index.ts
+│   │
+│   ├── types/                        # TypeScript definitions
+│   │   ├── api.ts                    # API request/response types
+│   │   ├── models.ts                 # Domain models
+│   │   ├── navigation.ts             # Navigation params
+│   │   └── index.ts
+│   │
+│   └── constants/                    # App constants
+│       ├── colors.ts                 # #6C63FF, #FF6B9D
+│       ├── typography.ts             # Font styles
+│       ├── spacing.ts                # Spacing system
+│       ├── api.ts                    # API endpoints
+│       └── index.ts
+│
+├── assets/                           # Static assets
+│   ├── images/
+│   │   ├── logo.png
+│   │   ├── onboarding/
+│   │   └── occasions/
+│   ├── fonts/
+│   └── icons/
+│
+└── __mocks__/                        # Jest mocks
+    ├── expo-camera.ts
+    ├── expo-secure-store.ts
+    └── expo-sqlite.ts
+```
+
+---
+
+### Backend Project Structure (dali-api)
+
+```
+dali-api/
+├── README.md
+├── pyproject.toml                    # Poetry config
+├── poetry.lock
+├── requirements.txt                  # Fallback deps
+├── .env
+├── .env.example
+├── .gitignore
+├── .pre-commit-config.yaml
+├── Dockerfile
+├── docker-compose.yml
+├── docker-compose.dev.yml
+│
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                    # Tests + linting
+│       └── deploy.yml                # Deployment
+│
+├── alembic/                          # Database migrations
+│   ├── alembic.ini
+│   ├── env.py
+│   └── versions/
+│       └── 001_initial.py
+│
+├── app/
+│   ├── __init__.py
+│   ├── main.py                       # FastAPI entry point
+│   ├── config.py                     # Settings management
+│   │
+│   ├── api/                          # API routes
+│   │   ├── __init__.py
+│   │   ├── deps.py                   # Dependency injection
+│   │   └── v1/
+│   │       ├── __init__.py
+│   │       ├── router.py             # Route aggregation
+│   │       ├── auth.py               # /auth endpoints
+│   │       ├── users.py              # /users endpoints
+│   │       ├── outfits.py            # /outfits endpoints
+│   │       ├── wardrobe.py           # /wardrobe endpoints
+│   │       ├── share.py              # /share endpoints
+│   │       └── context.py            # /context endpoints
+│   │
+│   ├── models/                       # SQLAlchemy models
+│   │   ├── __init__.py
+│   │   ├── base.py                   # Base model class
+│   │   ├── user.py                   # users table
+│   │   ├── preference.py             # user_preferences table
+│   │   ├── outfit.py                 # outfits table
+│   │   ├── outfit_item.py            # outfit_items table
+│   │   ├── theory.py                 # theories table
+│   │   └── share_record.py           # share_records table
+│   │
+│   ├── schemas/                      # Pydantic schemas
+│   │   ├── __init__.py
+│   │   ├── auth.py                   # Auth request/response
+│   │   ├── user.py                   # User schemas
+│   │   ├── outfit.py                 # Outfit schemas
+│   │   ├── wardrobe.py               # Wardrobe schemas
+│   │   └── common.py                 # Shared schemas
+│   │
+│   ├── services/                     # Business logic
+│   │   ├── __init__.py
+│   │   ├── auth.py                   # Auth service
+│   │   ├── user.py                   # User service
+│   │   ├── outfit.py                 # Outfit generation
+│   │   ├── ai_orchestrator.py        # AI pipeline orchestration
+│   │   ├── storage.py                # OSS operations
+│   │   └── sms.py                    # SMS sending
+│   │
+│   ├── integrations/                 # External APIs
+│   │   ├── __init__.py
+│   │   ├── alibaba_vision.py         # Alibaba Vision API
+│   │   ├── tongyi_qianwen.py         # Tongyi Qianwen API
+│   │   ├── alibaba_oss.py            # Alibaba OSS
+│   │   ├── wechat.py                 # WeChat OAuth
+│   │   └── weather.py                # Weather API
+│   │
+│   ├── core/                         # Core utilities
+│   │   ├── __init__.py
+│   │   ├── security.py               # JWT + encryption
+│   │   ├── exceptions.py             # Custom exceptions
+│   │   └── logging.py                # Logging config
+│   │
+│   └── db/                           # Database
+│       ├── __init__.py
+│       ├── session.py                # Session management
+│       └── init_db.py                # DB initialization
+│
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py                   # pytest fixtures
+│   ├── unit/
+│   │   ├── services/
+│   │   └── models/
+│   ├── integration/
+│   │   ├── api/
+│   │   └── db/
+│   └── e2e/
+│
+└── scripts/
+    ├── init_db.py                    # Database setup
+    ├── seed_data.py                  # Test data
+    └── backup.sh                     # Backup script
+```
+
+---
+
+### Architectural Boundaries
+
+#### API Boundaries
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Mobile App (dali-mobile)                    │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │   Screens   │──│   Hooks     │──│  Services   │              │
+│  │  (app/)     │  │  (hooks/)   │  │ (services/) │              │
+│  └─────────────┘  └─────────────┘  └──────┬──────┘              │
+└────────────────────────────────────────────┼─────────────────────┘
+                                             │ HTTPS/REST
+                                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Backend API (dali-api)                      │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
+│  │   Routes    │──│  Services   │──│   Models    │              │
+│  │  (api/v1/)  │  │ (services/) │  │  (models/)  │              │
+│  └─────────────┘  └─────────────┘  └──────┬──────┘              │
+└────────────────────────────────────────────┼─────────────────────┘
+                                             │ SQL
+                                             ▼
+                                    ┌─────────────────┐
+                                    │   PostgreSQL    │
+                                    └─────────────────┘
+```
+
+#### Data Flow
+
+```
+User Action → Screen → Hook → Service → API → Backend Service → DB
+                                  ↓
+                             SQLite (offline cache)
+```
+
+#### Integration Points
+
+| Integration | Mobile Location | Backend Location |
+|-------------|-----------------|------------------|
+| Alibaba OSS | `services/upload.ts` | `integrations/alibaba_oss.py` |
+| Vision API | - | `integrations/alibaba_vision.py` |
+| Tongyi Qianwen | - | `integrations/tongyi_qianwen.py` |
+| WeChat OAuth | `services/auth.ts` | `integrations/wechat.py` |
+| SMS | - | `services/sms.py` |
+| Weather | - | `integrations/weather.py` |
+
+---
+
+### Cross-Cutting Concerns Location
+
+| Concern | Mobile | Backend |
+|---------|--------|---------|
+| Authentication | `stores/authStore.ts`, `services/api.ts` (interceptor) | `core/security.py`, `api/deps.py` |
+| Error Handling | `services/api.ts`, Root `ErrorBoundary` | `core/exceptions.py`, middleware |
+| Logging | Sentry SDK | `core/logging.py` |
+| Offline Support | `stores/offlineStore.ts`, `utils/storage.ts` | N/A |
+| Validation | `utils/validation.ts` | `schemas/*.py` (Pydantic) |
+
+---
+
+### Development Workflow
+
+**Mobile Development:**
+```bash
+# Start development server
+npx expo start
+
+# Run on iOS simulator
+npx expo run:ios
+
+# Build for testing (local)
+npx expo run:ios --configuration Release
+
+# Build for release (EAS)
+eas build --platform ios --profile production
+```
+
+**Backend Development:**
+```bash
+# Start with Docker
+docker-compose -f docker-compose.dev.yml up
+
+# Run locally
+poetry run uvicorn app.main:app --reload
+
+# Run migrations
+poetry run alembic upgrade head
+
+# Run tests
+poetry run pytest
+```
+
+---
+
+## Architecture Validation Results
+
+_Validation completed on 2026-01-03._
+
+### Coherence Validation ✅
+
+**Decision Compatibility:**
+All technology choices work together without conflicts:
+- Expo SDK 51+ + React Native: Official support, stable
+- FastAPI + SQLAlchemy 2.0: Async compatibility, mature ecosystem
+- Zustand + React Query: Complementary (client vs server state), no overlap
+- Expo SQLite + PostgreSQL: Clear offline/cloud separation
+- Axios + JWT: Interceptor support for token refresh
+
+**Pattern Consistency:**
+- Naming conventions are consistent across frontend (camelCase) and backend (snake_case for DB, camelCase for API)
+- Error handling patterns unified with standardized error structure
+- State management patterns clearly separated (Zustand for client, React Query for server)
+
+**Structure Alignment:**
+- Project structure directly maps to technology decisions
+- Component boundaries respect the chosen patterns
+- Integration points are clearly defined in specific directories
+
+### Requirements Coverage Validation ✅
+
+**Functional Requirements Coverage (65/65):**
+
+| Category | FR Count | Coverage | Key Components |
+|----------|----------|----------|----------------|
+| User Account (FR1-8) | 8 | ✅ 100% | authStore, auth.ts, onboarding/ |
+| Photography (FR9-17) | 9 | ✅ 100% | expo-camera, upload.ts, CameraView |
+| AI Recommendations (FR18-27) | 10 | ✅ 100% | ai_orchestrator.py, alibaba_vision.py |
+| Knowledge Education (FR28-34) | 7 | ✅ 100% | TheoryVisualization, ColorWheel |
+| History Management (FR35-42) | 8 | ✅ 100% | expo-sqlite, sync.ts, offlineStore |
+| Sharing (FR43-49) | 7 | ✅ 100% | ShareTemplate, share.ts |
+| Occasion-Based (FR50-57) | 8 | ✅ 100% | context.ts, weather.py, OccasionCard |
+| System Capabilities (FR58-65) | 8 | ✅ 100% | usePermissions, ErrorBoundary |
+
+**Non-Functional Requirements Coverage:**
+
+| NFR | Requirement | Architectural Support |
+|-----|-------------|----------------------|
+| NFR-P1 | AI generation < 5s | ✅ Parallel API calls + skeleton screens + progressive loading |
+| NFR-P7 | History query < 200ms | ✅ SQLite local storage |
+| NFR-S1 | HTTPS/TLS 1.2+ | ✅ All API communication encrypted |
+| NFR-S2 | AES-256 encryption | ✅ OSS SSE + SecureStore |
+| NFR-R1 | 99.5% availability | ✅ Graceful degradation + retry mechanisms |
+| NFR-R10 | Auto-retry | ✅ Exponential backoff (3 attempts) |
+| NFR-U6 | Offline browsing | ✅ SQLite local storage + sync queue |
+| NFR-AI4 | Failure rate < 5% | ✅ AI → Rule engine → Cache fallback chain |
+
+### Implementation Readiness Validation ✅
+
+**Decision Completeness:**
+- ✅ All critical technology decisions documented with versions
+- ✅ Implementation patterns include concrete code examples
+- ✅ Naming conventions cover all layers (DB, API, Frontend)
+- ✅ Error handling patterns are comprehensive
+
+**Structure Completeness:**
+- ✅ Mobile project: ~50 files/directories defined
+- ✅ Backend project: ~40 files/directories defined
+- ✅ Requirements-to-directory mapping is explicit
+- ✅ Integration points are clearly specified
+
+**Pattern Completeness:**
+- ✅ All major conflict points addressed (naming, structure, communication)
+- ✅ Anti-patterns documented with correct alternatives
+- ✅ Code style enforcement rules are clear
+
+### Gap Analysis Results
+
+**Critical Gaps:** None identified
+
+**Future Enhancements (Non-blocking):**
+- 📌 Detailed database schema definitions (to be refined in Epics phase)
+- 📌 Specific AI prompt templates (to be designed during implementation)
+- 📌 Monitoring dashboard specifications (post-MVP optimization)
+- 📌 i18n infrastructure details (when multi-language support is needed)
+
+### Architecture Completeness Checklist
+
+**✅ Requirements Analysis**
+- [x] Project context thoroughly analyzed
+- [x] Scale and complexity assessed (Medium)
+- [x] Technical constraints identified (iOS 14+, Expo SDK 51+)
+- [x] Cross-cutting concerns mapped (8 concerns)
+
+**✅ Architectural Decisions**
+- [x] Critical decisions documented with versions
+- [x] Technology stack fully specified
+- [x] Integration patterns defined
+- [x] Performance considerations addressed
+
+**✅ Implementation Patterns**
+- [x] Naming conventions established (DB, API, Frontend)
+- [x] Structure patterns defined
+- [x] Communication patterns specified (API responses, events)
+- [x] Process patterns documented (error handling, loading states)
+
+**✅ Project Structure**
+- [x] Complete directory structure defined (Mobile + Backend)
+- [x] Component boundaries established
+- [x] Integration points mapped
+- [x] Requirements to structure mapping complete
+
+### Architecture Readiness Assessment
+
+**Overall Status:** ✅ READY FOR IMPLEMENTATION
+
+**Confidence Level:** HIGH
+
+**Key Strengths:**
+1. Clear separation of concerns (mobile/backend, offline/online)
+2. Comprehensive technology stack with proven compatibility
+3. Detailed implementation patterns prevent AI agent conflicts
+4. Full requirements coverage with explicit mapping
+5. Cost-effective infrastructure choices (~¥500-800/year)
+
+**Areas for Future Enhancement:**
+1. Database schema details (Epics phase)
+2. AI prompt engineering (implementation phase)
+3. Performance monitoring dashboards (post-MVP)
+4. Multi-language support infrastructure (future releases)
+
+### Implementation Handoff
+
+**AI Agent Guidelines:**
+
+1. **Follow all architectural decisions** exactly as documented
+2. **Use implementation patterns** consistently across all components
+3. **Respect project structure** and boundaries
+4. **Refer to this document** for all architectural questions
+5. **Check existing patterns** before creating new ones
+
+**First Implementation Priority:**
+
+```bash
+# Mobile project initialization
+npx create-expo-app@latest dali-mobile
+
+# Backend project initialization
+mkdir dali-api && cd dali-api
+poetry init
+poetry add fastapi uvicorn sqlalchemy alembic
+```
+
+**Recommended Epic Sequence:**
+1. Epic 0: Project Setup & Foundation
+2. Epic 1: Authentication & Onboarding
+3. Epic 2: Camera & Photo Upload
+4. Epic 3: AI Recommendation Engine
+5. Epic 4: History & Offline Support
+6. Epic 5: Sharing & Social Integration
+
+---
+
+## Document Complete
+
+**Architecture Document Statistics:**
+- Total sections: 7 major sections
+- Decisions documented: 25+ architectural decisions
+- Patterns defined: 15+ implementation patterns
+- Files/directories specified: 90+ locations
+- Requirements covered: 65 FR + 10+ NFR
+
+**Next Steps:**
+1. Run **Implementation Readiness Review** [IR] to validate against PRD/UX
+2. Create **Epics & Stories** to break down into implementable units
+3. Start **Sprint Planning** to begin development
+
+---
+
+_Architecture document completed on 2026-01-03 by Winston (Architect Agent) in collaboration with Xiaoshaoqian._
+
+---
+
+## Architecture Completion Summary
+
+### Workflow Completion
+
+**Architecture Decision Workflow:** COMPLETED
+
+**Total Steps Completed:** 8
+**Date Completed:** 2026-01-03
+**Document Location:** _bmad-output/planning-artifacts/architecture.md
+
+### Final Architecture Deliverables
+
+**Complete Architecture Document**
+
+- All architectural decisions documented with specific versions
+- Implementation patterns ensuring AI agent consistency
+- Complete project structure with all files and directories
+- Requirements to architecture mapping
+- Validation confirming coherence and completeness
+
+**Implementation Ready Foundation**
+
+- 25+ architectural decisions made
+- 15+ implementation patterns defined
+- 90+ files/directories specified
+- 65 functional requirements fully supported
+
+**AI Agent Implementation Guide**
+
+- Technology stack with verified versions
+- Consistency rules that prevent implementation conflicts
+- Project structure with clear boundaries
+- Integration patterns and communication standards
+
+### Implementation Handoff
+
+**For AI Agents:**
+This architecture document is your complete guide for implementing the dali (搭理) project. Follow all decisions, patterns, and structures exactly as documented.
+
+**First Implementation Priority:**
+
+```bash
+# Mobile project initialization
+npx create-expo-app@latest dali-mobile
+
+# Backend project initialization
+mkdir dali-api && cd dali-api
+poetry init
+poetry add fastapi uvicorn sqlalchemy alembic
+```
+
+**Development Sequence:**
+
+1. Initialize project using documented starter template
+2. Set up development environment per architecture
+3. Implement core architectural foundations
+4. Build features following established patterns
+5. Maintain consistency with documented rules
+
+### Quality Assurance Checklist
+
+**Architecture Coherence**
+
+- [x] All decisions work together without conflicts
+- [x] Technology choices are compatible
+- [x] Patterns support the architectural decisions
+- [x] Structure aligns with all choices
+
+**Requirements Coverage**
+
+- [x] All 65 functional requirements are supported
+- [x] All non-functional requirements are addressed
+- [x] Cross-cutting concerns are handled
+- [x] Integration points are defined
+
+**Implementation Readiness**
+
+- [x] Decisions are specific and actionable
+- [x] Patterns prevent agent conflicts
+- [x] Structure is complete and unambiguous
+- [x] Examples are provided for clarity
+
+### Project Success Factors
+
+**Clear Decision Framework**
+Every technology choice was made collaboratively with clear rationale, ensuring all stakeholders understand the architectural direction.
+
+**Consistency Guarantee**
+Implementation patterns and rules ensure that multiple AI agents will produce compatible, consistent code that works together seamlessly.
+
+**Complete Coverage**
+All project requirements are architecturally supported, with clear mapping from business needs to technical implementation.
+
+**Solid Foundation**
+The chosen Expo starter template and FastAPI backend provide a production-ready foundation following current best practices.
+
+---
+
+**Architecture Status:** READY FOR IMPLEMENTATION
+
+**Next Phase:** Begin implementation using the architectural decisions and patterns documented herein.
+
+**Document Maintenance:** Update this architecture when major technical decisions are made during implementation.

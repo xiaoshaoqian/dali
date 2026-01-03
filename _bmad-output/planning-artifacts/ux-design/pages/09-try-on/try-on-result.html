@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理 - 试穿效果</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .device-frame {
+            width: 393px;
+            height: 852px;
+            background: linear-gradient(180deg, #848489 0%, #3A3A3C 50%, #1C1C1E 100%);
+            border-radius: 55px;
+            padding: 3px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            /* Dark background for immersive photo view */
+            border-radius: 52px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 126px;
+            height: 37.5px;
+            background: #000;
+            border-radius: 19px;
+            z-index: 101;
+        }
+
+        /* Top Nav - Transparent */
+        .top-nav {
+            height: 59px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            padding-top: 12px;
+        }
+
+        .back-button {
+            width: 32px;
+            height: 32px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        /* Feature Area: Image Display */
+        .image-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Placeholder gradient for AI result */
+            background: linear-gradient(180deg, #E0E7FF 0%, #F5F3FF 100%);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Simulated User Photo (Original) */
+        .original-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #ddd;
+            z-index: 2;
+            opacity: 0;
+            /* Hidden by default */
+            transition: opacity 0.3s ease;
+        }
+
+        /* Comparison Toggle */
+        .compare-toggle {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            user-select: none;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .compare-toggle:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        /* Bottom Action Sheet */
+        .bottom-sheet {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 100%);
+            padding: 40px 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            z-index: 90;
+        }
+
+        .action-group {
+            display: flex;
+            gap: 16px;
+        }
+
+        .circle-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .circle-btn:active {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0.95);
+        }
+
+        .primary-btn {
+            flex: 1;
+            height: 52px;
+            background: #fff;
+            border-radius: 26px;
+            color: #000;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Magic Effect Overlay */
+        .magic-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 0%, #000 120%);
+            z-index: 50;
+            pointer-events: none;
+            animation: magicFade 2s ease-out forwards;
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #fff, 0 0 20px #6C63FF;
+            animation: sparkleAnim 1.5s ease-in-out infinite;
+        }
+
+        @keyframes magicFade {
+            0% {
+                opacity: 1;
+                background: #fff;
+            }
+
+            100% {
+                opacity: 0;
+                background: transparent;
+            }
+        }
+
+        @keyframes sparkleAnim {
+
+            0%,
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.5);
+                opacity: 1;
+            }
+        }
+
+        /* Placeholder Content */
+        .placeholder-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #6C63FF;
+            z-index: 10;
+        }
+
+        .home-indicator {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 134px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.4);
+            /* Light for dark bg */
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="device-frame">
+        <div class="screen">
+            <div class="dynamic-island"></div>
+
+            <div class="top-nav">
+                <div class="back-button" onclick="parent.switchPage('detail')">
+                    <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg>
+                </div>
+            </div>
+
+            <div class="image-container">
+                <!-- Result Image (AI Generated) -->
+                <div class="result-image">
+                    <!-- Placeholder Visual -->
+                    <div class="placeholder-text">
+                        <span style="font-size: 80px; display: block; margin-bottom: 20px;">✨</span>
+                        <div style="color: #1C1C1E; font-size: 18px; font-weight: 600;">AI 试穿完成</div>
+                    </div>
+                </div>
+
+                <!-- Original Image (Hidden for toggle) -->
+                <div class="original-image">
+                    <!-- Placeholder logic handled by JS to show difference -->
+                </div>
+
+                <!-- Comparison Toggle Button -->
+                <div class="compare-toggle" id="compareBtn">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M15 3h6v18h-6M10 3H4v18h6M21 3l-6 6 6 6-6 6M3 3l6 6-6 6 6 6" />
+                    </svg>
+                    按住对比原图
+                </div>
+
+                <!-- Magic Animation Overlay -->
+                <div class="magic-overlay"></div>
+            </div>
+
+            <div class="bottom-sheet">
+                <div class="action-group">
+                    <button class="circle-btn">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+                            <path d="M16 6l-4-4-4 4" />
+                            <path d="M12 2v13" />
+                        </svg>
+                    </button>
+                    <button class="circle-btn">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z">
+                            </path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+                <div style="flex:1; width: 12px;"></div> <!-- Spacer -->
+                <button class="primary-btn">
+                    保存到相册
+                </button>
+            </div>
+
+            <div class="home-indicator"></div>
+        </div>
+    </div>
+
+    <script>
+        // Comparison Logic
+        const compareBtn = document.getElementById('compareBtn');
+        const originalImage = document.querySelector('.original-image');
+        const container = document.querySelector('.image-container');
+
+        // Add some sparkles dynamically
+        for (let i = 0; i < 10; i++) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = Math.random() * 100 + '%';
+            sparkle.style.top = Math.random() * 100 + '%';
+            sparkle.style.animationDelay = Math.random() * 1 + 's';
+            document.querySelector('.magic-overlay').appendChild(sparkle);
+        }
+
+        // Hold to compare
+        compareBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            originalImage.style.opacity = '1';
+        });
+
+        compareBtn.addEventListener('touchend', () => {
+            originalImage.style.opacity = '0';
+        });
+
+        // Mouse events for desktop testing
+        compareBtn.addEventListener('mousedown', () => {
+            originalImage.style.opacity = '1';
+        });
+        compareBtn.addEventListener('mouseup', () => {
+            originalImage.style.opacity = '0';
+        });
+    </script>
+</body>
+
+</html>

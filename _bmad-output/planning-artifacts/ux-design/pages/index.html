@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -159,6 +160,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- 顶部导航栏 -->
     <div class="top-nav">
@@ -176,11 +178,8 @@
             <button class="nav-btn" onclick="switchPage('home-empty', this)">
                 <span>📭</span> 首页空状态
             </button>
-            <button class="nav-btn" onclick="switchPage('occasion', this)">
-                <span>🎯</span> 选择场合
-            </button>
             <button class="nav-btn" onclick="switchPage('photo', this)">
-                <span>📸</span> 拍照/场合
+                <span>📸</span> 创建搭配
             </button>
             <button class="nav-btn" onclick="switchPage('loading', this)">
                 <span>⏳</span> AI生成中
@@ -191,11 +190,14 @@
             <button class="nav-btn" onclick="switchPage('detail', this)">
                 <span>🎨</span> 方案详情
             </button>
+            <button class="nav-btn" onclick="switchPage('try-on', this)">
+                <span>🪄</span> AI试穿
+            </button>
             <button class="nav-btn" onclick="switchPage('wardrobe', this)">
-                <span>👗</span> 衣橱
+                <span>�</span> 衣橱
             </button>
             <button class="nav-btn" onclick="switchPage('profile', this)">
-                <span>👤</span> 个人页
+                <span>�</span> 个人页
             </button>
             <button class="nav-btn" onclick="switchPage('share', this)">
                 <span>🔗</span> 分享模板
@@ -208,11 +210,11 @@
         <iframe id="iframe-welcome" class="active" src="06-welcome-onboarding/welcome-onboarding-page.html"></iframe>
         <iframe id="iframe-home" src="01-home/home-page.html"></iframe>
         <iframe id="iframe-home-empty" src="01-home/home-page-empty.html"></iframe>
-        <iframe id="iframe-occasion" src="07-flow-pages/occasion-selector.html"></iframe>
         <iframe id="iframe-photo" src="07-flow-pages/photo-occasion.html"></iframe>
         <iframe id="iframe-loading" src="07-flow-pages/ai-loading.html"></iframe>
         <iframe id="iframe-results" src="02-outfit-results/outfit-results-page.html"></iframe>
         <iframe id="iframe-detail" src="03-outfit-detail/outfit-detail-page.html"></iframe>
+        <iframe id="iframe-try-on" src="09-try-on/try-on-result.html"></iframe>
         <iframe id="iframe-wardrobe" src="04-wardrobe/wardrobe-page.html"></iframe>
         <iframe id="iframe-profile" src="05-profile/profile-page.html"></iframe>
         <iframe id="iframe-share" src="08-share/share-templates.html"></iframe>
@@ -240,11 +242,11 @@
             'welcome': '欢迎页',
             'home': '首页',
             'home-empty': '首页空状态',
-            'occasion': '选择场合',
-            'photo': '拍照/场合选择',
+            'photo': '创建搭配',
             'loading': 'AI生成中',
             'results': '搭配方案',
             'detail': '方案详情',
+            'try-on': 'AI试穿',
             'wardrobe': '衣橱',
             'profile': '个人页',
             'share': '分享模板'
@@ -263,6 +265,18 @@
             }
 
             // 更新导航按钮状态
+            // 如果 btnElement 未定义 (例如从 iframe 内部调用)，尝试根据 pageId 自动查找按钮
+            if (!btnElement) {
+                const buttons = document.querySelectorAll('.nav-btn');
+                // 简单的映射逻辑：假设按钮顺序和 pageId 有某种对应，或者遍历 textContent/onclick。
+                // 这里的简单做法是：根据 onclick 属性包含的内容来匹配
+                buttons.forEach(btn => {
+                    if (btn.getAttribute('onclick').includes(`'${pageId}'`)) {
+                        btnElement = btn;
+                    }
+                });
+            }
+
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -275,8 +289,8 @@
         }
 
         // 键盘快捷键支持
-        document.addEventListener('keydown', function(e) {
-            const pages = ['welcome', 'home', 'home-empty', 'occasion', 'photo', 'loading', 'results', 'detail', 'wardrobe', 'profile', 'share'];
+        document.addEventListener('keydown', function (e) {
+            const pages = ['welcome', 'home', 'home-empty', 'photo', 'loading', 'results', 'detail', 'try-on', 'wardrobe', 'profile', 'share'];
             const currentIndex = pages.findIndex(p => {
                 const iframe = document.getElementById('iframe-' + p);
                 return iframe && iframe.classList.contains('active');
@@ -294,4 +308,5 @@
         });
     </script>
 </body>
+
 </html>
