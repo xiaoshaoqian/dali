@@ -1,7 +1,7 @@
 # 搭理 App - UX 设计页面索引
 
-**设计版本:** v1.0
-**最后更新:** 2025-12-31
+**设计版本:** v1.1
+**最后更新:** 2026-01-04
 
 ---
 
@@ -11,29 +11,46 @@
 - **MD 文档**: 详细的设计规范（布局、组件、交互、动画）
 - **HTML 原型**: 可交互的高保真原型（iPhone 15 Pro 尺寸：393×852px）
 
+重要更新 (v1.1):
+- 全线升级 **Purple Mesh Gradient** (极光紫) 视觉语言。
+- 引入 **Concave Header** (反向圆角) 和 **Floating Cards** (悬浮卡片) 布局。
+- 新增 **设置中心** 及其子页面群。
+- 新增 **虚拟试穿** 结果页。
+
 ---
 
 ## 🗂️ 页面清单
 
-### 主要页面 (Main Pages)
+### 核心功能 (Core Feature Pages)
 
 | 页面 | 标识 | 文档 | 原型 | 说明 |
 |------|------|------|------|------|
 | **欢迎页** | WelcomeScreen | [📄](06-welcome-onboarding/welcome-onboarding-page.md) | [🔗](06-welcome-onboarding/welcome-onboarding-page.html) | 首次启动引导页 |
 | **首页** | HomeScreen | [📄](01-home/home-page.md) | [🔗](01-home/home-page.html) | 核心入口：拍照/相册 + 历史记录 |
 | **首页空状态** | HomeEmptyState | 见首页文档 | [🔗](01-home/home-page-empty.html) | 无历史记录的空状态 |
-| **搭配方案结果** | OutfitResultsScreen | [📄](02-outfit-results/outfit-results-page.md) | [🔗](02-outfit-results/outfit-results-page.html) | 显示 3 个 AI 生成的搭配方案 |
-| **方案详情** | OutfitDetailScreen | [📄](03-outfit-detail/outfit-detail-page.md) | [🔗](03-outfit-detail/outfit-detail-page.html) | 搭配详情 + 色彩理论可视化 |
-| **衣橱** | WardrobeScreen | [📄](04-wardrobe/wardrobe-page.md) | [🔗](04-wardrobe/wardrobe-page.html) | 历史搭配记录 + 搜索/筛选 |
+| **搭配列表 (原衣橱)** | OutfitListScreen | [📄](04-wardrobe/wardrobe-page.md) | [🔗](04-wardrobe/outfit-page.html) | *Renamed*: 历史搭配记录 + 搜索/筛选 |
 | **个人页** | ProfileScreen | [📄](05-profile/profile-page.md) | [🔗](05-profile/profile-page.html) | 用户资料 + AI 学习进度 |
 
-### 流程页面 (Flow Pages)
+### 搭配生成流程 (Generation Service Pages)
 
 | 页面 | 标识 | 文档 | 原型 | 说明 |
 |------|------|------|------|------|
 | **场合选择弹窗** | OccasionSelectorModal | [📄](07-flow-pages/occasion-selector.md) | [🔗](07-flow-pages/occasion-selector.html) | Bottom Sheet：选择穿搭场合 + AI 推荐 |
 | **拍照+场合选择** | PhotoOccasionScreen | [📄](07-flow-pages/photo-occasion.md) | [🔗](07-flow-pages/photo-occasion.html) | 照片预览 + 场合/风格选择 |
-| **AI 生成中** | AILoadingScreen | [📄](07-flow-pages/ai-loading.md) | [🔗](07-flow-pages/ai-loading.html) | 加载状态 + 进度条 + 骨架屏 |
+| **AI 生成中** | AILoadingScreen | [📄](07-flow-pages/ai-loading.md) | [🔗](07-flow-pages/ai-loading.html) | *Visual Updated*: 紫色极光背景 + 呼吸动画 |
+| **搭配方案结果** | OutfitResultsScreen | [📄](02-outfit-results/outfit-results-page.md) | [🔗](02-outfit-results/outfit-results-page.html) | *Visual Updated*: 显示 3 个 AI 生成的搭配方案 |
+| **方案详情** | OutfitDetailScreen | [📄](03-outfit-detail/outfit-detail-page.md) | [🔗](03-outfit-detail/outfit-detail-page.html) | *Visual Updated*: 悬浮卡片布局 + 详情展示 |
+| **虚拟试穿结果** | TryOnResultScreen | (待补充) | [🔗](09-try-on/try-on-result.html) | *New*: AI 试穿效果预览 + 玻璃质感操作栏 |
+
+### 设置中心 (Settings Pages)
+
+| 页面 | 标识 | 文档 | 原型 | 说明 |
+|------|------|------|------|------|
+| **设置首页** | SettingsScreen | (见 Profile) | [🔗](05-profile/settings-page.html) | 设置项入口聚合 |
+| **账号安全** | SettingsSecurity | - | [🔗](05-profile/settings-security.html) | 修改密码、绑定手机 |
+| **隐私设置** | SettingsPrivacy | - | [🔗](05-profile/settings-privacy.html) | 权限管理、可见性 |
+| **帮助反馈** | SettingsHelp | - | [🔗](05-profile/settings-help.html) | 常见问题、问题反馈 |
+| **关于我们** | SettingsAbout | - | [🔗](05-profile/settings-about.html) | 版本信息、用户协议 |
 
 ### 分享功能 (Share Feature)
 
@@ -43,158 +60,66 @@
 
 ---
 
-## 🔄 核心用户流程
-
-### 完整搭配生成流程
+## 🔄 核心用户流程 (Updated)
 
 ```mermaid
 flowchart TD
     A[启动 App] --> B{首次使用?}
 
-    B -->|是| C[欢迎页<br/>WelcomeScreen]
-    B -->|否| D[首页<br/>HomeScreen]
+    B -->|是| C[欢迎页]
+    B -->|否| D[首页]
 
-    C --> D
+    D --> E{核心操作}
 
-    D --> E{用户操作}
+    E -->|拍照/上传| F[生成流程]
+    E -->|点击个人头像| G[个人页<br/>Profile]
+    E -->|点击历史卡片| H[方案详情<br/>Detail]
 
-    E -->|点击拍照| F[系统相机]
-    E -->|点击相册| G[系统相册]
-    E -->|点击历史记录| H[方案详情<br/>OutfitDetailScreen]
+    subgraph 生成流程
+    F --> F1[选择场合/风格]
+    F1 --> F2[AI 生成中<br/>Loading]
+    F2 --> F3[方案结果页<br/>Results]
+    end
 
-    F --> I[拍摄照片]
-    G --> J[选择照片]
+    F3 -->|点击卡片| H
 
-    I --> K[拍照+场合选择<br/>PhotoOccasionScreen]
-    J --> K
-
-    K --> L[选择场合 + 风格偏好]
-    L --> M[点击"生成搭配方案"]
-
-    M --> N[AI 生成中<br/>AILoadingScreen]
-    N --> O[搭配方案结果<br/>OutfitResultsScreen]
-
-    O --> P{用户操作}
-
-    P -->|点击方案卡片| Q[方案详情<br/>OutfitDetailScreen]
-    P -->|左右滑动| O
-
-    Q --> R{用户操作}
-
-    R -->|点击分享| S[分享模板<br/>ShareTemplatesModal]
-    R -->|返回| O
-
-    S --> T[选择模板 + 平台]
-    T --> U[分享完成]
-```
-
-### 快捷流程：查看历史
-
-```mermaid
-flowchart TD
-    A[首页<br/>HomeScreen] --> B{用户操作}
-
-    B -->|点击"最近搭配"| C[方案详情<br/>OutfitDetailScreen]
-    B -->|点击"查看全部"| D[衣橱<br/>WardrobeScreen]
-
-    D --> E[筛选/搜索历史记录]
-    E --> F[点击历史记录]
-    F --> C
+    subgraph 详情交互
+    H --> H1{后续操作}
+    H1 -->|点击试穿| I[试穿结果<br/>Try-On]
+    H1 -->|点击分享| J[分享模板]
+    end
+    
+    subgraph 个人中心
+    G --> G1[设置<br/>Settings]
+    G1 --> G2[各类设置子页面]
+    end
 ```
 
 ---
 
-## 📐 设计规范
+## 📐 设计规范 (v1.1)
 
-### 设备规格
-- **目标设备**: iPhone 15 Pro
-- **屏幕尺寸**: 393×852px
-- **设计系统**: iOS Design System
-- **字体**: SF Pro Display / PingFang SC
+### 视觉特征 (Visual Identity)
+- **Mesh Gradient (极光紫)**: 用于所有 Loading 页、Header 背景、强调区域。
+  - CSS: `radial-gradient` 组合 (`#8B7FFF`, `#6C63FF`, `#5D55E6`)
+- **Concave Header (反向圆角)**: 头部与内容区的连接处使用 `border-radius: 32px 32px 0 0` 的反向遮罩，创造"内容区向上覆盖"的层次感。
+- **Floating Cards (悬浮卡片)**: 内容容器不再通栏，而是圆角卡片 (`radius: 20-24px`) 悬浮于灰色背景之上。
+- **Glassmorphism (毛玻璃)**: 用于底部操作栏、Tab Bar、悬浮按钮。
 
-### 设计 Token
-- **主色调**: 紫色 `#6C63FF`
-- **渐变**: `linear-gradient(135deg, #6C63FF 0%, #7B72FF 100%)`
-- **背景色**:
-  - 白色 `#FFFFFF`
-  - 浅灰 `#F2F2F7`
-  - 深灰 `#1C1C1E`
-- **文字颜色**:
-  - 主文字 `#1C1C1E`
-  - 次文字 `#8E8E93`
-  - 占位符 `#C7C7CC`
-
-### 核心组件
-- **Dynamic Island**: iPhone 15 Pro 灵动岛（126×37.5px）
-- **Tab Bar**: iOS 风格标签栏（毛玻璃效果）
-- **Home Indicator**: iOS 底部指示器（134×5px）
-- **Status Bar**: 状态栏（时间、信号、电池）
-
----
-
-## 🖥️ 查看原型
-
-### 方式 1: 交互式导航页面
-打开 [index.html](index.html) 可以在统一界面查看所有页面：
-- 顶部导航栏快速切换页面
-- 支持键盘快捷键（← → 切换）
-- 完整的 iPhone 15 Pro 设备框架展示
-
-### 方式 2: 单独查看
-直接打开各个页面文件夹下的 HTML 文件，例如：
-```
-01-home/home-page.html
-02-outfit-results/outfit-results-page.html
-...
-```
-
----
-
-## 📋 文档结构说明
-
-每个页面的 MD 文档都包含以下章节：
-
-1. **页面概述**: 目标、任务、成功标准
-2. **设计方向**: 核心视觉特征
-3. **布局结构**: ASCII 布局图示
-4. **组件清单**: 详细的组件规范（样式、状态、交互）
-5. **交互规范**: 手势、流程图
-6. **动画规范**: 进入/退出/交互动画
-7. **滚动行为**: 滚动区域和规则（如适用）
-8. **状态定义**: 默认/加载/错误/空状态
-9. **数据需求**: 接口数据结构
-10. **无障碍支持**: VoiceOver、触摸目标、对比度
-11. **技术实现注意事项**: React Native 代码示例
-
----
-
-## 🎨 设计文件
-
-- **Figma 源文件**: (待补充)
-- **设计系统**: 参考 `ux-design-specification.md`
-- **图标库**: SF Symbols (`@expo/vector-icons`)
+### 颜色系统
+- **Primary Purple**: `#6C63FF` (品牌主色)
+- **Background Gray**: `#F2F2F7` (iOS System Grayscale 6)
+- **Card White**: `#FFFFFF`
+- **Text Dark**: `#1C1C1E`
+- **Text Light**: `#8E8E93` or `rgba(255,255,255, 0.7)` (on dark bg)
 
 ---
 
 ## 📊 页面统计
 
-- **总页面数**: 11 个（含变体）
-- **主要页面**: 6 个
-- **流程页面**: 3 个
-- **弹窗页面**: 2 个
-- **总文档数**: 10 个 MD + 12 个 HTML
-
----
-
-## 🔧 技术栈
-
-- **框架**: React Native (Expo)
-- **导航**: React Navigation
-- **状态管理**: React Context / Zustand
-- **本地存储**: SQLite (expo-sqlite)
-- **相机/相册**: expo-camera / expo-image-picker
-- **动画**: React Native Animated / Reanimated
-- **分享**: react-native-share / expo-sharing
+- **总HTML文件数**: 17 个
+- **新增页面**: 5 个 (设置子页面 x4, 试穿页 x1)
+- **主要更新**: 4 个 (Loading, Results, Detail, Outfit List)
 
 ---
 
@@ -202,20 +127,10 @@ flowchart TD
 
 | 版本 | 日期 | 更新内容 |
 |-----|------|---------|
-| v1.0 | 2025-12-31 | 初版：完整的 11 个页面设计 + 交互原型 |
+| v1.1 | 2026-01-04 | **Visual Polish**: 全线统一紫色极光风格、反向圆角头部；新增设置中心与试穿页。 |
+| v1.0 | 2025-12-31 | 初版：基础 11 个页面设计 + 交互原型 |
 
 ---
 
-## 🤝 贡献指南
-
-修改设计时请遵循以下步骤：
-1. 更新对应的 MD 文档
-2. 同步修改 HTML 原型
-3. 在 index.html 中验证效果
-4. 更新本 README.md（如有结构变化）
-
----
-
-**设计师**: Claude
+**设计师**: Claude (Antigravity)
 **项目**: 搭理 - AI 穿搭顾问
-**版本**: v1.0

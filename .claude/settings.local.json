@@ -7,7 +7,8 @@
       "Bash(dir /s /b *.md *.html)",
       "WebFetch(domain:docs.expo.dev)",
       "Skill(bmad:bmm:workflows:generate-project-context)",
-      "Skill(bmad:bmm:workflows:generate-project-context:*)"
+      "Skill(bmad:bmm:workflows:generate-project-context:*)",
+      "Bash(dir:*)"
     ]
   }
 }

@@ -1,0 +1,105 @@
+# generated: 2026-01-04
+# project: dali
+# tracking_system: file-system
+# story_location: E:\Personal-Project\dali\_bmad-output\implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-04
+project: dali
+tracking_system: file-system
+story_location: E:\Personal-Project\dali\_bmad-output\implementation-artifacts
+
+development_status:
+  # Epic 0: Project Setup & Foundation
+  epic-0: backlog
+  0-1-initialize-mobile-project-with-expo: backlog
+  0-2-initialize-backend-project-with-fastapi: backlog
+  epic-0-retrospective: optional
+
+  # Epic 1: Authentication & Onboarding
+  epic-1: backlog
+  1-1-phone-sms-registration-verification: backlog
+  1-2-wechat-quick-login: backlog
+  1-3-personalized-onboarding-questionnaire: backlog
+  1-4-token-management-session-persistence: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Camera & Photo Management
+  epic-2: backlog
+  2-1-camera-integration-for-photo-capture: backlog
+  2-2-photo-album-selection-editing: backlog
+  2-3-photo-upload-to-cloud-storage: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: AI Outfit Generation Engine
+  epic-3: backlog
+  3-1-ai-image-recognition-integration: backlog
+  3-2-occasion-based-recommendation-engine: backlog
+  3-3-ai-generation-loading-experience-skeleton-progress: backlog
+  3-4-outfit-results-display-with-theory-visualization: backlog
+  3-5-outfit-feedback-like-save: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Theory & Knowledge Display
+  epic-4: backlog
+  4-1-color-theory-visualization-component: backlog
+  4-2-style-tag-and-occasion-icon-display: backlog
+  4-3-theory-explanation-text-generation-and-display: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Outfit History & Search
+  epic-5: backlog
+  5-1-sqlite-local-storage-for-outfit-history: backlog
+  5-2-outfit-history-grid-view: backlog
+  5-3-filter-by-occasion-time-and-favorites: backlog
+  5-4-cloud-sync-service-last-write-wins-strategy: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: Sharing & Social Integration
+  epic-6: backlog
+  6-1-sharetemplate-component-3-styles: backlog
+  6-2-share-image-generation-with-watermark: backlog
+  6-3-one-tap-social-platform-sharing-and-tracking: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Profile & Growth Tracking
+  epic-7: backlog
+  7-1-profile-screen-with-user-stats: backlog
+  7-2-progresscircle-component-ai-learning-visualization: backlog
+  7-3-preferencecloud-component-and-edit-preferences: backlog
+  epic-7-retrospective: optional
+
+  # Epic 8: Permissions & Offline Support
+  epic-8: backlog
+  8-1-permission-manager-with-friendly-prompts: backlog
+  8-2-offline-mode-handler-with-graceful-degradation: backlog
+  8-3-network-reconnection-and-auto-sync-within-30s: backlog
+  epic-8-retrospective: optional

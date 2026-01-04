@@ -193,14 +193,29 @@
             <button class="nav-btn" onclick="switchPage('try-on', this)">
                 <span>🪄</span> AI试穿
             </button>
-            <button class="nav-btn" onclick="switchPage('wardrobe', this)">
-                <span>�</span> 衣橱
+            <button class="nav-btn" onclick="switchPage('outfit', this)">
+                <span>👗</span> 搭配
             </button>
             <button class="nav-btn" onclick="switchPage('profile', this)">
-                <span>�</span> 个人页
+                <span></span> 个人页
             </button>
             <button class="nav-btn" onclick="switchPage('share', this)">
                 <span>🔗</span> 分享模板
+            </button>
+            <button class="nav-btn" onclick="switchPage('settings', this)">
+                <span>⚙️</span> 设置
+            </button>
+            <button class="nav-btn" onclick="switchPage('settings-security', this)">
+                <span>🔐</span> 账号安全
+            </button>
+            <button class="nav-btn" onclick="switchPage('settings-privacy', this)">
+                <span>🛡️</span> 隐私
+            </button>
+            <button class="nav-btn" onclick="switchPage('settings-help', this)">
+                <span>❓</span> 帮助
+            </button>
+            <button class="nav-btn" onclick="switchPage('settings-about', this)">
+                <span>ℹ️</span> 关于
             </button>
         </div>
     </div>
@@ -215,9 +230,14 @@
         <iframe id="iframe-results" src="02-outfit-results/outfit-results-page.html"></iframe>
         <iframe id="iframe-detail" src="03-outfit-detail/outfit-detail-page.html"></iframe>
         <iframe id="iframe-try-on" src="09-try-on/try-on-result.html"></iframe>
-        <iframe id="iframe-wardrobe" src="04-wardrobe/wardrobe-page.html"></iframe>
+        <iframe id="iframe-outfit" src="04-wardrobe/outfit-page.html"></iframe>
         <iframe id="iframe-profile" src="05-profile/profile-page.html"></iframe>
         <iframe id="iframe-share" src="08-share/share-templates.html"></iframe>
+        <iframe id="iframe-settings" src="05-profile/settings-page.html"></iframe>
+        <iframe id="iframe-settings-security" src="05-profile/settings-security.html"></iframe>
+        <iframe id="iframe-settings-privacy" src="05-profile/settings-privacy.html"></iframe>
+        <iframe id="iframe-settings-help" src="05-profile/settings-help.html"></iframe>
+        <iframe id="iframe-settings-about" src="05-profile/settings-about.html"></iframe>
     </div>
 
     <!-- 底部信息栏 -->
@@ -247,9 +267,14 @@
             'results': '搭配方案',
             'detail': '方案详情',
             'try-on': 'AI试穿',
-            'wardrobe': '衣橱',
+            'outfit': '搭配',
             'profile': '个人页',
-            'share': '分享模板'
+            'share': '分享模板',
+            'settings': '设置',
+            'settings-security': '账号安全',
+            'settings-privacy': '隐私设置',
+            'settings-help': '帮助与反馈',
+            'settings-about': '关于我们'
         };
 
         function switchPage(pageId, btnElement) {
@@ -290,7 +315,7 @@
 
         // 键盘快捷键支持
         document.addEventListener('keydown', function (e) {
-            const pages = ['welcome', 'home', 'home-empty', 'photo', 'loading', 'results', 'detail', 'try-on', 'wardrobe', 'profile', 'share'];
+            const pages = ['welcome', 'home', 'home-empty', 'photo', 'loading', 'results', 'detail', 'try-on', 'outfit', 'profile', 'share', 'settings', 'settings-security', 'settings-privacy', 'settings-help', 'settings-about'];
             const currentIndex = pages.findIndex(p => {
                 const iframe = document.getElementById('iframe-' + p);
                 return iframe && iframe.classList.contains('active');

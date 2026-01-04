@@ -124,8 +124,46 @@
 
         /* 头部区域 */
         .header {
-            background: linear-gradient(180deg, #6C63FF 0%, #8578FF 100%);
-            padding: 59px 20px 20px;
+            background:
+                radial-gradient(circle at 100% 0%, #8B7FFF 0%, transparent 50%),
+                radial-gradient(circle at 0% 0%, #6C63FF 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, #5D55E6 0%, transparent 50%),
+                #6C63FF;
+            padding: 59px 20px 48px;
+            /* Adjusted padding to accommodate the cap */
+            position: relative;
+            overflow: hidden;
+            /* Removed hanging border-radius */
+            box-shadow: none;
+            /* Shadow handled by cap visually or removed */
+            z-index: 30;
+            /* Ensure it stays above */
+        }
+
+        /* The "Inverse" Radius Cap to match Home Page style */
+        .header::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 32px;
+            background: #F2F2F7;
+            /* Matches body background */
+            border-radius: 32px 32px 0 0;
+            z-index: 5;
+        }
+
+        .header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            opacity: 0.4;
+            pointer-events: none;
         }
 
         .header-top {
@@ -139,6 +177,8 @@
             font-size: 32px;
             font-weight: 700;
             color: #fff;
+            margin-bottom: 24px;
+            /* Added spacing */
         }
 
         .filter-button {
@@ -155,14 +195,20 @@
         /* 搜索框 */
         .search-box {
             width: 100%;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
+            height: 48px;
+            /* Increased height */
+            background: rgba(255, 255, 255, 0.25);
+            /* Increased contrast */
+            backdrop-filter: blur(10px);
+            /* Added glass effect */
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            padding: 0 12px;
-            gap: 8px;
-            margin-bottom: 16px;
+            padding: 0 16px;
+            gap: 10px;
+            margin-bottom: 0;
+            /* Remove bottom margin since it's the last item */
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .search-icon {
@@ -183,55 +229,36 @@
             color: rgba(255, 255, 255, 0.6);
         }
 
-        /* 场合筛选标签 */
-        .filter-tabs {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: none;
-        }
 
-        .filter-tabs::-webkit-scrollbar {
-            display: none;
-        }
 
-        .filter-tabs-inner {
+        /* 内容容器 (Sheet) - Transparent Now */
+        .content-sheet {
+            margin: 0 20px 0;
+            /* No negative margin */
+            background: transparent;
+            /* Removed white/gray background */
+            border-radius: 0;
+            height: calc(100% - 180px);
+            /* Adjust based on new header */
             display: flex;
-            gap: 8px;
-        }
-
-        .filter-tab {
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 16px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #fff;
-            white-space: nowrap;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .filter-tab.active {
-            background: #fff;
-            color: #6C63FF;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            flex-direction: column;
+            position: relative;
+            z-index: 20;
+            box-shadow: none;
+            /* Removed shadow */
+            overflow: visible;
+            /* For radius */
         }
 
         /* 内容区域 */
         .content {
-            padding: 16px 20px 100px;
+            padding: 0 0 100px;
             overflow-y: auto;
-            height: calc(100% - 190px - 83px);
-            /* approx header height adjustment */
+            flex: 1;
+            /* Take remaining space in flex container */
             -webkit-overflow-scrolling: touch;
-            background: #F2F2F7;
-            /* Ensure background is light for content */
-            border-radius: 24px 24px 0 0;
-            /* Card look */
-            margin-top: -20px;
-            /* Overlap slightly */
-            position: relative;
-            z-index: 10;
+            background: transparent;
+            /* Transparent content bg */
         }
 
         .content::-webkit-scrollbar {
@@ -242,7 +269,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 16px;
+            background: transparent;
+            /* Transparent */
+            padding: 16px 4px 12px;
+            /* Adjusted padding */
+            margin: 0 0;
+            /* Reset margins */
         }
 
         .count-text {
@@ -254,10 +286,13 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            font-size: 14px;
-            color: #6C63FF;
+            font-size: 13px;
+            color: #3A3A3C;
             font-weight: 500;
             cursor: pointer;
+            background: rgba(118, 118, 128, 0.12);
+            padding: 6px 12px;
+            border-radius: 14px;
         }
 
         /* 搭配网格 */
@@ -378,6 +413,8 @@
             justify-content: space-around;
             align-items: flex-start;
             padding-top: 8px;
+            z-index: 100;
+            /* Ensure it stays on top */
         }
 
         .tab-item {
@@ -421,6 +458,8 @@
             height: 5px;
             background: #1C1C1E;
             border-radius: 3px;
+            z-index: 101;
+            /* Ensure it stays on top of tab bar */
         }
 
         /* 空状态样式 */
@@ -525,9 +564,15 @@
                     <h1 class="page-title">搭配</h1>
                     <div class="filter-button">
                         <svg width="20" height="20" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
-                            <line x1="4" y1="6" x2="20" y2="6" />
-                            <line x1="4" y1="12" x2="20" y2="12" />
-                            <line x1="4" y1="18" x2="20" y2="18" />
+                            <path d="M4 21v-7" />
+                            <path d="M4 10V3" />
+                            <path d="M12 21v-9" />
+                            <path d="M12 8V3" />
+                            <path d="M20 21v-5" />
+                            <path d="M20 12V3" />
+                            <path d="M1 14h6" />
+                            <path d="M9 8h6" />
+                            <path d="M17 16h6" />
                         </svg>
                     </div>
                 </div>
@@ -542,22 +587,12 @@
                     <input type="text" class="search-input" placeholder="搜索搭配方案...">
                 </div>
 
-                <!-- 场合筛选 -->
-                <div class="filter-tabs">
-                    <div class="filter-tabs-inner">
-                        <div class="filter-tab active">全部</div>
-                        <div class="filter-tab">通勤 💼</div>
-                        <div class="filter-tab">约会 💕</div>
-                        <div class="filter-tab">休闲 ☕</div>
-                        <div class="filter-tab">聚会 🎉</div>
-                        <div class="filter-tab">运动 🏃</div>
-                        <div class="filter-tab">居家 🏠</div>
-                    </div>
-                </div>
+
             </div>
 
-            <!-- 内容区域 -->
-            <div class="content">
+            <!-- 内容容器 (Sheet Wrapper) -->
+            <div class="content-sheet">
+                <!-- 内容头部 - 固定部分 -->
                 <div class="content-header">
                     <span class="count-text">共 28 套搭配方案</span>
                     <div class="sort-button">
@@ -569,120 +604,124 @@
                     </div>
                 </div>
 
-                <!-- 搭配网格 -->
-                <div class="outfits-grid">
-                    <div class="outfit-card">
-                        <div class="outfit-thumbnail style1">
-                            <span class="thumbnail-text">职场优雅风</span>
-                            <div class="saved-badge">
-                                <svg width="14" height="14" fill="#FF6B9D" viewBox="0 0 24 24">
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="outfit-info">
-                            <div class="outfit-info-top">
-                                <div class="outfit-title">职场优雅风</div>
-                                <div class="outfit-date">今天</div>
-                            </div>
-                            <div class="outfit-mini-tags">
-                                <span class="mini-tag">简约</span>
-                                <span class="mini-tag">通勤</span>
-                            </div>
-                        </div>
-                    </div>
+                <!-- 内容区域 - 滚动部分 -->
+                <div class="content">
 
-                    <div class="outfit-card">
-                        <div class="outfit-thumbnail style2">
-                            <span class="thumbnail-text">休闲时尚风</span>
-                        </div>
-                        <div class="outfit-info">
-                            <div class="outfit-info-top">
-                                <div class="outfit-title">休闲时尚风</div>
-                                <div class="outfit-date">今天</div>
+                    <!-- 搭配网格 -->
+                    <div class="outfits-grid">
+                        <div class="outfit-card">
+                            <div class="outfit-thumbnail style1">
+                                <span class="thumbnail-text">职场优雅风</span>
+                                <div class="saved-badge">
+                                    <svg width="14" height="14" fill="#FF6B9D" viewBox="0 0 24 24">
+                                        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                                    </svg>
+                                </div>
                             </div>
-                            <div class="outfit-mini-tags">
-                                <span class="mini-tag">时尚</span>
-                                <span class="mini-tag">休闲</span>
+                            <div class="outfit-info">
+                                <div class="outfit-info-top">
+                                    <div class="outfit-title">职场优雅风</div>
+                                    <div class="outfit-date">今天</div>
+                                </div>
+                                <div class="outfit-mini-tags">
+                                    <span class="mini-tag">简约</span>
+                                    <span class="mini-tag">通勤</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="outfit-card">
-                        <div class="outfit-thumbnail style3">
-                            <span class="thumbnail-text">气质约会风</span>
-                            <div class="saved-badge">
-                                <svg width="14" height="14" fill="#FF6B9D" viewBox="0 0 24 24">
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                                </svg>
+                        <div class="outfit-card">
+                            <div class="outfit-thumbnail style2">
+                                <span class="thumbnail-text">休闲时尚风</span>
+                            </div>
+                            <div class="outfit-info">
+                                <div class="outfit-info-top">
+                                    <div class="outfit-title">休闲时尚风</div>
+                                    <div class="outfit-date">今天</div>
+                                </div>
+                                <div class="outfit-mini-tags">
+                                    <span class="mini-tag">时尚</span>
+                                    <span class="mini-tag">休闲</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="outfit-info">
-                            <div class="outfit-info-top">
-                                <div class="outfit-title">气质约会风</div>
-                                <div class="outfit-date">昨天</div>
-                            </div>
-                            <div class="outfit-mini-tags">
-                                <span class="mini-tag">甜美</span>
-                                <span class="mini-tag">约会</span>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="outfit-card">
-                        <div class="outfit-thumbnail style4">
-                            <span class="thumbnail-text">轻奢商务风</span>
-                        </div>
-                        <div class="outfit-info">
-                            <div class="outfit-info-top">
-                                <div class="outfit-title">轻奢商务风</div>
-                                <div class="outfit-date">昨天</div>
+                        <div class="outfit-card">
+                            <div class="outfit-thumbnail style3">
+                                <span class="thumbnail-text">气质约会风</span>
+                                <div class="saved-badge">
+                                    <svg width="14" height="14" fill="#FF6B9D" viewBox="0 0 24 24">
+                                        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                                    </svg>
+                                </div>
                             </div>
-                            <div class="outfit-mini-tags">
-                                <span class="mini-tag">知性</span>
-                                <span class="mini-tag">通勤</span>
+                            <div class="outfit-info">
+                                <div class="outfit-info-top">
+                                    <div class="outfit-title">气质约会风</div>
+                                    <div class="outfit-date">昨天</div>
+                                </div>
+                                <div class="outfit-mini-tags">
+                                    <span class="mini-tag">甜美</span>
+                                    <span class="mini-tag">约会</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="outfit-card">
-                        <div class="outfit-thumbnail style1">
-                            <span class="thumbnail-text">文艺清新风</span>
-                        </div>
-                        <div class="outfit-info">
-                            <div class="outfit-info-top">
-                                <div class="outfit-title">文艺清新风</div>
-                                <div class="outfit-date">3天前</div>
+                        <div class="outfit-card">
+                            <div class="outfit-thumbnail style4">
+                                <span class="thumbnail-text">轻奢商务风</span>
                             </div>
-                            <div class="outfit-mini-tags">
-                                <span class="mini-tag">简约</span>
-                                <span class="mini-tag">休闲</span>
+                            <div class="outfit-info">
+                                <div class="outfit-info-top">
+                                    <div class="outfit-title">轻奢商务风</div>
+                                    <div class="outfit-date">昨天</div>
+                                </div>
+                                <div class="outfit-mini-tags">
+                                    <span class="mini-tag">知性</span>
+                                    <span class="mini-tag">通勤</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="outfit-card">
-                        <div class="outfit-thumbnail style2">
-                            <span class="thumbnail-text">运动活力风</span>
-                            <div class="saved-badge">
-                                <svg width="14" height="14" fill="#FF6B9D" viewBox="0 0 24 24">
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                                </svg>
+                        <div class="outfit-card">
+                            <div class="outfit-thumbnail style1">
+                                <span class="thumbnail-text">文艺清新风</span>
+                            </div>
+                            <div class="outfit-info">
+                                <div class="outfit-info-top">
+                                    <div class="outfit-title">文艺清新风</div>
+                                    <div class="outfit-date">3天前</div>
+                                </div>
+                                <div class="outfit-mini-tags">
+                                    <span class="mini-tag">简约</span>
+                                    <span class="mini-tag">休闲</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="outfit-info">
-                            <div class="outfit-info-top">
-                                <div class="outfit-title">运动活力风</div>
-                                <div class="outfit-date">3天前</div>
+
+                        <div class="outfit-card">
+                            <div class="outfit-thumbnail style2">
+                                <span class="thumbnail-text">运动活力风</span>
+                                <div class="saved-badge">
+                                    <svg width="14" height="14" fill="#FF6B9D" viewBox="0 0 24 24">
+                                        <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                                    </svg>
+                                </div>
                             </div>
-                            <div class="outfit-mini-tags">
-                                <span class="mini-tag">运动</span>
-                                <span class="mini-tag">健身</span>
+                            <div class="outfit-info">
+                                <div class="outfit-info-top">
+                                    <div class="outfit-title">运动活力风</div>
+                                    <div class="outfit-date">3天前</div>
+                                </div>
+                                <div class="outfit-mini-tags">
+                                    <span class="mini-tag">运动</span>
+                                    <span class="mini-tag">健身</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> <!-- End content-sheet -->
 
             <!-- Tab Bar -->
             <div class="tab-bar">
@@ -697,10 +736,9 @@
                 <a href="#" class="tab-item active">
                     <div class="tab-icon">
                         <svg class="icon" fill="#6C63FF" viewBox="0 0 24 24">
-                            <rect x="3" y="3" width="7" height="18" rx="1" />
-                            <rect x="14" y="3" width="7" height="18" rx="1" />
-                            <line x1="6" y1="12" x2="7" y2="12" stroke="#fff" stroke-width="2" />
-                            <line x1="17" y1="12" x2="18" y2="12" stroke="#fff" stroke-width="2" />
+                            <!-- Wide T-shirt Filled (Based on Home Page Stroke Path) -->
+                            <path
+                                d="M20.38 3.46L16 2h-2c0 2-3 2-4 0H8L3.62 3.46a2 2 0 0 0-1.08 2.22l.52 2.62a2 2 0 0 0 1.63 1.58L6 10v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9l1.31-.12a2 2 0 0 0 1.63-1.58l.52-2.62a2 2 0 0 0-1.08-2.22z" />
                         </svg>
                     </div>
                     <span class="tab-label">搭配</span>
@@ -720,15 +758,7 @@
         </div>
     </div>
 
-    <script>
-        // 筛选标签切换
-        document.querySelectorAll('.filter-tab').forEach(tab => {
-            tab.addEventListener('click', function () {
-                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-            });
-        });
-    </script>
+
 </body>
 
 </html>
