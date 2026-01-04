@@ -4,7 +4,7 @@ user_name: 'Xiaoshaoqian'
 date: '2026-01-03'
 sections_completed: ['technology_stack', 'language_rules', 'framework_rules', 'testing_rules', 'code_quality', 'workflow_rules', 'critical_rules']
 status: 'complete'
-rule_count: 45
+rule_count: 50
 optimized_for_llm: true
 ---
 
@@ -53,6 +53,39 @@ _Critical rules and patterns that AI agents must follow when implementing code. 
 ---
 
 ## Critical Implementation Rules
+
+### UX Design Source of Truth (CRITICAL)
+
+**UI implementation MUST follow the HTML prototypes in `_bmad-output/planning-artifacts/ux-design/pages/`**
+
+| Page | HTML Prototype Path |
+|------|---------------------|
+| 首页 (空状态) | `ux-design/pages/01-home/home-page-empty.html` |
+| 首页 (有数据) | `ux-design/pages/01-home/home-page.html` |
+| 搭配历史 | `ux-design/pages/04-wardrobe/outfit-page.html` |
+| 我的 | `ux-design/pages/05-profile/profile-page.html` |
+| 搭配结果 | `ux-design/pages/02-outfit-results/outfit-results-page.html` |
+| 搭配详情 | `ux-design/pages/03-outfit-detail/outfit-detail-page.html` |
+| 设置 | `ux-design/pages/05-profile/settings-page.html` |
+| AI加载 | `ux-design/pages/07-flow-pages/ai-loading.html` |
+| 分享模板 | `ux-design/pages/08-share/share-templates.html` |
+
+**Before implementing ANY screen:**
+1. Read the corresponding HTML prototype file completely
+2. Extract exact colors, spacing, typography from the CSS
+3. Use SVG icons from the prototype (not emoji)
+4. Match the exact layout structure
+
+**Key Design Elements:**
+- Primary color: `#6C63FF` (purple)
+- Secondary color: `#8578FF` / `#8B7FFF`
+- Accent color: `#FF6B9D` (pink)
+- Background: `#F2F2F7` (iOS light gray)
+- Card background: `#FFFFFF`
+- Tab bar: 83px height, blur effect, `#F2F2F7` background
+- Header gradient: `linear-gradient(180deg, #6C63FF 0%, #8578FF 100%)`
+- Card border-radius: 24px (content cards), 16px (item cards)
+- White card overlaps purple header by ~100px with rounded top corners
 
 ### TypeScript/React Native Rules
 
@@ -338,4 +371,4 @@ poetry run pytest                         # Run tests
 
 _This context file ensures AI agents implement code consistently with project standards._
 
-_Last Updated: 2026-01-03_
+_Last Updated: 2026-01-04_

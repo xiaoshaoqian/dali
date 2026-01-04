@@ -8,7 +8,13 @@
       "WebFetch(domain:docs.expo.dev)",
       "Skill(bmad:bmm:workflows:generate-project-context)",
       "Skill(bmad:bmm:workflows:generate-project-context:*)",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(npx expo install:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(npx expo-doctor:*)",
+      "Bash(npx expo start)"
     ]
   }
 }

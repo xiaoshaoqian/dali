@@ -1,0 +1,3 @@
+// UI Components barrel export
+// Base UI components for the design system
+export * from './icons';
