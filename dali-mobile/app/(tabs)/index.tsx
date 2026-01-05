@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 
 import { CameraIcon, AlbumIcon, OutfitIcon } from '@/components/ui/icons';
 import { colors } from '@/constants';
@@ -35,6 +36,16 @@ const styleBackgrounds: Record<string, [string, string]> = {
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+
+  // Navigate to camera screen
+  const handleCamera = () => {
+    router.push('/camera' as never);
+  };
+
+  // Navigate to album picker
+  const handleAlbum = () => {
+    router.push('/album' as never);
+  };
 
   return (
     <View style={styles.container}>
@@ -62,14 +73,22 @@ export default function HomeScreen() {
 
           {/* Action Buttons - Side by Side */}
           <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.cameraButton} activeOpacity={0.8}>
+            <TouchableOpacity
+              style={styles.cameraButton}
+              activeOpacity={0.8}
+              onPress={handleCamera}
+            >
               <View style={styles.btnIcon}>
                 <CameraIcon size={36} color="#FFFFFF" />
               </View>
               <Text style={styles.cameraButtonText}>拍照</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.albumButton} activeOpacity={0.8}>
+            <TouchableOpacity
+              style={styles.albumButton}
+              activeOpacity={0.8}
+              onPress={handleAlbum}
+            >
               <View style={styles.btnIcon}>
                 <AlbumIcon size={36} color="#1C1C1E" />
               </View>

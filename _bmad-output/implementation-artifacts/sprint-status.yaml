@@ -45,25 +45,25 @@ development_status:
   epic-0-retrospective: optional
 
   # Epic 1: Authentication & Onboarding
-  epic-1: backlog
-  1-1-phone-sms-registration-verification: backlog
+  epic-1: in-progress
+  1-1-phone-sms-registration-verification: done
   1-2-wechat-quick-login: backlog
-  1-3-personalized-onboarding-questionnaire: backlog
-  1-4-token-management-session-persistence: backlog
+  1-3-personalized-onboarding-questionnaire: done
+  1-4-token-management-session-persistence: done
   epic-1-retrospective: optional
 
   # Epic 2: Camera & Photo Management
-  epic-2: backlog
-  2-1-camera-integration-for-photo-capture: backlog
-  2-2-photo-album-selection-editing: backlog
-  2-3-photo-upload-to-cloud-storage: backlog
+  epic-2: done
+  2-1-camera-integration-for-photo-capture: done
+  2-2-photo-album-selection-editing: done
+  2-3-photo-upload-to-cloud-storage: done
   epic-2-retrospective: optional
 
   # Epic 3: AI Outfit Generation Engine
-  epic-3: backlog
-  3-1-ai-image-recognition-integration: backlog
-  3-2-occasion-based-recommendation-engine: backlog
-  3-3-ai-generation-loading-experience-skeleton-progress: backlog
+  epic-3: in-progress
+  3-1-ai-image-recognition-integration: done
+  3-2-occasion-based-recommendation-engine: done
+  3-3-ai-generation-loading-experience-skeleton-progress: done
   3-4-outfit-results-display-with-theory-visualization: backlog
   3-5-outfit-feedback-like-save: backlog
   epic-3-retrospective: optional

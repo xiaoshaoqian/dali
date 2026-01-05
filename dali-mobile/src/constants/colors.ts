@@ -28,6 +28,9 @@ export const colors = {
   gradientStart: '#6C63FF', // Purple gradient start
   gradientEnd: '#9D94FF', // Purple gradient end
 
+  // Light variants
+  primaryLight: '#F5F3FF', // Light purple for selected states
+
   // Transparent variants
   primaryTransparent: 'rgba(108, 99, 255, 0.1)', // For tag backgrounds
   accentTransparent: 'rgba(255, 107, 157, 0.1)', // For accent backgrounds

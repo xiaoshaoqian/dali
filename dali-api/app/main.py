@@ -3,6 +3,7 @@
 搭理app Backend API - AI-powered fashion styling assistant.
 """
 
+import asyncio
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -16,6 +17,7 @@ from app.api.v1.router import router as api_v1_router
 from app.config import settings
 from app.core.exceptions import APIException
 from app.core.logging import setup_logging
+from app.services.verification_store import start_cleanup_task
 
 # Use unpkg CDN which is more reliable in China
 SWAGGER_JS_URL = "https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"
@@ -28,9 +30,15 @@ async def lifespan(app: FastAPI):
     """Application lifespan events."""
     # Startup
     setup_logging()
+    # Start background cleanup task for verification codes
+    cleanup_task = asyncio.create_task(start_cleanup_task())
     yield
     # Shutdown
-    pass
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(

@@ -22,7 +22,15 @@
       "Bash(poetry run pytest:*)",
       "Bash(poetry run ruff:*)",
       "Bash(poetry run python:*)",
-      "Bash(timeout 5 poetry run uvicorn:*)"
+      "Bash(timeout 5 poetry run uvicorn:*)",
+      "Bash(git -C \"E:/Personal-Project/dali\" log --oneline -10)",
+      "Bash(npx expo lint:*)",
+      "Bash(node_modules/.bin/tsc:*)",
+      "Bash(git -C \"E:/Personal-Project/dali\" diff --name-only)",
+      "Bash(pushd:*)",
+      "Bash(popd)",
+      "Bash(git -C \"E:/Personal-Project/dali\" status --porcelain)",
+      "Bash(node -e:*)"
     ]
   }
 }
