@@ -14,7 +14,15 @@
       "Bash(npx tsc:*)",
       "Bash(ls:*)",
       "Bash(npx expo-doctor:*)",
-      "Bash(npx expo start)"
+      "Bash(npx expo start)",
+      "WebSearch",
+      "Bash(poetry init:*)",
+      "Bash(poetry add:*)",
+      "Bash(poetry run alembic:*)",
+      "Bash(poetry run pytest:*)",
+      "Bash(poetry run ruff:*)",
+      "Bash(poetry run python:*)",
+      "Bash(timeout 5 poetry run uvicorn:*)"
     ]
   }
 }
