@@ -36,8 +36,7 @@ export default function OccasionScreen() {
       setGarmentData(result);
       setScreenState('selecting');
       setShowSelector(true);
-    } catch (error) {
-      console.error('Garment analysis failed:', error);
+    } catch (_error) {
       Alert.alert(
         '抱歉',
         '我没看清这件衣服，能换个角度再拍一张吗？',

@@ -151,8 +151,7 @@ export default function AILoadingScreen() {
       } else {
         throw new Error('No recommendations received');
       }
-    } catch (error) {
-      console.error('Outfit generation failed:', error);
+    } catch (_error) {
       setIsGenerating(false);
       Alert.alert(
         '生成失败',

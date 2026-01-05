@@ -1,9 +1,11 @@
 /**
  * Outfit Results Screen
- * Displays AI-generated outfit recommendations
- * Part of Story 3.2: Occasion-Based Recommendation Engine
+ * Displays AI-generated outfit recommendations with horizontal scrolling cards
+ * Part of Story 3.4: Outfit Results Display with Theory Visualization
+ *
+ * @see _bmad-output/planning-artifacts/ux-design/pages/02-outfit-results/outfit-results-page.html
  */
-import React, { useMemo } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,70 +13,73 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Animated, {
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 
 import { colors } from '@/constants';
+import { OutfitCard } from '@/components/outfit/OutfitCard';
 import type { OutfitRecommendation } from '@/services';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = SCREEN_WIDTH - 40;
+const CARD_WIDTH = 353;
+const CARD_GAP = 16;
+const CARD_WITH_GAP = CARD_WIDTH + CARD_GAP;
+const HORIZONTAL_PADDING = (SCREEN_WIDTH - CARD_WIDTH) / 2;
 
-// Style tag chip component
-function StyleTag({ tag }: { tag: string }) {
+// Scroll indicator dot component
+function ScrollDot({ active }: { active: boolean }) {
   return (
-    <View style={styles.styleTag}>
-      <Text style={styles.styleTagText}>{tag}</Text>
-    </View>
+    <Animated.View
+      style={[
+        styles.dot,
+        active && styles.dotActive,
+      ]}
+    />
   );
 }
 
-// Outfit card component
-function OutfitCard({ recommendation, index }: { recommendation: OutfitRecommendation; index: number }) {
+// Success banner component
+function SuccessBanner({ count }: { count: number }) {
   return (
-    <View style={styles.outfitCard}>
-      {/* Card Header */}
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardIndex}>方案 {index + 1}</Text>
-        <Text style={styles.cardName}>{recommendation.name}</Text>
+    <Animated.View entering={FadeInUp.delay(200).duration(400)} style={styles.successBanner}>
+      <View style={styles.successIcon}>
+        <Text style={styles.successIconText}>✓</Text>
       </View>
+      <View style={styles.successText}>
+        <Text style={styles.successTitle}>生成成功</Text>
+        <Text style={styles.successSubtitle}>AI 为你精心挑选了 {count} 套方案</Text>
+      </View>
+    </Animated.View>
+  );
+}
 
-      {/* Style Tags */}
-      <View style={styles.tagsContainer}>
-        {recommendation.styleTags.map((tag, i) => (
-          <StyleTag key={i} tag={tag} />
-        ))}
-      </View>
-
-      {/* Outfit Items */}
-      <View style={styles.itemsContainer}>
-        {recommendation.items.map((item, i) => (
-          <View key={i} style={styles.itemRow}>
-            <View style={[styles.colorDot, { backgroundColor: item.colorHex }]} />
-            <View style={styles.itemInfo}>
-              <Text style={styles.itemType}>{item.itemType}</Text>
-              <Text style={styles.itemName}>{item.name}</Text>
-            </View>
-            <Text style={styles.itemColor}>{item.color}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Theory Preview */}
-      <View style={styles.theoryContainer}>
-        <Text style={styles.theoryLabel}>搭配解析</Text>
-        <Text style={styles.theoryText} numberOfLines={3}>
-          {recommendation.theory.fullExplanation}
-        </Text>
-      </View>
-
-      {/* Color Principle */}
-      <View style={styles.principleContainer}>
-        <Text style={styles.principleLabel}>配色原理：</Text>
-        <Text style={styles.principleValue}>{recommendation.theory.colorPrinciple}</Text>
-      </View>
+// Header with back and share buttons
+function Header({
+  onBack,
+  onShare,
+}: {
+  onBack: () => void;
+  onShare: () => void;
+}) {
+  return (
+    <View style={styles.topNav}>
+      <TouchableOpacity style={styles.navButton} onPress={onBack} activeOpacity={0.7}>
+        <Text style={styles.navButtonIcon}>‹</Text>
+      </TouchableOpacity>
+      <Text style={styles.navTitle}>搭配方案</Text>
+      <TouchableOpacity style={styles.navButton} onPress={onShare} activeOpacity={0.7}>
+        <Text style={styles.shareIcon}>↑</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -87,9 +92,11 @@ export default function OutfitResultsScreen() {
   }>();
 
   const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   // Parse recommendations from params
-  const recommendations: OutfitRecommendation[] = useMemo(() => {
+  const recommendations: OutfitRecommendation[] = React.useMemo(() => {
     try {
       return params.recommendations ? JSON.parse(params.recommendations) : [];
     } catch {
@@ -97,48 +104,126 @@ export default function OutfitResultsScreen() {
     }
   }, [params.recommendations]);
 
-  const handleDone = () => {
-    router.replace('/(tabs)' as never);
-  };
+  // Handle scroll event to update active indicator
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetX = event.nativeEvent.contentOffset.x;
+    const newIndex = Math.round(offsetX / CARD_WITH_GAP);
+    if (newIndex !== activeIndex && newIndex >= 0 && newIndex < recommendations.length) {
+      setActiveIndex(newIndex);
+    }
+  }, [activeIndex, recommendations.length]);
+
+  // Navigate to card on dot tap
+  const handleDotPress = useCallback((index: number) => {
+    scrollRef.current?.scrollTo({
+      x: index * CARD_WITH_GAP,
+      animated: true,
+    });
+    setActiveIndex(index);
+  }, []);
+
+  // Navigation handlers
+  const handleBack = useCallback(() => {
+    router.back();
+  }, []);
+
+  const handleShare = useCallback(() => {
+    // TODO: Implement share functionality
+  }, []);
+
+  const handleCardPress = useCallback((recommendation: OutfitRecommendation) => {
+    router.push({
+      pathname: '/outfit/[id]',
+      params: {
+        id: recommendation.id,
+        recommendation: JSON.stringify(recommendation),
+      },
+    });
+  }, []);
+
+  const handleLike = useCallback((_id: string) => {
+    // TODO: Implement like functionality with API call
+  }, []);
+
+  const handleSave = useCallback((_id: string) => {
+    // TODO: Implement save functionality with API call
+  }, []);
 
   return (
     <View style={styles.container}>
-      {/* Header */}
+      {/* Header with gradient and inverse radius cap */}
       <LinearGradient
-        colors={['#6C63FF', '#9D94FF']}
+        colors={['#6C63FF', '#8B7FFF', '#9D94FF']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={[styles.header, { paddingTop: insets.top + 16 }]}
       >
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle}>搭配方案</Text>
-          <Text style={styles.headerSubtitle}>{params.occasion || '场合'} · 共 {recommendations.length} 套</Text>
-        </View>
+        <Header onBack={handleBack} onShare={handleShare} />
+        <SuccessBanner count={recommendations.length || 3} />
+
+        {/* Inverse radius cap */}
+        <View style={styles.headerCap} />
       </LinearGradient>
 
-      {/* Recommendations List */}
+      {/* Scroll Indicator */}
+      <View style={styles.scrollIndicator}>
+        {(recommendations.length > 0 ? recommendations : [1, 2, 3]).map((_, index) => (
+          <TouchableOpacity
+            key={index}
+            onPress={() => handleDotPress(index)}
+            activeOpacity={0.7}
+          >
+            <ScrollDot active={index === activeIndex} />
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Horizontal scrolling cards */}
       <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
-        showsVerticalScrollIndicator={false}
+        ref={scrollRef}
+        horizontal
+        pagingEnabled={false}
+        showsHorizontalScrollIndicator={false}
+        decelerationRate="fast"
+        snapToInterval={CARD_WITH_GAP}
+        snapToAlignment="center"
+        contentContainerStyle={[
+          styles.cardsContainer,
+          { paddingHorizontal: HORIZONTAL_PADDING },
+        ]}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
-        {recommendations.map((rec, index) => (
-          <OutfitCard key={rec.id} recommendation={rec} index={index} />
+        {recommendations.map((recommendation, index) => (
+          <Animated.View
+            key={recommendation.id}
+            entering={FadeInUp.delay(100 + index * 100).duration(600)}
+            style={styles.cardWrapper}
+          >
+            <OutfitCard
+              recommendation={recommendation}
+              index={index}
+              onPress={() => handleCardPress(recommendation)}
+              onLike={() => handleLike(recommendation.id)}
+              onSave={() => handleSave(recommendation.id)}
+            />
+          </Animated.View>
         ))}
 
+        {/* Empty state */}
         {recommendations.length === 0 && (
           <View style={styles.emptyState}>
             <Text style={styles.emptyText}>暂无推荐方案</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={handleBack}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.retryButtonText}>返回重试</Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>
-
-      {/* Bottom Actions */}
-      <View style={[styles.bottomActions, { paddingBottom: insets.bottom + 20 }]}>
-        <TouchableOpacity style={styles.doneButton} onPress={handleDone} activeOpacity={0.8}>
-          <Text style={styles.doneButtonText}>完成</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -146,154 +231,131 @@ export default function OutfitResultsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: colors.gray4,
   },
 
   // Header
   header: {
     paddingHorizontal: 20,
-    paddingBottom: 24,
+    paddingBottom: 48,
+    position: 'relative',
+    zIndex: 100,
   },
-  headerContent: {
+  headerCap: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 32,
+    backgroundColor: colors.gray4,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+  },
+
+  // Top Navigation
+  topNav: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 20,
   },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
+  navButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navButtonIcon: {
+    fontSize: 24,
     color: '#FFFFFF',
-    marginBottom: 4,
+    fontWeight: '300',
+    marginTop: -2,
   },
-  headerSubtitle: {
-    fontSize: 16,
+  shareIcon: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  navTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // Success Banner
+  successBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 16,
+    padding: 12,
+    paddingHorizontal: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    marginBottom: 10,
+    zIndex: 10,
+  },
+  successIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  successIconText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  successText: {
+    flex: 1,
+  },
+  successTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  successSubtitle: {
+    fontSize: 13,
     color: 'rgba(255, 255, 255, 0.8)',
   },
 
-  // Scroll View
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 20,
-    gap: 16,
-  },
-
-  // Outfit Card
-  outfitCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  cardHeader: {
-    marginBottom: 12,
-  },
-  cardIndex: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: colors.primary,
-    marginBottom: 4,
-  },
-  cardName: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1C1C1E',
-  },
-
-  // Style Tags
-  tagsContainer: {
+  // Scroll Indicator
+  scrollIndicator: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
-  },
-  styleTag: {
-    backgroundColor: 'rgba(108, 99, 255, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  styleTagText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: colors.primary,
-  },
-
-  // Outfit Items
-  itemsContainer: {
-    gap: 12,
-    marginBottom: 16,
-  },
-  itemRow: {
-    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
+    paddingVertical: 12,
+    gap: 6,
   },
-  colorDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E5E5EA',
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#D1D1D6',
   },
-  itemInfo: {
-    flex: 1,
-  },
-  itemType: {
-    fontSize: 12,
-    color: '#8E8E93',
-    marginBottom: 2,
-  },
-  itemName: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#1C1C1E',
-  },
-  itemColor: {
-    fontSize: 13,
-    color: '#8E8E93',
+  dotActive: {
+    width: 20,
+    backgroundColor: colors.primary,
   },
 
-  // Theory
-  theoryContainer: {
-    backgroundColor: '#F2F2F7',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+  // Cards Container
+  cardsContainer: {
+    paddingBottom: 40,
+    gap: CARD_GAP,
   },
-  theoryLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.primary,
-    marginBottom: 8,
-  },
-  theoryText: {
-    fontSize: 14,
-    lineHeight: 22,
-    color: '#3C3C43',
-  },
-
-  // Color Principle
-  principleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  principleLabel: {
-    fontSize: 13,
-    color: '#8E8E93',
-  },
-  principleValue: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: colors.primary,
+  cardWrapper: {
+    width: CARD_WIDTH,
   },
 
   // Empty State
   emptyState: {
-    flex: 1,
+    width: SCREEN_WIDTH - 40,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
@@ -301,30 +363,17 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#8E8E93',
+    marginBottom: 20,
   },
-
-  // Bottom Actions
-  bottomActions: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E5EA',
-  },
-  doneButton: {
-    height: 52,
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
     borderRadius: 12,
     backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  doneButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
+  retryButtonText: {
+    fontSize: 15,
     fontWeight: '600',
+    color: '#FFFFFF',
   },
 });

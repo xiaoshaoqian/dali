@@ -50,6 +50,15 @@ export interface GenerateOutfitResponse {
   message?: string;
 }
 
+// Like/Save response types
+export interface LikeOutfitResponse {
+  isLiked: boolean;
+}
+
+export interface SaveOutfitResponse {
+  isFavorited: boolean;
+}
+
 /**
  * Generate outfit recommendations based on garment and occasion
  * @param request - Generation request with photo, occasion, and garment data
@@ -60,6 +69,50 @@ async function generateOutfits(request: GenerateOutfitRequest): Promise<Generate
   return response.data;
 }
 
+/**
+ * Toggle like status for an outfit
+ * @param outfitId - The outfit ID to like/unlike
+ * @returns Response with new like status
+ */
+async function likeOutfit(outfitId: string): Promise<LikeOutfitResponse> {
+  const response = await apiClient.post<LikeOutfitResponse>(`/outfits/${outfitId}/like`);
+  return response.data;
+}
+
+/**
+ * Unlike an outfit (explicit unlike)
+ * @param outfitId - The outfit ID to unlike
+ * @returns Response with new like status
+ */
+async function unlikeOutfit(outfitId: string): Promise<LikeOutfitResponse> {
+  const response = await apiClient.delete<LikeOutfitResponse>(`/outfits/${outfitId}/like`);
+  return response.data;
+}
+
+/**
+ * Toggle save/favorite status for an outfit
+ * @param outfitId - The outfit ID to save/unsave
+ * @returns Response with new save status
+ */
+async function saveOutfit(outfitId: string): Promise<SaveOutfitResponse> {
+  const response = await apiClient.post<SaveOutfitResponse>(`/outfits/${outfitId}/save`);
+  return response.data;
+}
+
+/**
+ * Unsave an outfit (explicit unsave)
+ * @param outfitId - The outfit ID to unsave
+ * @returns Response with new save status
+ */
+async function unsaveOutfit(outfitId: string): Promise<SaveOutfitResponse> {
+  const response = await apiClient.delete<SaveOutfitResponse>(`/outfits/${outfitId}/save`);
+  return response.data;
+}
+
 export const outfitService = {
   generateOutfits,
+  likeOutfit,
+  unlikeOutfit,
+  saveOutfit,
+  unsaveOutfit,
 };
