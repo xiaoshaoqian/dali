@@ -30,7 +30,15 @@
       "Bash(pushd:*)",
       "Bash(popd)",
       "Bash(git -C \"E:/Personal-Project/dali\" status --porcelain)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Skill(bmad:bmm:workflows:create-story)",
+      "Skill(bmad:bmm:workflows:create-story:*)",
+      "Bash(git -C \"/Users/xiaoshaoqian/Code/github/dali\" log --oneline -10)",
+      "Bash(git -C \"/Users/xiaoshaoqian/Code/github/dali\" log --oneline -20 --all -- \"dali-mobile/app/ai-loading\" \"dali-mobile/src/services\" \"dali-mobile/src/components/ai\")",
+      "Bash(npm test:*)",
+      "Bash(npx jest --passWithNoTests)",
+      "Bash(node_modules/.bin/jest:*)",
+      "Bash(./node_modules/.bin/jest:*)"
     ]
   }
 }

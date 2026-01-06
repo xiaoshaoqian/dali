@@ -3,3 +3,5 @@
 export { useCountdown } from './useCountdown';
 export { usePermissions } from './usePermissions';
 export type { PermissionType } from './usePermissions';
+export { useLikeOutfit } from './useLikeOutfit';
+export { useSaveOutfit } from './useSaveOutfit';

@@ -1,2 +1,4 @@
 // Theory Components barrel export
-// Theory visualization components (ColorWheel, StyleTagChip, etc.)
+// Theory visualization components (TheoryVisualization, ColorWheel, etc.)
+
+export { TheoryVisualization } from './TheoryVisualization';
