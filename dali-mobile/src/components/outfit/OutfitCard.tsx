@@ -199,13 +199,13 @@ export function OutfitCard({
             <View style={styles.cardTitle}>
               <Text style={styles.outfitName}>{recommendation.name}</Text>
               <View style={styles.tagsContainer}>
-                {recommendation.styleTags.slice(0, 2).map((tag, i) => (
-                  <StyleTagChip
-                    key={i}
-                    label={tag}
-                    variant={i === 0 ? 'style' : 'occasion'}
-                  />
-                ))}
+                {/* Style tags using new StyleTagChip with array interface (AC #7) */}
+                {/* Results page uses compact size (12px font) per HTML prototype */}
+                <StyleTagChip
+                  tags={recommendation.styleTags}
+                  variant="style"
+                  size="compact"
+                />
               </View>
             </View>
             <LinearGradient

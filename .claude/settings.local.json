@@ -38,7 +38,12 @@
       "Bash(npm test:*)",
       "Bash(npx jest --passWithNoTests)",
       "Bash(node_modules/.bin/jest:*)",
-      "Bash(./node_modules/.bin/jest:*)"
+      "Bash(./node_modules/.bin/jest:*)",
+      "Bash(git -C \"E:/Personal-Project/dali\" log --oneline -10 -- dali-mobile/src/components)",
+      "Bash(npx jest:*)",
+      "Bash(git -C \"E:/Personal-Project/dali\" diff --cached --name-only)",
+      "Skill(bmad:bmm:workflows:code-review)",
+      "Bash(cat:*)"
     ]
   }
 }

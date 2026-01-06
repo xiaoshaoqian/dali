@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1767665745362" clover="3.2.0">
+  <project timestamp="1767665745362" name="All files">
+    <metrics statements="54" coveredstatements="47" conditionals="43" coveredconditionals="28" methods="22" coveredmethods="15" elements="119" coveredelements="90" complexity="0" loc="54" ncloc="54" packages="3" files="14" classes="14"/>
+    <package name="components.outfit">
+      <metrics statements="33" coveredstatements="31" conditionals="29" coveredconditionals="27" methods="11" coveredmethods="9"/>
+      <file name="OccasionIcon.tsx" path="E:\Personal-Project\dali\dali-mobile\src\components\outfit\OccasionIcon.tsx">
+        <metrics statements="10" coveredstatements="10" conditionals="7" coveredconditionals="7" methods="3" coveredmethods="3"/>
+        <line num="51" count="1" type="stmt"/>
+        <line num="63" count="1" type="stmt"/>
+        <line num="76" count="9" type="stmt"/>
+        <line num="103" count="26" type="stmt"/>
+        <line num="105" count="26" type="cond" truecount="2" falsecount="0"/>
+        <line num="107" count="1" type="stmt"/>
+        <line num="110" count="25" type="stmt"/>
+        <line num="112" count="25" type="stmt"/>
+        <line num="135" count="1" type="stmt"/>
+        <line num="138" count="1" type="stmt"/>
+      </file>
+      <file name="StyleTagChip.tsx" path="E:\Personal-Project\dali\dali-mobile\src\components\outfit\StyleTagChip.tsx">
+        <metrics statements="23" coveredstatements="21" conditionals="22" coveredconditionals="20" methods="8" coveredmethods="6"/>
+        <line num="45" count="21" type="stmt"/>
+        <line num="47" count="21" type="stmt"/>
+        <line num="48" count="0" type="stmt"/>
+        <line num="54" count="21" type="stmt"/>
+        <line num="55" count="0" type="stmt"/>
+        <line num="61" count="21" type="stmt"/>
+        <line num="65" count="21" type="stmt"/>
+        <line num="66" count="21" type="stmt"/>
+        <line num="67" count="21" type="cond" truecount="2" falsecount="0"/>
+        <line num="69" count="21" type="cond" truecount="2" falsecount="0"/>
+        <line num="74" count="21" type="stmt"/>
+        <line num="85" count="21" type="cond" truecount="2" falsecount="0"/>
+        <line num="86" count="16" type="stmt"/>
+        <line num="108" count="5" type="stmt"/>
+        <line num="142" count="13" type="cond" truecount="4" falsecount="0"/>
+        <line num="143" count="2" type="stmt"/>
+        <line num="147" count="11" type="stmt"/>
+        <line num="149" count="11" type="stmt"/>
+        <line num="156" count="17" type="stmt"/>
+        <line num="161" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="188" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="190" count="4" type="stmt"/>
+        <line num="199" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="components.outfit.icons">
+      <metrics statements="6" coveredstatements="6" conditionals="12" coveredconditionals="0" methods="6" coveredmethods="6"/>
+      <file name="BriefcaseIcon.tsx" path="E:\Personal-Project\dali\dali-mobile\src\components\outfit\icons\BriefcaseIcon.tsx">
+        <metrics statements="1" coveredstatements="1" conditionals="2" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="14" count="3" type="stmt"/>
+      </file>
+      <file name="BuildingIcon.tsx" path="E:\Personal-Project\dali\dali-mobile\src\components\outfit\icons\BuildingIcon.tsx">
+        <metrics statements="1" coveredstatements="1" conditionals="2" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="14" count="8" type="stmt"/>
+      </file>
+      <file name="CoffeeIcon.tsx" path="E:\Personal-Project\dali\dali-mobile\src\components\outfit\icons\CoffeeIcon.tsx">
+        <metrics statements="1" coveredstatements="1" conditionals="2" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="14" count="3" type="stmt"/>
+      </file>
+      <file name="HeartIcon.tsx" path="E:\Personal-Project\dali\dali-mobile\src\components\outfit\icons\HeartIcon.tsx">
+        <metrics statements="1" coveredstatements="1" conditionals="2" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="14" count="5" type="stmt"/>
+      </file>
+      <file name="HouseIcon.tsx" path="E:\Personal-Project\dali\dali-mobile\src\components\outfit\icons\HouseIcon.tsx">
+        <metrics statements="1" coveredstatements="1" conditionals="2" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="14" count="3" type="stmt"/>
+      </file>
+      <file name="PeopleIcon.tsx" path="E:\Personal-Project\dali\dali-mobile\src\components\outfit\icons\PeopleIcon.tsx">
+        <metrics statements="1" coveredstatements="1" conditionals="2" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="14" count="3" type="stmt"/>
+      </file>
+      <file name="index.ts" path="E:\Personal-Project\dali\dali-mobile\src\components\outfit\icons\index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+    </package>
+    <package name="constants">
+      <metrics statements="15" coveredstatements="10" conditionals="2" coveredconditionals="1" methods="5" coveredmethods="0"/>
+      <file name="api.ts" path="E:\Personal-Project\dali\dali-mobile\src\constants\api.ts">
+        <metrics statements="10" coveredstatements="5" conditionals="2" coveredconditionals="1" methods="5" coveredmethods="0"/>
+        <line num="9" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="14" count="2" type="stmt"/>
+        <line num="17" count="2" type="stmt"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="41" count="0" type="stmt"/>
+        <line num="42" count="0" type="stmt"/>
+        <line num="43" count="0" type="stmt"/>
+        <line num="50" count="0" type="stmt"/>
+        <line num="72" count="2" type="stmt"/>
+        <line num="75" count="2" type="stmt"/>
+      </file>
+      <file name="colors.ts" path="E:\Personal-Project\dali\dali-mobile\src\constants\colors.ts">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="8" count="2" type="stmt"/>
+      </file>
+      <file name="index.ts" path="E:\Personal-Project\dali\dali-mobile\src\constants\index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="spacing.ts" path="E:\Personal-Project\dali\dali-mobile\src\constants\spacing.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="8" count="2" type="stmt"/>
+        <line num="35" count="2" type="stmt"/>
+        <line num="53" count="2" type="stmt"/>
+      </file>
+      <file name="typography.ts" path="E:\Personal-Project\dali\dali-mobile\src\constants\typography.ts">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="13" count="2" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>

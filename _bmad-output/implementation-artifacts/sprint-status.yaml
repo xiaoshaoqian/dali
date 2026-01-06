@@ -70,18 +70,18 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: Theory & Knowledge Display
-  epic-4: backlog
-  4-1-color-theory-visualization-component: backlog
-  4-2-style-tag-and-occasion-icon-display: backlog
-  4-3-theory-explanation-text-generation-and-display: backlog
+  epic-4: done
+  4-1-color-theory-visualization-component: done
+  4-2-style-tag-and-occasion-icon-display: done
+  4-3-theory-explanation-text-generation-and-display: done
   epic-4-retrospective: optional
 
   # Epic 5: Outfit History & Search
-  epic-5: backlog
-  5-1-sqlite-local-storage-for-outfit-history: backlog
-  5-2-outfit-history-grid-view: backlog
-  5-3-filter-by-occasion-time-and-favorites: backlog
-  5-4-cloud-sync-service-last-write-wins-strategy: backlog
+  epic-5: done
+  5-1-sqlite-local-storage-for-outfit-history: done
+  5-2-outfit-history-grid-view: done
+  5-3-filter-by-occasion-time-and-favorites: done
+  5-4-cloud-sync-service-last-write-wins-strategy: done
   epic-5-retrospective: optional
 
   # Epic 6: Sharing & Social Integration

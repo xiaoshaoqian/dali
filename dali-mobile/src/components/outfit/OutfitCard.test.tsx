@@ -1,10 +1,12 @@
 /**
  * OutfitCard Component Tests
  * Part of Story 3.4: Outfit Results Display with Theory Visualization
+ * Updated for Story 4.2: Uses new StyleTagChip component
  */
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { OutfitCard } from '../OutfitCard';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { OutfitCard } from './OutfitCard';
 import type { OutfitRecommendation } from '@/services';
 
 // Mock expo-linear-gradient
@@ -18,6 +20,81 @@ jest.mock('react-native-reanimated', () => {
   Reanimated.default.createAnimatedComponent = (component: React.ComponentType) => component;
   return Reanimated;
 });
+
+// Mock expo-haptics
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(),
+  ImpactFeedbackStyle: {
+    Light: 'light',
+    Medium: 'medium',
+  },
+}));
+
+// Mock expo-sqlite for offline store
+jest.mock('expo-sqlite', () => ({
+  openDatabaseSync: jest.fn(() => ({
+    execAsync: jest.fn(),
+    runAsync: jest.fn(),
+    getFirstAsync: jest.fn(),
+    getAllAsync: jest.fn(() => []),
+  })),
+  openDatabaseAsync: jest.fn(() => Promise.resolve({
+    execAsync: jest.fn(),
+    runAsync: jest.fn(),
+    getFirstAsync: jest.fn(),
+    getAllAsync: jest.fn(() => []),
+  })),
+}));
+
+// Mock storage utils to prevent actual database operations
+jest.mock('@/utils/storage', () => ({
+  getDb: jest.fn(() => Promise.resolve({
+    execAsync: jest.fn(),
+    runAsync: jest.fn(),
+    getFirstAsync: jest.fn(),
+    getAllAsync: jest.fn(() => []),
+  })),
+  initDatabase: jest.fn(() => Promise.resolve()),
+  updateOutfitLikeStatus: jest.fn(() => Promise.resolve()),
+  updateOutfitSaveStatus: jest.fn(() => Promise.resolve()),
+  getOutfitById: jest.fn(() => Promise.resolve(null)),
+  getPendingSyncOutfits: jest.fn(() => Promise.resolve([])),
+  markOutfitAsSynced: jest.fn(() => Promise.resolve()),
+  saveOutfitToLocal: jest.fn(() => Promise.resolve()),
+}));
+
+// Mock react-native-gesture-handler
+jest.mock('react-native-gesture-handler', () => {
+  const View = require('react-native').View;
+  return {
+    GestureHandlerRootView: View,
+    GestureDetector: ({ children }: any) => children,
+    Gesture: {
+      Tap: () => ({
+        numberOfTaps: () => ({ onEnd: () => ({}) }),
+        onEnd: () => ({}),
+      }),
+      LongPress: () => ({
+        minDuration: () => ({ onEnd: () => ({}) }),
+        onEnd: () => ({}),
+      }),
+      Exclusive: () => ({}),
+    },
+  };
+});
+
+// Create a wrapper with QueryClientProvider
+const createWrapper = () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+  return ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+};
 
 const mockRecommendation: OutfitRecommendation = {
   id: 'test-outfit-1',
@@ -42,14 +119,16 @@ describe('OutfitCard', () => {
   describe('render', () => {
     it('should render outfit name correctly', () => {
       const { getByText } = render(
-        <OutfitCard recommendation={mockRecommendation} index={0} />
+        <OutfitCard recommendation={mockRecommendation} index={0} />,
+        { wrapper: createWrapper() }
       );
       expect(getByText('职场优雅风')).toBeTruthy();
     });
 
     it('should render style tags', () => {
       const { getByText } = render(
-        <OutfitCard recommendation={mockRecommendation} index={0} />
+        <OutfitCard recommendation={mockRecommendation} index={0} />,
+        { wrapper: createWrapper() }
       );
       expect(getByText('简约')).toBeTruthy();
       expect(getByText('通勤')).toBeTruthy();
@@ -57,14 +136,16 @@ describe('OutfitCard', () => {
 
     it('should render AI badge', () => {
       const { getByText } = render(
-        <OutfitCard recommendation={mockRecommendation} index={0} />
+        <OutfitCard recommendation={mockRecommendation} index={0} />,
+        { wrapper: createWrapper() }
       );
       expect(getByText('AI 推荐')).toBeTruthy();
     });
 
     it('should render outfit items', () => {
       const { getByText } = render(
-        <OutfitCard recommendation={mockRecommendation} index={0} />
+        <OutfitCard recommendation={mockRecommendation} index={0} />,
+        { wrapper: createWrapper() }
       );
       expect(getByText('真丝衬衫')).toBeTruthy();
       expect(getByText('西装裤')).toBeTruthy();
@@ -72,7 +153,8 @@ describe('OutfitCard', () => {
 
     it('should render action buttons', () => {
       const { getByText } = render(
-        <OutfitCard recommendation={mockRecommendation} index={0} />
+        <OutfitCard recommendation={mockRecommendation} index={0} />,
+        { wrapper: createWrapper() }
       );
       expect(getByText('点赞')).toBeTruthy();
       expect(getByText('收藏')).toBeTruthy();
@@ -87,7 +169,8 @@ describe('OutfitCard', () => {
           recommendation={mockRecommendation}
           index={0}
           onPress={onPress}
-        />
+        />,
+        { wrapper: createWrapper() }
       );
 
       // Find and press the main look area
@@ -102,7 +185,8 @@ describe('OutfitCard', () => {
           recommendation={mockRecommendation}
           index={0}
           onLike={onLike}
-        />
+        />,
+        { wrapper: createWrapper() }
       );
 
       fireEvent.press(getByText('点赞'));
@@ -111,7 +195,8 @@ describe('OutfitCard', () => {
 
     it('should toggle like state when like button is pressed', () => {
       const { getByText, queryByText } = render(
-        <OutfitCard recommendation={mockRecommendation} index={0} />
+        <OutfitCard recommendation={mockRecommendation} index={0} />,
+        { wrapper: createWrapper() }
       );
 
       const likeButton = getByText('点赞');
@@ -126,7 +211,8 @@ describe('OutfitCard', () => {
           recommendation={mockRecommendation}
           index={0}
           onSave={onSave}
-        />
+        />,
+        { wrapper: createWrapper() }
       );
 
       fireEvent.press(getByText('收藏'));

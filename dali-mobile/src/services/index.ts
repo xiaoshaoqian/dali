@@ -22,3 +22,10 @@ export type {
   GenerateOutfitRequest,
   GenerateOutfitResponse,
 } from './outfitService';
+
+export {
+  syncService,
+  scheduleNetworkRecoverySync,
+  updatePendingSyncCount,
+  FOREGROUND_SYNC_INTERVAL,
+} from './sync';

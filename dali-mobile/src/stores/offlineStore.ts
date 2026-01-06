@@ -1,13 +1,14 @@
 /**
  * Offline Store
- * Zustand store for managing offline actions queue
+ * Zustand store for managing offline state and sync queue
  *
  * @see Story 3.5: Outfit Feedback (Like & Save)
+ * @see Story 5.4: Cloud Sync Service
  */
 import { create } from 'zustand';
 
 // Action types for offline queue
-export type OfflineActionType = 'like' | 'unlike' | 'save' | 'unsave';
+export type OfflineActionType = 'like' | 'unlike' | 'save' | 'unsave' | 'delete';
 
 // Pending action structure
 export interface PendingAction {
@@ -18,13 +19,29 @@ export interface PendingAction {
   retryCount: number;
 }
 
+// Sync result type
+export interface SyncResult {
+  uploaded: number;
+  downloaded: number;
+  conflicts: number;
+  errors: string[];
+}
+
 interface OfflineState {
   /** Whether device is online */
   isOnline: boolean;
+  /** Whether this was the previous online state (for detecting transitions) */
+  wasOnline: boolean;
   /** Queue of pending actions to sync */
   pendingActions: PendingAction[];
   /** Whether sync is in progress */
   isSyncing: boolean;
+  /** Timestamp of last successful sync */
+  lastSyncTime: number | null;
+  /** Number of outfits pending sync (from SQLite) */
+  pendingSyncCount: number;
+  /** Last sync result */
+  lastSyncResult: SyncResult | null;
 
   /** Set online status */
   setOnline: (isOnline: boolean) => void;
@@ -40,6 +57,12 @@ interface OfflineState {
   clearPendingActions: () => void;
   /** Get pending actions for a specific outfit */
   getPendingActionsForOutfit: (outfitId: string) => PendingAction[];
+  /** Update last sync time */
+  setLastSyncTime: (time: number) => void;
+  /** Update pending sync count */
+  setPendingSyncCount: (count: number) => void;
+  /** Set last sync result */
+  setLastSyncResult: (result: SyncResult | null) => void;
 }
 
 /**
@@ -51,10 +74,18 @@ function generateActionId(): string {
 
 export const useOfflineStore = create<OfflineState>((set, get) => ({
   isOnline: true,
+  wasOnline: true,
   pendingActions: [],
   isSyncing: false,
+  lastSyncTime: null,
+  pendingSyncCount: 0,
+  lastSyncResult: null,
 
-  setOnline: (isOnline) => set({ isOnline }),
+  setOnline: (isOnline) =>
+    set((state) => ({
+      wasOnline: state.isOnline,
+      isOnline,
+    })),
 
   addPendingAction: (type, outfitId) => {
     const newAction: PendingAction = {
@@ -73,17 +104,20 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
       );
 
       // Also remove opposite action if exists (like cancels unlike, save cancels unsave)
-      const oppositeType: Record<OfflineActionType, OfflineActionType> = {
+      const oppositeType: Partial<Record<OfflineActionType, OfflineActionType>> = {
         like: 'unlike',
         unlike: 'like',
         save: 'unsave',
         unsave: 'save',
+        // delete has no opposite
       };
 
-      const finalFiltered = filtered.filter(
-        (action) =>
-          !(action.outfitId === outfitId && action.type === oppositeType[type])
-      );
+      const opposite = oppositeType[type];
+      const finalFiltered = opposite
+        ? filtered.filter(
+            (action) => !(action.outfitId === outfitId && action.type === opposite)
+          )
+        : filtered;
 
       return {
         pendingActions: [...finalFiltered, newAction],
@@ -116,4 +150,10 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
   getPendingActionsForOutfit: (outfitId) => {
     return get().pendingActions.filter((action) => action.outfitId === outfitId);
   },
+
+  setLastSyncTime: (time) => set({ lastSyncTime: time }),
+
+  setPendingSyncCount: (count) => set({ pendingSyncCount: count }),
+
+  setLastSyncResult: (result) => set({ lastSyncResult: result }),
 }));

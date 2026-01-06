@@ -2,8 +2,9 @@
  * Outfit Detail Screen
  * Displays detailed outfit information with theory visualization
  * Enhanced with like/save functionality (Story 3.5)
+ * Updated with StyleTagChip and OccasionIcon (Story 4.2)
  *
- * Part of Story 3.4 & 3.5: Outfit Results Display + Feedback
+ * Part of Story 3.4 & 3.5 & 4.2: Outfit Results Display + Feedback + Style Tags
  *
  * @see _bmad-output/planning-artifacts/ux-design/pages/03-outfit-detail/outfit-detail-page.html
  */
@@ -23,14 +24,17 @@ import Animated, { FadeInUp, FadeIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { colors } from '@/constants';
-import { StyleTagChip } from '@/components/outfit/StyleTagChip';
+import { StyleTagChip, OccasionIcon, isValidOccasionType } from '@/components/outfit';
+import { LegacyStyleTagChip } from '@/components/outfit/StyleTagChip';
 import { LikeButton } from '@/components/outfit/LikeButton';
 import { SaveButton } from '@/components/outfit/SaveButton';
-import { TheoryVisualization } from '@/components/theory/TheoryVisualization';
+import { TheoryVisualization, TheoryExplanation, TheoryFeedback } from '@/components/theory';
 import { Toast } from '@/components/ui/Toast';
 import { useLikeOutfit } from '@/hooks/useLikeOutfit';
 import { useSaveOutfit } from '@/hooks/useSaveOutfit';
+import { useTheoryViewTracking, submitTheoryFeedback } from '@/hooks/useTheoryViewTracking';
 import type { OutfitRecommendation } from '@/services';
+import type { OccasionType } from '@/components/outfit';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -145,6 +149,9 @@ export default function OutfitDetailScreen() {
   const likeHook = useLikeOutfit(outfitId, isLiked);
   const saveHook = useSaveOutfit(outfitId, isSaved);
 
+  // Theory view tracking - Story 4.3
+  const theoryTracking = useTheoryViewTracking(outfitId, !!recommendation);
+
   const showToast = useCallback((message: string) => {
     setToastMessage(message);
     setToastVisible(true);
@@ -178,6 +185,14 @@ export default function OutfitDetailScreen() {
   const handleTryOn = useCallback(() => {
     // TODO: Navigate to try-on screen
   }, []);
+
+  // Handle theory feedback - Story 4.3
+  const handleTheoryFeedback = useCallback(
+    (helpful: boolean) => {
+      submitTheoryFeedback(outfitId, helpful);
+    },
+    [outfitId]
+  );
 
   if (!recommendation) {
     return (
@@ -228,22 +243,35 @@ export default function OutfitDetailScreen() {
 
         {/* Content Cards */}
         <View style={styles.contentSheet}>
-          {/* Title & Tags Card */}
+          {/* Title & Tags Card - Updated for Story 4.2 */}
           <FloatingCard delay={100}>
             <Text style={styles.outfitTitle}>{recommendation.name}</Text>
             <View style={styles.tagRow}>
-              {recommendation.styleTags.map((tag, i) => (
+              {/* Style tags using new StyleTagChip */}
+              {recommendation.styleTags && recommendation.styleTags.length > 0 && (
                 <StyleTagChip
-                  key={i}
-                  label={tag}
-                  variant={i === 0 ? 'style' : 'occasion'}
+                  tags={recommendation.styleTags}
+                  variant="style"
+                  size="default"
                 />
-              ))}
-              <StyleTagChip label="AI 推荐" variant="occasion" />
+              )}
+              {/* Occasion icon with label if valid occasion type */}
+              {recommendation.occasion && isValidOccasionType(recommendation.occasion) && (
+                <View style={styles.occasionRow}>
+                  <OccasionIcon
+                    occasion={recommendation.occasion as OccasionType}
+                    size={20}
+                    showLabel={true}
+                    labelStyle={styles.occasionLabel}
+                  />
+                </View>
+              )}
+              {/* AI recommendation badge */}
+              <LegacyStyleTagChip label="AI 推荐" variant="occasion" />
             </View>
           </FloatingCard>
 
-          {/* Color Theory Card */}
+          {/* Color Theory Card - Enhanced with ColorWheel */}
           <FloatingCard delay={200}>
             <View style={styles.cardTitle}>
               <View style={styles.cardIcon}>
@@ -252,25 +280,44 @@ export default function OutfitDetailScreen() {
               <Text style={styles.cardTitleText}>配色逻辑</Text>
             </View>
             <TheoryVisualization
-              colorPrinciple={recommendation.theory.colorPrinciple}
-              colors={recommendation.items.map(item => item.colorHex)}
+              theory={{
+                colorPrinciple: recommendation.theory.colorPrinciple,
+                colors: recommendation.items.map(item => ({
+                  hex: item.colorHex,
+                  name: item.color,
+                  category: item.name,
+                })),
+                explanation: recommendation.theory.styleAnalysis,
+              }}
+              showColorPalette={true}
+              wheelSize={80}
             />
           </FloatingCard>
 
-          {/* Full Theory Explanation Card */}
-          {recommendation.theory.fullExplanation && (
-            <FloatingCard delay={250}>
-              <View style={styles.cardTitle}>
-                <View style={styles.cardIcon}>
-                  <Text style={styles.cardIconText}>💡</Text>
-                </View>
-                <Text style={styles.cardTitleText}>搭配解析</Text>
+          {/* Full Theory Explanation Card - Enhanced with Story 4.3 */}
+          <FloatingCard delay={250}>
+            <View style={styles.cardTitle}>
+              <View style={styles.cardIcon}>
+                <Text style={styles.cardIconText}>💡</Text>
               </View>
-              <Text style={styles.explanationText}>
-                {recommendation.theory.fullExplanation}
-              </Text>
-            </FloatingCard>
-          )}
+              <Text style={styles.cardTitleText}>搭配解析</Text>
+            </View>
+            <TheoryExplanation
+              explanation={
+                recommendation.theory.explanation ||
+                recommendation.theory.fullExplanation ||
+                '这套搭配结合了你的风格偏好，色彩搭配和谐，适合你选择的场合。'
+              }
+              showHighlights={true}
+              maxLines={4}
+            />
+            {/* Theory Feedback - shows after 5s view */}
+            <TheoryFeedback
+              outfitId={outfitId}
+              visible={theoryTracking.hasTracked}
+              onFeedback={handleTheoryFeedback}
+            />
+          </FloatingCard>
 
           {/* AI Reasons Card */}
           <FloatingCard delay={300}>
@@ -459,11 +506,11 @@ const styles = StyleSheet.create({
   floatingCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
-    padding: 24,
+    padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     elevation: 3,
   },
 
@@ -478,6 +525,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
     flexWrap: 'wrap',
+    alignItems: 'center',
+  },
+  occasionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    backgroundColor: '#F2F2F7',
+    borderRadius: 12,
+  },
+  occasionLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#3A3A3C',
   },
 
   // Card Title

@@ -22,6 +22,8 @@ export interface OutfitTheory {
   bodyTypeAdvice: string;
   occasionFit: string;
   fullExplanation: string;
+  /** Enhanced explanation text (150-200 chars) with **keyword** highlights - Story 4.3 */
+  explanation?: string;
 }
 
 export interface OutfitRecommendation {
@@ -31,6 +33,8 @@ export interface OutfitRecommendation {
   theory: OutfitTheory;
   styleTags: string[];
   confidence: number;
+  /** The occasion this outfit is recommended for - Story 4.2 */
+  occasion?: string;
 }
 
 export interface GenerateOutfitRequest {
