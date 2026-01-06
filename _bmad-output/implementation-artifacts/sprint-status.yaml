@@ -20,6 +20,7 @@
 #   - in-progress: Developer actively working on implementation
 #   - review: Ready for code review (via Dev's code-review workflow)
 #   - done: Story completed
+#   - cancelled: Story cancelled and will not be implemented
 #
 # Retrospective Status:
 #   - optional: Can be completed but not required
@@ -47,7 +48,7 @@ development_status:
   # Epic 1: Authentication & Onboarding
   epic-1: in-progress
   1-1-phone-sms-registration-verification: done
-  1-2-wechat-quick-login: backlog
+  1-2-wechat-quick-login: cancelled  # WeChat login deferred - phone SMS login sufficient for MVP
   1-3-personalized-onboarding-questionnaire: done
   1-4-token-management-session-persistence: done
   epic-1-retrospective: optional
