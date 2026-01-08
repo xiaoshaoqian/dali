@@ -52,7 +52,7 @@ export function trackShareEvent(
     timestamp: new Date().toISOString(),
   };
 
-  trackEvent('share_outfit', event);
+  trackEvent('share_outfit', event as unknown as EventData);
 }
 
 /**

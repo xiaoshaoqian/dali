@@ -33,7 +33,7 @@ export interface ArtisticTemplateProps {
  * @param props - Component props
  * @returns ArtisticTemplate component
  */
-export function ArtisticTemplate({ outfit }: ArtisticTemplateProps): JSX.Element {
+export function ArtisticTemplate({ outfit }: ArtisticTemplateProps): React.ReactElement {
   return (
     <LinearGradient
       colors={['#FFF5E5', '#FFE5CC']}

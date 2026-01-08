@@ -10,6 +10,12 @@ export type { ShareTemplateProps } from './ShareTemplate';
 export { SharePreview } from './SharePreview';
 export type { SharePreviewProps } from './SharePreview';
 
+export { ShareImagePreview } from './ShareImagePreview';
+export type { ShareImagePreviewProps } from './ShareImagePreview';
+
+export { SharePlatformSheet } from './SharePlatformSheet';
+export type { SharePlatformSheetProps } from './SharePlatformSheet';
+
 export { MinimalTemplate } from './templates/MinimalTemplate';
 export type { MinimalTemplateProps } from './templates/MinimalTemplate';
 

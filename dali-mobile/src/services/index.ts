@@ -29,3 +29,29 @@ export {
   updatePendingSyncCount,
   FOREGROUND_SYNC_INTERVAL,
 } from './sync';
+
+export {
+  shareService,
+  saveImageToGallery,
+  ensureFileSizeLimit,
+  trackShareImageGenerated,
+  trackSaveToGallery,
+  trackShareCompleted,
+  trackShareToPlatform,
+  trackShareCancelled,
+  shareToSystem,
+  isSystemShareAvailable,
+  checkWeChatInstalled,
+  openWeChatAppStore,
+  requestMediaLibraryPermissions,
+  checkMediaLibraryPermissions,
+  getFileSize,
+  exceedsFileSizeLimit,
+} from './share';
+export type {
+  ShareTrackEvent,
+  PermissionResult,
+  SaveToGalleryResult,
+  FileSizeCheckResult,
+  SystemShareResult,
+} from './share';

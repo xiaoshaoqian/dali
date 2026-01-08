@@ -33,7 +33,7 @@ export interface FashionTemplateProps {
  * @param props - Component props
  * @returns FashionTemplate component
  */
-export function FashionTemplate({ outfit }: FashionTemplateProps): JSX.Element {
+export function FashionTemplate({ outfit }: FashionTemplateProps): React.ReactElement {
   return (
     <LinearGradient
       colors={['#6C63FF', '#9D94FF']}

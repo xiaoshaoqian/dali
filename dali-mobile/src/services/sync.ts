@@ -89,7 +89,7 @@ function localToServerFormat(local: LocalOutfitRecord): ServerOutfit {
   try {
     theory = JSON.parse(local.theoryJson);
   } catch {
-    theory = {};
+    theory = {} as OutfitTheory;
   }
 
   try {

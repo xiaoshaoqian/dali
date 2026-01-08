@@ -63,7 +63,7 @@ export const ShareTemplate = forwardRef<ShareTemplateRef, ShareTemplateProps>(
     const startTime = Date.now();
 
     try {
-      if (!viewShotRef.current) {
+      if (!viewShotRef.current || !viewShotRef.current.capture) {
         throw new Error('ViewShot ref is not initialized');
       }
 

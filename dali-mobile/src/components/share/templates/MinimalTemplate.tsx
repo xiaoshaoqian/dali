@@ -31,7 +31,7 @@ export interface MinimalTemplateProps {
  * @param props - Component props
  * @returns MinimalTemplate component
  */
-export function MinimalTemplate({ outfit }: MinimalTemplateProps): JSX.Element {
+export function MinimalTemplate({ outfit }: MinimalTemplateProps): React.ReactElement {
   return (
     <View style={styles.container}>
       {/* Logo Section */}
