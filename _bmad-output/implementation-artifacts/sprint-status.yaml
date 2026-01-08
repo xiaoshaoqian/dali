@@ -85,8 +85,8 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 6: Sharing & Social Integration
-  epic-6: backlog
-  6-1-sharetemplate-component-3-styles: backlog
+  epic-6: in-progress
+  6-1-sharetemplate-component-3-styles: done
   6-2-share-image-generation-with-watermark: backlog
   6-3-one-tap-social-platform-sharing-and-tracking: backlog
   epic-6-retrospective: optional
