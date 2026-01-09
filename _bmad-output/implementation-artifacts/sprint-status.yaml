@@ -92,8 +92,8 @@ development_status:
   epic-6-retrospective: optional
 
   # Epic 7: Profile & Growth Tracking
-  epic-7: backlog
-  7-1-profile-screen-with-user-stats: backlog
+  epic-7: in-progress
+  7-1-profile-screen-with-user-stats: done
   7-2-progresscircle-component-ai-learning-visualization: backlog
   7-3-preferencecloud-component-and-edit-preferences: backlog
   epic-7-retrospective: optional

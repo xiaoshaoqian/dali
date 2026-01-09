@@ -43,7 +43,8 @@
       "Bash(npx jest:*)",
       "Bash(git -C \"E:/Personal-Project/dali\" diff --cached --name-only)",
       "Skill(bmad:bmm:workflows:code-review)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(findstr:*)"
     ]
   }
 }

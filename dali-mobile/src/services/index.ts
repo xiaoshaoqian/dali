@@ -8,6 +8,8 @@ export { apiClient } from './apiClient';
 export { userPreferencesService } from './userPreferencesService';
 export type { UserPreferencesRequest, UserPreferencesResponse } from './userPreferencesService';
 
+export { getUserStats, getUserProfile, updateUserProfile, uploadUserAvatar } from './user';
+
 export { photoUploadService } from './photoUploadService';
 export type { SignedUrlResponse, UploadResult, UploadProgress } from './photoUploadService';
 

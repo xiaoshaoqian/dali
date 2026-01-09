@@ -21,3 +21,10 @@ export {
   useNetworkStatus,
   useSyncStatus,
 } from './useNetworkSync';
+export {
+  useUserProfile,
+  useUpdateUserProfile,
+  useUploadAvatar,
+  userKeys,
+} from './useUserProfile';
+export { useUserStats } from './useUserStats';
