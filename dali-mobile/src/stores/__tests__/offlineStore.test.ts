@@ -3,9 +3,20 @@
  * Tests for offline action queue store
  *
  * @see Story 3.5: Outfit Feedback (Like & Save)
+ * @see Story 8.2: Offline Mode Handler with Graceful Degradation
  */
 
-import { useOfflineStore } from '../offlineStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useOfflineStore, loadPendingActions, persistPendingActions, PENDING_ACTIONS_KEY } from '../offlineStore';
+
+// Mock AsyncStorage
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(),
+  setItem: jest.fn(),
+  removeItem: jest.fn(),
+}));
+
+const mockAsyncStorage = AsyncStorage as jest.Mocked<typeof AsyncStorage>;
 
 describe('offlineStore', () => {
   beforeEach(() => {
@@ -138,6 +149,99 @@ describe('offlineStore', () => {
 
       const actions = getPendingActionsForOutfit('non-existent');
       expect(actions).toHaveLength(0);
+    });
+  });
+});
+
+describe('offlineStore persistence', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Reset store state
+    useOfflineStore.setState({
+      isOnline: true,
+      wasOnline: true,
+      pendingActions: [],
+      isSyncing: false,
+      lastSyncTime: null,
+      pendingSyncCount: 0,
+      lastSyncResult: null,
+    });
+  });
+
+  describe('loadPendingActions', () => {
+    it('should load pending actions from AsyncStorage', async () => {
+      const savedActions = [
+        { id: '1', type: 'like', outfitId: 'outfit-1', timestamp: Date.now(), retryCount: 0 },
+        { id: '2', type: 'save', outfitId: 'outfit-2', timestamp: Date.now(), retryCount: 0 },
+      ];
+
+      mockAsyncStorage.getItem.mockResolvedValueOnce(JSON.stringify(savedActions));
+
+      await loadPendingActions();
+
+      expect(mockAsyncStorage.getItem).toHaveBeenCalledWith(PENDING_ACTIONS_KEY);
+      expect(useOfflineStore.getState().pendingActions).toEqual(savedActions);
+    });
+
+    it('should handle empty storage gracefully', async () => {
+      mockAsyncStorage.getItem.mockResolvedValueOnce(null);
+
+      await loadPendingActions();
+
+      expect(useOfflineStore.getState().pendingActions).toEqual([]);
+    });
+
+    it('should handle invalid JSON gracefully', async () => {
+      mockAsyncStorage.getItem.mockResolvedValueOnce('invalid-json');
+
+      await loadPendingActions();
+
+      expect(useOfflineStore.getState().pendingActions).toEqual([]);
+    });
+
+    it('should handle AsyncStorage errors gracefully', async () => {
+      mockAsyncStorage.getItem.mockRejectedValueOnce(new Error('Storage error'));
+
+      await loadPendingActions();
+
+      expect(useOfflineStore.getState().pendingActions).toEqual([]);
+    });
+  });
+
+  describe('persistPendingActions', () => {
+    it('should persist pending actions to AsyncStorage', async () => {
+      const actions = [
+        { id: '1', type: 'like' as const, outfitId: 'outfit-1', timestamp: Date.now(), retryCount: 0 },
+      ];
+
+      useOfflineStore.setState({ pendingActions: actions });
+
+      await persistPendingActions();
+
+      expect(mockAsyncStorage.setItem).toHaveBeenCalledWith(
+        PENDING_ACTIONS_KEY,
+        JSON.stringify(actions)
+      );
+    });
+
+    it('should clear storage when no pending actions', async () => {
+      useOfflineStore.setState({ pendingActions: [] });
+
+      await persistPendingActions();
+
+      expect(mockAsyncStorage.removeItem).toHaveBeenCalledWith(PENDING_ACTIONS_KEY);
+    });
+
+    it('should handle AsyncStorage errors gracefully', async () => {
+      const actions = [
+        { id: '1', type: 'like' as const, outfitId: 'outfit-1', timestamp: Date.now(), retryCount: 0 },
+      ];
+      useOfflineStore.setState({ pendingActions: actions });
+
+      mockAsyncStorage.setItem.mockRejectedValueOnce(new Error('Storage error'));
+
+      // Should not throw
+      await expect(persistPendingActions()).resolves.toBeUndefined();
     });
   });
 });

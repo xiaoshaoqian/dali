@@ -13,6 +13,7 @@ import {
   syncService,
   scheduleNetworkRecoverySync,
   updatePendingSyncCount,
+  syncAll,
 } from '@/services/sync';
 import { AppState, AppStateStatus } from 'react-native';
 
@@ -91,7 +92,8 @@ export function useNetworkSync(): {
   }, []);
 
   /**
-   * Trigger manual sync
+   * Trigger manual sync (syncs both pending actions and outfits)
+   * @see Story 8.3: AC#1, AC#2
    */
   const triggerSync = useCallback(async () => {
     if (!isOnline) {
@@ -99,7 +101,7 @@ export function useNetworkSync(): {
       return;
     }
 
-    await syncService.manualSync();
+    await syncAll();
     await updatePendingSyncCount();
   }, [isOnline]);
 

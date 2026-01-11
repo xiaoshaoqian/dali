@@ -28,3 +28,18 @@ export {
   userKeys,
 } from './useUserProfile';
 export { useUserStats } from './useUserStats';
+export { useAIProgress } from './useAIProgress';
+export type { UseAIProgressParams, UseAIProgressResult } from './useAIProgress';
+export {
+  usePreferences,
+  useUpdatePreferences,
+  usePreferencesNeedUpdate,
+  transformToCloudTags,
+  preferenceKeys,
+} from './usePreferences';
+export type { PreferencesWithInferredTags } from './usePreferences';
+export {
+  useOfflineMode,
+  categorizeNetworkError,
+} from './useOfflineMode';
+export type { OfflineActionType, OfflineError } from './useOfflineMode';

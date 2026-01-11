@@ -4,8 +4,19 @@
  *
  * @see Story 3.5: Outfit Feedback (Like & Save)
  * @see Story 5.4: Cloud Sync Service
+ * @see Story 8.2: Offline Mode Handler with Graceful Degradation
+ * @see Story 8.3: Network Reconnection and Auto-Sync
  */
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import type { UserPreferencesRequest } from '@/services/userPreferencesService';
+
+// AsyncStorage key for pending actions
+export const PENDING_ACTIONS_KEY = '@dali/pending_actions';
+
+// AsyncStorage key for pending preferences
+export const PENDING_PREFERENCES_KEY = '@dali/pending_preferences';
 
 // Action types for offline queue
 export type OfflineActionType = 'like' | 'unlike' | 'save' | 'unsave' | 'delete';
@@ -157,3 +168,103 @@ export const useOfflineStore = create<OfflineState>((set, get) => ({
 
   setLastSyncResult: (result) => set({ lastSyncResult: result }),
 }));
+
+// =============================================================================
+// Persistence Functions
+// =============================================================================
+
+/**
+ * Load pending actions from AsyncStorage
+ * Should be called on app startup
+ */
+export async function loadPendingActions(): Promise<void> {
+  try {
+    const stored = await AsyncStorage.getItem(PENDING_ACTIONS_KEY);
+    if (stored) {
+      const actions = JSON.parse(stored) as PendingAction[];
+      useOfflineStore.setState({ pendingActions: actions });
+    }
+  } catch (error) {
+    console.error('[OfflineStore] Failed to load pending actions:', error);
+    // Keep empty array on error
+  }
+}
+
+/**
+ * Persist pending actions to AsyncStorage
+ * Should be called whenever pendingActions changes
+ */
+export async function persistPendingActions(): Promise<void> {
+  try {
+    const { pendingActions } = useOfflineStore.getState();
+    if (pendingActions.length > 0) {
+      await AsyncStorage.setItem(PENDING_ACTIONS_KEY, JSON.stringify(pendingActions));
+    } else {
+      await AsyncStorage.removeItem(PENDING_ACTIONS_KEY);
+    }
+  } catch (error) {
+    console.error('[OfflineStore] Failed to persist pending actions:', error);
+  }
+}
+
+/**
+ * Subscribe to store changes and persist automatically
+ * Returns unsubscribe function
+ */
+export function setupPersistence(): () => void {
+  return useOfflineStore.subscribe(
+    (state, prevState) => {
+      // Only persist when pendingActions changes
+      if (state.pendingActions !== prevState.pendingActions) {
+        persistPendingActions();
+      }
+    }
+  );
+}
+
+// =============================================================================
+// Pending Preferences Functions (Story 8.3: AC#6)
+// =============================================================================
+
+/**
+ * Save pending preferences to AsyncStorage for offline sync
+ * @see Story 8.3: AC#6 - Preferences sync on reconnection
+ */
+export async function savePendingPreferences(preferences: UserPreferencesRequest): Promise<void> {
+  try {
+    await AsyncStorage.setItem(PENDING_PREFERENCES_KEY, JSON.stringify(preferences));
+    console.log('[OfflineStore] Saved pending preferences for sync');
+  } catch (error) {
+    console.error('[OfflineStore] Failed to save pending preferences:', error);
+  }
+}
+
+/**
+ * Get pending preferences from AsyncStorage
+ * @returns The pending preferences or null if none
+ */
+export async function getPendingPreferences(): Promise<UserPreferencesRequest | null> {
+  try {
+    const stored = await AsyncStorage.getItem(PENDING_PREFERENCES_KEY);
+    if (stored) {
+      return JSON.parse(stored) as UserPreferencesRequest;
+    }
+    return null;
+  } catch (error) {
+    console.error('[OfflineStore] Failed to get pending preferences:', error);
+    return null;
+  }
+}
+
+/**
+ * Clear pending preferences after successful sync
+ */
+export async function clearPendingPreferences(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(PENDING_PREFERENCES_KEY);
+    console.log('[OfflineStore] Cleared pending preferences');
+  } catch (error) {
+    console.error('[OfflineStore] Failed to clear pending preferences:', error);
+  }
+}
+

@@ -30,7 +30,19 @@ export {
   scheduleNetworkRecoverySync,
   updatePendingSyncCount,
   FOREGROUND_SYNC_INTERVAL,
+  syncAll,
+  syncPendingActions,
+  syncPendingPreferences,
 } from './sync';
+
+export {
+  registerBackgroundSync,
+  unregisterBackgroundSync,
+  isBackgroundSyncRegistered,
+  getBackgroundFetchStatus,
+  isBackgroundFetchAvailable,
+  BACKGROUND_SYNC_TASK,
+} from './backgroundSync';
 
 export {
   shareService,

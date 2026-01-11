@@ -9,7 +9,12 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "搭理需要访问相机以拍摄衣服照片，为您生成个性化搭配建议",
+        "NSPhotoLibraryUsageDescription": "搭理需要访问相册以选择衣服照片",
+        "NSLocationWhenInUseUsageDescription": "搭理使用您的位置获取当地天气，为您推荐更合适的搭配"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +24,12 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
     },
     "web": {
       "output": "static",
@@ -40,7 +50,26 @@
         }
       ],
       "expo-sqlite",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "搭理需要访问相机以拍摄衣服照片，为您生成个性化搭配建议"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "搭理使用您的位置获取当地天气，为您推荐更合适的搭配"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#6C63FF"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

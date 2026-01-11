@@ -3,6 +3,7 @@
  * Implements Last-Write-Wins synchronization strategy for outfit data
  *
  * @see Story 5.4: Cloud Sync Service (Last-Write-Wins Strategy)
+ * @see Story 8.3: Network Reconnection and Auto-Sync within 30s
  * @see Architecture: Data Sync Strategy
  */
 
@@ -15,8 +16,16 @@ import {
   OutfitInput,
 } from '@/utils/storage';
 import type { OutfitItem, OutfitTheory } from './outfitService';
-import { useOfflineStore, SyncResult } from '@/stores';
+import {
+  useOfflineStore,
+  SyncResult,
+  PendingAction,
+  OfflineActionType,
+  getPendingPreferences,
+  clearPendingPreferences,
+} from '@/stores';
 import { apiClient } from './apiClient';
+import { userPreferencesService } from './userPreferencesService';
 
 // =============================================================================
 // Constants
@@ -509,14 +518,17 @@ export const syncService = SyncService.getInstance();
  * Trigger sync after network recovery
  * Should be called when device transitions from offline to online
  * @param delayMs - Delay before triggering sync (default: 30 seconds per NFR-U8)
+ *
+ * @see Story 8.3: AC#1, AC#2
  */
 export function scheduleNetworkRecoverySync(delayMs: number = 30000): void {
   console.log(`[Sync] Scheduling sync in ${delayMs}ms after network recovery`);
 
-  setTimeout(() => {
+  setTimeout(async () => {
     const store = useOfflineStore.getState();
     if (store.isOnline) {
-      syncService.syncPendingOutfits();
+      // Use syncAll to sync both pending actions and outfits
+      await syncAll();
     }
   }, delayMs);
 }
@@ -527,4 +539,262 @@ export function scheduleNetworkRecoverySync(delayMs: number = 30000): void {
 export async function updatePendingSyncCount(): Promise<void> {
   const pending = await getPendingSyncOutfits();
   useOfflineStore.getState().setPendingSyncCount(pending.length);
+}
+
+// =============================================================================
+// Pending Actions Sync (Story 8.3)
+// =============================================================================
+
+/**
+ * Result of syncing pending actions
+ */
+export interface PendingActionsSyncResult {
+  /** Number of actions successfully synced */
+  synced: number;
+  /** Number of actions that failed */
+  failed: number;
+  /** Error messages */
+  errors: string[];
+}
+
+/**
+ * API endpoint mapping for action types
+ */
+const ACTION_API_MAP: Record<OfflineActionType, { method: 'POST' | 'DELETE'; pathTemplate: string }> = {
+  like: { method: 'POST', pathTemplate: '/api/v1/outfits/{outfitId}/like' },
+  unlike: { method: 'DELETE', pathTemplate: '/api/v1/outfits/{outfitId}/like' },
+  save: { method: 'POST', pathTemplate: '/api/v1/outfits/{outfitId}/save' },
+  unsave: { method: 'DELETE', pathTemplate: '/api/v1/outfits/{outfitId}/save' },
+  delete: { method: 'DELETE', pathTemplate: '/api/v1/outfits/{outfitId}' },
+};
+
+/**
+ * Sync a single pending action to the server
+ * @param action - The pending action to sync
+ * @returns true if successful, false otherwise
+ */
+async function syncSingleAction(action: PendingAction): Promise<boolean> {
+  const apiConfig = ACTION_API_MAP[action.type];
+  if (!apiConfig) {
+    console.error(`[Sync] Unknown action type: ${action.type}`);
+    return false;
+  }
+
+  const path = apiConfig.pathTemplate.replace('{outfitId}', action.outfitId);
+
+  try {
+    if (apiConfig.method === 'POST') {
+      await apiClient.post(path);
+    } else {
+      await apiClient.delete(path);
+    }
+    return true;
+  } catch (error) {
+    // If API returns 404 for unlike/unsave/delete, consider it a success
+    // (the resource doesn't exist, which is the desired state)
+    if (
+      error &&
+      typeof error === 'object' &&
+      'response' in error &&
+      (error as { response?: { status?: number } }).response?.status === 404 &&
+      (action.type === 'unlike' || action.type === 'unsave' || action.type === 'delete')
+    ) {
+      console.log(`[Sync] Action ${action.type} for ${action.outfitId} - resource not found, considering success`);
+      return true;
+    }
+
+    // Log other errors
+    console.error(`[Sync] Failed to sync action ${action.type} for ${action.outfitId}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Sync all pending actions from the offline queue
+ * Processes like/unlike/save/unsave/delete operations
+ *
+ * @see Story 8.3: AC#2, AC#3, AC#4
+ * @see NFR-R10: Exponential backoff retry
+ *
+ * @returns Result of the sync operation
+ */
+export async function syncPendingActions(): Promise<PendingActionsSyncResult> {
+  const store = useOfflineStore.getState();
+  const result: PendingActionsSyncResult = {
+    synced: 0,
+    failed: 0,
+    errors: [],
+  };
+
+  // Check if online
+  if (!store.isOnline) {
+    console.log('[Sync] Device is offline, skipping pending actions sync');
+    result.errors.push('Device is offline');
+    return result;
+  }
+
+  const pendingActions = [...store.pendingActions];
+  console.log(`[Sync] Processing ${pendingActions.length} pending actions`);
+
+  if (pendingActions.length === 0) {
+    return result;
+  }
+
+  for (const action of pendingActions) {
+    // Check if we should skip this action (max 3 retries reached)
+    if (action.retryCount >= MAX_RETRIES) {
+      console.log(`[Sync] Skipping action ${action.id} - max retries (${MAX_RETRIES}) reached`);
+      result.failed++;
+      continue;
+    }
+
+    try {
+      // Try to sync with exponential backoff
+      const success = await retryWithBackoff(
+        () => syncSingleAction(action),
+        MAX_RETRIES - action.retryCount,
+        BASE_RETRY_DELAY
+      );
+
+      if (success) {
+        // Remove from queue on success
+        store.removePendingAction(action.id);
+        result.synced++;
+        console.log(`[Sync] Successfully synced action: ${action.type} for outfit ${action.outfitId}`);
+      } else {
+        // Increment retry count for next attempt
+        store.incrementRetryCount(action.id);
+        result.failed++;
+      }
+    } catch (error) {
+      // Sync failed after all retries
+      store.incrementRetryCount(action.id);
+      result.failed++;
+
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      result.errors.push(`Action ${action.type} for ${action.outfitId}: ${errorMessage}`);
+      console.error(`[Sync] Failed to sync action after retries:`, error);
+    }
+  }
+
+  console.log(`[Sync] Pending actions sync complete: ${result.synced} synced, ${result.failed} failed`);
+  return result;
+}
+
+/**
+ * Sync pending preferences to the server
+ * Called when device reconnects after being offline
+ *
+ * @see Story 8.3: AC#6 - Preferences sync on reconnection
+ * @returns Object with synced count and success status
+ */
+export async function syncPendingPreferences(): Promise<{ synced: number; success: boolean }> {
+  const store = useOfflineStore.getState();
+
+  if (!store.isOnline) {
+    console.log('[Sync] Device is offline, skipping preferences sync');
+    return { synced: 0, success: false };
+  }
+
+  try {
+    const pendingPreferences = await getPendingPreferences();
+
+    if (!pendingPreferences) {
+      console.log('[Sync] No pending preferences to sync');
+      return { synced: 0, success: true };
+    }
+
+    console.log('[Sync] Syncing pending preferences...');
+    await userPreferencesService.savePreferences(pendingPreferences);
+    await clearPendingPreferences();
+    console.log('[Sync] Preferences synced successfully');
+    return { synced: 1, success: true };
+  } catch (error) {
+    console.error('[Sync] Failed to sync preferences:', error);
+    return { synced: 0, success: false };
+  }
+}
+
+/**
+ * Sync all pending data (actions + outfits)
+ * This is the main sync function called on network recovery
+ *
+ * @see Story 8.3: AC#1, AC#2
+ */
+export async function syncAll(): Promise<SyncResult> {
+  const store = useOfflineStore.getState();
+
+  // Check if online
+  if (!store.isOnline) {
+    return {
+      uploaded: 0,
+      downloaded: 0,
+      conflicts: 0,
+      errors: ['Device is offline'],
+    };
+  }
+
+  // Prevent concurrent syncs
+  if (store.isSyncing) {
+    return {
+      uploaded: 0,
+      downloaded: 0,
+      conflicts: 0,
+      errors: ['Sync already in progress'],
+    };
+  }
+
+  store.setSyncing(true);
+
+  const result: SyncResult = {
+    uploaded: 0,
+    downloaded: 0,
+    conflicts: 0,
+    errors: [],
+  };
+
+  try {
+    // 1. Sync pending preferences first (AC#6)
+    console.log('[Sync] Starting syncAll - Phase 1: Pending Preferences');
+    const preferencesResult = await syncPendingPreferences();
+    result.uploaded += preferencesResult.synced;
+    if (!preferencesResult.success && preferencesResult.synced === 0) {
+      // Only add error if there were preferences to sync but it failed
+      const pendingPrefs = await getPendingPreferences();
+      if (pendingPrefs) {
+        result.errors.push('Failed to sync preferences');
+      }
+    }
+
+    // 2. Sync pending actions (like/unlike/save/unsave/delete)
+    console.log('[Sync] Starting syncAll - Phase 2: Pending Actions');
+    const actionsResult = await syncPendingActions();
+    result.uploaded += actionsResult.synced;
+    result.errors.push(...actionsResult.errors);
+
+    // 3. Sync pending outfits (temporarily release sync lock for the inner method)
+    console.log('[Sync] Starting syncAll - Phase 3: Pending Outfits');
+    store.setSyncing(false); // Release lock for inner method
+    const outfitsResult = await syncService.syncPendingOutfits();
+    store.setSyncing(true); // Re-acquire lock
+    result.uploaded += outfitsResult.uploaded;
+    result.downloaded += outfitsResult.downloaded;
+    result.conflicts += outfitsResult.conflicts;
+    // Filter out "Sync already in progress" errors from inner call
+    result.errors.push(...outfitsResult.errors.filter(e => e !== 'Sync already in progress'));
+
+    // Update sync time and result
+    store.setLastSyncTime(Date.now());
+    store.setLastSyncResult(result);
+
+    console.log('[Sync] syncAll completed:', result);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    result.errors.push(errorMessage);
+    console.error('[Sync] syncAll error:', error);
+  } finally {
+    store.setSyncing(false);
+  }
+
+  return result;
 }

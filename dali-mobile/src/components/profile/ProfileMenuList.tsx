@@ -26,8 +26,8 @@ export function ProfileMenuList(): React.ReactElement {
   };
 
   const handleStyleProfile = () => {
-    // TODO: Navigate to style profile page (Story 7.3)
-    alert('提示: 风格档案功能即将上线');
+    // Navigate to style profile page (Story 7.3)
+    router.push('/style-profile');
   };
 
   const handleSettings = () => {

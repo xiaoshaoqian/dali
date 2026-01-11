@@ -1,8 +1,13 @@
 // Stores barrel export
-// Zustand state management stores (authStore, userStore, offlineStore, filterStore)
+// Zustand state management stores (authStore, userStore, offlineStore, filterStore, permissionStore)
 export { useAuthStore } from './authStore';
 export { useOfflineStore } from './offlineStore';
 export type { OfflineActionType, PendingAction, SyncResult } from './offlineStore';
+export {
+  savePendingPreferences,
+  getPendingPreferences,
+  clearPendingPreferences,
+} from './offlineStore';
 export {
   useFilterStore,
   useOccasionLabel,
@@ -19,3 +24,5 @@ export type {
   FilterState,
   FilterActions,
 } from './filterStore';
+export { usePermissionStore } from './permissionStore';
+export type { PermissionStatus, PermissionType } from './permissionStore';

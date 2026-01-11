@@ -2,8 +2,11 @@
  * Home Screen (首页 - 空状态)
  * Main entry point for outfit generation
  * Ref: ux-design/pages/01-home/home-page-empty.html
+ *
+ * @see Story 8.2: Offline Mode Handler with Graceful Degradation
+ * @see AC#4: Offline Generate Restriction
  */
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -17,6 +20,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 
 import { CameraIcon, AlbumIcon, OutfitIcon } from '@/components/ui/icons';
+import { OfflineRestrictionModal } from '@/components/ui';
+import { useOfflineMode } from '@/hooks';
 import { colors } from '@/constants';
 
 // Inspiration card data
@@ -36,15 +41,41 @@ const styleBackgrounds: Record<string, [string, string]> = {
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const { isOffline, canPerformAction, getRestrictionMessage } = useOfflineMode();
+
+  // State for offline restriction modal
+  const [showOfflineModal, setShowOfflineModal] = useState(false);
+
+  // Check if generate outfit actions are allowed
+  const canGenerate = canPerformAction('generate_outfit');
 
   // Navigate to camera screen
   const handleCamera = () => {
+    if (!canGenerate) {
+      setShowOfflineModal(true);
+      return;
+    }
     router.push('/camera' as never);
   };
 
   // Navigate to album picker
   const handleAlbum = () => {
+    if (!canGenerate) {
+      setShowOfflineModal(true);
+      return;
+    }
     router.push('/album' as never);
+  };
+
+  // Handle offline modal primary action (view history)
+  const handleViewHistory = () => {
+    setShowOfflineModal(false);
+    router.push('/(tabs)/wardrobe' as never);
+  };
+
+  // Handle offline modal dismiss
+  const handleDismissOfflineModal = () => {
+    setShowOfflineModal(false);
   };
 
   return (
@@ -74,25 +105,41 @@ export default function HomeScreen() {
           {/* Action Buttons - Side by Side */}
           <View style={styles.actionButtons}>
             <TouchableOpacity
-              style={styles.cameraButton}
-              activeOpacity={0.8}
+              style={[
+                styles.cameraButton,
+                !canGenerate && styles.cameraButtonDisabled,
+              ]}
+              activeOpacity={canGenerate ? 0.8 : 1}
               onPress={handleCamera}
             >
               <View style={styles.btnIcon}>
-                <CameraIcon size={36} color="#FFFFFF" />
+                <CameraIcon size={36} color={canGenerate ? '#FFFFFF' : '#C7C7CC'} />
               </View>
-              <Text style={styles.cameraButtonText}>拍照</Text>
+              <Text style={[
+                styles.cameraButtonText,
+                !canGenerate && styles.buttonTextDisabled,
+              ]}>
+                拍照
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.albumButton}
-              activeOpacity={0.8}
+              style={[
+                styles.albumButton,
+                !canGenerate && styles.albumButtonDisabled,
+              ]}
+              activeOpacity={canGenerate ? 0.8 : 1}
               onPress={handleAlbum}
             >
               <View style={styles.btnIcon}>
-                <AlbumIcon size={36} color="#1C1C1E" />
+                <AlbumIcon size={36} color={canGenerate ? '#1C1C1E' : '#C7C7CC'} />
               </View>
-              <Text style={styles.albumButtonText}>从相册选择</Text>
+              <Text style={[
+                styles.albumButtonText,
+                !canGenerate && styles.buttonTextDisabled,
+              ]}>
+                从相册选择
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -167,6 +214,18 @@ export default function HomeScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* Offline Restriction Modal */}
+      <OfflineRestrictionModal
+        visible={showOfflineModal}
+        title="当前离线"
+        message={getRestrictionMessage('generate_outfit') || '无法生成新搭配，你可以查看历史搭配或等待网络恢复'}
+        primaryButtonLabel="查看历史"
+        secondaryButtonLabel="知道了"
+        onPrimaryPress={handleViewHistory}
+        onSecondaryPress={handleDismissOfflineModal}
+        onDismiss={handleDismissOfflineModal}
+      />
     </View>
   );
 }
@@ -258,6 +317,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#1C1C1E',
+  },
+  // Disabled states for offline mode
+  cameraButtonDisabled: {
+    backgroundColor: '#C7C7CC',
+    shadowOpacity: 0,
+    opacity: 0.7,
+  },
+  albumButtonDisabled: {
+    backgroundColor: '#E5E5EA',
+    borderColor: '#D1D1D6',
+    opacity: 0.7,
+  },
+  buttonTextDisabled: {
+    color: '#8E8E93',
   },
   recentSection: {
     marginTop: 20,

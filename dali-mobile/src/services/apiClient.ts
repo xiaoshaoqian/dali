@@ -1,11 +1,15 @@
 /**
- * API Client with Token Auto-Refresh
+ * API Client with Token Auto-Refresh and Offline Handling
  * Axios instance with interceptors for automatic token refresh on 401 errors
+ * and user-friendly offline error messages
+ *
+ * @see Story 8.2: AC#9 - API Request Offline Fallback
  */
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 import { API_BASE_URL, API_TIMEOUT } from '@/constants/api';
 import { authService } from '@/services/authService';
+import { categorizeNetworkError } from '@/hooks/useOfflineMode';
 
 // Create axios instance
 export const apiClient = axios.create({
@@ -71,12 +75,22 @@ apiClient.interceptors.request.use(
 );
 
 /**
- * Response interceptor - handle 401 errors and refresh tokens
+ * Response interceptor - handle 401 errors, refresh tokens, and offline errors
  */
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+    // Check for offline/network errors first (AC#9)
+    const offlineError = categorizeNetworkError(error);
+    if (offlineError.isOfflineError) {
+      // Create a user-friendly error with the offline message
+      const friendlyError = new Error(offlineError.userMessage);
+      (friendlyError as Error & { isOffline: boolean }).isOffline = true;
+      (friendlyError as Error & { originalError: unknown }).originalError = error;
+      return Promise.reject(friendlyError);
+    }
 
     // Only handle 401 errors
     if (error.response?.status !== 401) {

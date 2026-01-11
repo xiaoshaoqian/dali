@@ -3,6 +3,9 @@
  * User profile with stats and quick action menu
  *
  * @see Story 7.1: Profile Screen with User Stats
+ * @see Story 7.2: ProgressCircle Component (AI Learning Visualization)
+ * @see Story 7.3: PreferenceCloud Component and Edit Preferences
+ * @see Story 8.3: Network Reconnection and Auto-Sync (AC#12)
  * @see ux-design/pages/05-profile/profile-page.html
  */
 import React from 'react';
@@ -23,19 +26,31 @@ import {
   ProfileStats,
   ProfileMenuList,
   EditNicknameModal,
+  AILearningSection,
+  PreferencesReminderBanner,
+  SyncStatusSection,
 } from '@/components/profile';
+import { Toast } from '@/components/ui';
 import {
   useUserProfile,
   useUserStats,
   useUpdateUserProfile,
   useUploadAvatar,
+  usePreferences,
+  usePreferencesNeedUpdate,
+  useNetworkSync,
 } from '@/hooks';
 import { colors, spacing } from '@/constants';
+
+/** Toast duration for progress improvement notification (AC#8) */
+const PROGRESS_TOAST_DURATION = 3000;
 
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [isNicknameModalVisible, setIsNicknameModalVisible] = React.useState(false);
+  const [isProgressToastVisible, setIsProgressToastVisible] = React.useState(false);
+  const [isReminderDismissed, setIsReminderDismissed] = React.useState(false);
 
   // Fetch profile and stats
   const {
@@ -49,6 +64,13 @@ export default function ProfileScreen() {
     isLoading: isStatsLoading,
     refetch: refetchStats,
   } = useUserStats();
+
+  // Fetch preferences for reminder check (AC#9)
+  const { data: preferences } = usePreferences();
+  const showPreferencesReminder = usePreferencesNeedUpdate(preferences?.updatedAt) && !isReminderDismissed;
+
+  // Sync status hook (Story 8.3: AC#12)
+  const { triggerSync } = useNetworkSync();
 
   // Mutations
   const updateProfileMutation = useUpdateUserProfile();
@@ -93,6 +115,31 @@ export default function ProfileScreen() {
     router.push('/settings');
   };
 
+  // Progress improvement handler (AC#8)
+  const handleProgressImprovement = () => {
+    setIsProgressToastVisible(true);
+  };
+
+  // Toast dismiss handler
+  const handleProgressToastDismiss = () => {
+    setIsProgressToastVisible(false);
+  };
+
+  // Preferences reminder handlers (AC#9)
+  const handlePreferencesReminderPress = () => {
+    router.push('/edit-preferences');
+  };
+
+  const handlePreferencesReminderDismiss = () => {
+    setIsReminderDismissed(true);
+  };
+
+  // Manual sync handler (Story 8.3: AC#12)
+  const handleManualSync = async () => {
+    await triggerSync();
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
   // Loading state
   if (isProfileLoading || !profile) {
     return (
@@ -132,6 +179,27 @@ export default function ProfileScreen() {
           {/* Stats Card - Floating above */}
           {stats && <ProfileStats stats={stats} />}
 
+          {/* AI Learning Progress Section */}
+          {stats && (
+            <AILearningSection
+              aiAccuracy={stats.aiAccuracy}
+              totalOutfits={stats.totalOutfits}
+              favoriteCount={stats.favoriteCount}
+              onProgressImprovement={handleProgressImprovement}
+            />
+          )}
+
+          {/* Preferences Update Reminder (AC#9) */}
+          {showPreferencesReminder && (
+            <PreferencesReminderBanner
+              onPress={handlePreferencesReminderPress}
+              onDismiss={handlePreferencesReminderDismiss}
+            />
+          )}
+
+          {/* Sync Status Section (Story 8.3: AC#12) */}
+          <SyncStatusSection onSyncPress={handleManualSync} />
+
           {/* Menu List */}
           <View style={styles.menuSection}>
             <ProfileMenuList />
@@ -146,6 +214,15 @@ export default function ProfileScreen() {
         onSave={handleNicknameSave}
         onCancel={() => setIsNicknameModalVisible(false)}
         isLoading={updateProfileMutation.isPending}
+      />
+
+      {/* Progress Improvement Toast (AC#8) */}
+      <Toast
+        message="你的风格档案更完善了 🎉"
+        type="success"
+        duration={PROGRESS_TOAST_DURATION}
+        visible={isProgressToastVisible}
+        onDismiss={handleProgressToastDismiss}
       />
     </View>
   );

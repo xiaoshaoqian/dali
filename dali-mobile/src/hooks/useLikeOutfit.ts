@@ -3,6 +3,7 @@
  * React Query mutation hook for liking/unliking outfits with optimistic updates
  *
  * @see Story 3.5: Outfit Feedback (Like & Save)
+ * @see Story 8.2: AC#6 - Offline Like/Favorite Operations
  */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -15,6 +16,8 @@ interface UseLikeOutfitOptions {
   onSuccess?: (isLiked: boolean) => void;
   /** Callback when like fails */
   onError?: (error: Error) => void;
+  /** Callback when action is queued offline (AC#6: shows "已离线保存，稍后同步") */
+  onOfflineQueued?: () => void;
 }
 
 interface LikeMutationContext {
@@ -50,6 +53,8 @@ export function useLikeOutfit(
       if (!isOnline) {
         // Queue for later sync
         addPendingAction(newIsLiked ? 'like' : 'unlike', outfitId);
+        // Notify caller for toast display (AC#6)
+        options?.onOfflineQueued?.();
         return { isLiked: newIsLiked };
       }
 
