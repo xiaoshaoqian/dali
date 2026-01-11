@@ -73,9 +73,9 @@ class SMSService:
 
         # In development mode, skip actual SMS sending
         if settings.APP_ENV == "development" or not settings.SMS_ACCESS_KEY_ID:
-            # Store code without sending
-            # Note: Code is stored but never logged for security
-            verification_store.store_code(phone, code)
+            # Use fixed code 123456 in development for easy testing
+            dev_code = "123456"
+            verification_store.store_code(phone, dev_code)
             return
 
         # Send SMS via Alibaba Cloud
