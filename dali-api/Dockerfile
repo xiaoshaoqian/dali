@@ -1,5 +1,6 @@
 # Build stage
-FROM python:3.11-slim as builder
+# 使用阿里云镜像源，避免国内构建时 Docker Hub 超时
+FROM registry.cn-hangzhou.aliyuncs.com/library/python:3.11-slim as builder
 
 WORKDIR /app
 
@@ -14,7 +15,7 @@ RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi --only main
 
 # Production stage
-FROM python:3.11-slim
+FROM registry.cn-hangzhou.aliyuncs.com/library/python:3.11-slim
 
 WORKDIR /app
 
