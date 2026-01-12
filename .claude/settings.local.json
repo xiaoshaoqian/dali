@@ -45,7 +45,8 @@
       "Skill(bmad:bmm:workflows:code-review)",
       "Bash(cat:*)",
       "Bash(findstr:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(find:*)"
     ]
   }
 }

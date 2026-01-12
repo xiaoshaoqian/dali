@@ -63,8 +63,15 @@ So that photos are securely stored and accessible for AI processing.
 4. Return final photo URL for AI processing
 
 ### Mock Implementation
-Since actual OSS credentials are not available, backend will return mock signed URLs.
-Upload service will simulate the upload process locally.
+
+~~Since actual OSS credentials are not available, backend will return mock signed URLs.
+Upload service will simulate the upload process locally.~~
+
+**Updated 2026-01-12**: Real OSS implementation completed. The system now automatically detects OSS credentials:
+- **With credentials**: Uses real Alibaba Cloud OSS with presigned URLs
+- **Without credentials**: Falls back to mock implementation for development
+
+This allows seamless transition from development to production without code changes.
 
 ### Retry Strategy
 - First retry: 1 second delay
@@ -100,3 +107,9 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 - 2026-01-05: Story created and implementation started (Claude Opus 4.5)
 - 2026-01-05: Implementation completed - backend upload API, mobile photoUploadService, camera/album upload integration (Claude Opus 4.5)
 - 2026-01-05: Code review completed - fixed 2 issues (1 HIGH, 1 MEDIUM): added missing tests, implemented retry logic with exponential backoff per NFR-R10 (Claude Opus 4.5)
+- **2026-01-12: Real OSS integration completed (Claude Sonnet 4.5)**
+  - Added `oss2` SDK dependency (v2.19.1)
+  - Implemented real `alibaba_oss.py` with full OSS client functionality
+  - Updated `storage.py` to auto-detect credentials and switch between real OSS and mock
+  - Updated `.env.example` with detailed OSS configuration guide
+  - System now production-ready for Alibaba Cloud OSS
