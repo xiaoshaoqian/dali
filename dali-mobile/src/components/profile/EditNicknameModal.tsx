@@ -36,12 +36,12 @@ export function EditNicknameModal({
   onCancel,
   isLoading = false,
 }: EditNicknameModalProps): React.ReactElement {
-  const [nickname, setNickname] = React.useState(currentNickname);
+  const [nickname, setNickname] = React.useState(currentNickname || '');
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     if (visible) {
-      setNickname(currentNickname);
+      setNickname(currentNickname || '');
       setError(null);
     }
   }, [visible, currentNickname]);
