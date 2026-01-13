@@ -1,6 +1,6 @@
 # Build stage
 # 使用 AWS 的公共镜像源
-FROM public.ecr.aws/docker/library/python:3.11-slim
+FROM public.ecr.aws/docker/library/python:3.11-slim AS builder
 
 WORKDIR /app
 
