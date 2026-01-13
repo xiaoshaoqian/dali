@@ -40,6 +40,14 @@ class User(Base):
         index=True,
         nullable=True,
     )
+    nickname: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+    avatar: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+    )
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,

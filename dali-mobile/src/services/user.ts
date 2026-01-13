@@ -10,7 +10,7 @@ import type { UserStats, UserProfile, UpdateUserProfileRequest, UploadAvatarResp
  * @returns User statistics including outfit count, favorites, shares
  */
 export async function getUserStats(): Promise<UserStats> {
-  const response = await apiClient.get<UserStats>('/api/v1/users/me/stats');
+  const response = await apiClient.get<UserStats>('/users/me/stats');
   return response.data;
 }
 
@@ -19,7 +19,7 @@ export async function getUserStats(): Promise<UserStats> {
  * @returns User profile with id, nickname, avatar, etc
  */
 export async function getUserProfile(): Promise<UserProfile> {
-  const response = await apiClient.get<UserProfile>('/api/v1/users/me');
+  const response = await apiClient.get<UserProfile>('/users/me');
   return response.data;
 }
 
@@ -29,7 +29,7 @@ export async function getUserProfile(): Promise<UserProfile> {
  * @returns Updated user profile
  */
 export async function updateUserProfile(updates: UpdateUserProfileRequest): Promise<UserProfile> {
-  const response = await apiClient.put<UserProfile>('/api/v1/users/me', updates);
+  const response = await apiClient.put<UserProfile>('/users/me', updates);
   return response.data;
 }
 
@@ -47,7 +47,7 @@ export async function uploadUserAvatar(imageUri: string): Promise<string> {
   try {
     // Step 1: Get signed upload URL
     const { data: uploadData } = await apiClient.post<UploadAvatarResponse>(
-      '/api/v1/users/me/avatar/upload-url'
+      '/users/me/avatar/upload-url'
     );
 
     // Step 2: Upload image to OSS

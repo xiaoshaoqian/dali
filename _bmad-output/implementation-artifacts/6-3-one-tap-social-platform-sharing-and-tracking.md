@@ -866,3 +866,4 @@ src/services/wechat.ts (新建，可选)
 | 2026-01-08 | Claude (create-story workflow) | Initial story creation |
 | 2026-01-08 | Claude (dev-story workflow) | Implementation complete, Status → Review |
 | 2026-01-08 | Claude (code-review workflow) | Fixed double tracking bug, added Dev Agent Record |
+| 2026-01-13 | Claude Sonnet 4.5 | **BUG FIX**: Fixed API path duplication in `share.ts` tracking functions. Removed `/api/v1` prefix from all `apiClient.post('/share/track')` calls (trackShareImageGenerated, trackSaveToGallery, trackShareCompleted, trackShareToPlatform, trackShareCancelled) since baseURL already contains this prefix. |

@@ -46,7 +46,10 @@
       "Bash(cat:*)",
       "Bash(findstr:*)",
       "Bash(curl:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 118012 -Force\")",
+      "Bash(python -m py_compile:*)"
     ]
   }
 }

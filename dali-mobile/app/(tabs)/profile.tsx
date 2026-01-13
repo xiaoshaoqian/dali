@@ -11,7 +11,9 @@
 import React from 'react';
 import {
   View,
+  Text,
   ScrollView,
+  TouchableOpacity,
   RefreshControl,
   StyleSheet,
   StatusBar,
@@ -56,12 +58,14 @@ export default function ProfileScreen() {
   const {
     data: profile,
     isLoading: isProfileLoading,
+    error: profileError,
     refetch: refetchProfile,
   } = useUserProfile();
 
   const {
     data: stats,
     isLoading: isStatsLoading,
+    error: statsError,
     refetch: refetchStats,
   } = useUserStats();
 
@@ -141,10 +145,31 @@ export default function ProfileScreen() {
   };
 
   // Loading state
-  if (isProfileLoading || !profile) {
+  if (isProfileLoading) {
     return (
       <View style={styles.container}>
         <StatusBar barStyle="light-content" />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>加载中...</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // Error state - show error message with retry button
+  if (profileError || !profile) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorTitle}>无法加载个人信息</Text>
+          <Text style={styles.errorMessage}>
+            {profileError ? String(profileError) : '请确认您已登录'}
+          </Text>
+          <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
+            <Text style={styles.retryButtonText}>重试</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -232,6 +257,44 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.gray4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: colors.gray2,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.gray1,
+    marginBottom: spacing.m,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: colors.gray2,
+    textAlign: 'center',
+    marginBottom: spacing.xl,
+  },
+  retryButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.m,
+    borderRadius: 12,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,

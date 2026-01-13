@@ -241,7 +241,7 @@ export async function trackShareImageGenerated(
       timestamp: Date.now(),
     };
 
-    await apiClient.post('/api/v1/share/track', event);
+    await apiClient.post('/share/track', event);
 
     if (__DEV__) {
       console.log('[ShareService] Tracked share_image_generated event:', event);
@@ -270,7 +270,7 @@ export async function trackSaveToGallery(
       timestamp: Date.now(),
     };
 
-    await apiClient.post('/api/v1/share/track', event);
+    await apiClient.post('/share/track', event);
 
     if (__DEV__) {
       console.log('[ShareService] Tracked share_save_to_gallery event:', event);
@@ -299,7 +299,7 @@ export async function trackShareCompleted(
       timestamp: Date.now(),
     };
 
-    await apiClient.post('/api/v1/share/track', event);
+    await apiClient.post('/share/track', event);
 
     if (__DEV__) {
       console.log('[ShareService] Tracked share_completed event:', event);
@@ -331,7 +331,7 @@ export async function trackShareToPlatform(
       timestamp: Date.now(),
     };
 
-    await apiClient.post('/api/v1/share/track', event);
+    await apiClient.post('/share/track', event);
 
     if (__DEV__) {
       console.log('[ShareService] Tracked share to platform:', event);
@@ -360,7 +360,7 @@ export async function trackShareCancelled(
       timestamp: Date.now(),
     };
 
-    await apiClient.post('/api/v1/share/track', event);
+    await apiClient.post('/share/track', event);
 
     if (__DEV__) {
       console.log('[ShareService] Tracked share_cancelled event:', event);
