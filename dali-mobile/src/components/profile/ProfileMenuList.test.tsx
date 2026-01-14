@@ -1,78 +1,77 @@
 /**
  * ProfileMenuList Component Tests
+ *
+ * @see HTML Prototype: ux-design/pages/05-profile/profile-page.html
  */
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react-native';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react-native';
 
-import ProfileMenuList from '../ProfileMenuList';
+import ProfileMenuList from './ProfileMenuList';
 
 // Mock expo-router
+const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({
-    push: jest.fn(),
+    push: mockPush,
   }),
 }));
 
+// Mock expo-haptics
+jest.mock('expo-haptics', () => ({
+  impactAsync: jest.fn(),
+  ImpactFeedbackStyle: { Light: 'light' },
+}));
+
 describe('ProfileMenuList', () => {
+  beforeEach(() => {
+    mockPush.mockClear();
+  });
+
+  it('should render group titles', () => {
+    render(<ProfileMenuList />);
+
+    expect(screen.getByText('我的档案')).toBeTruthy();
+    expect(screen.getByText('账户')).toBeTruthy();
+  });
+
   it('should render all menu items', () => {
     render(<ProfileMenuList />);
 
-    expect(screen.getByText('我的收藏')).toBeTruthy();
-    expect(screen.getByText('分享记录')).toBeTruthy();
+    expect(screen.getByText('身材档案')).toBeTruthy();
     expect(screen.getByText('风格档案')).toBeTruthy();
     expect(screen.getByText('设置')).toBeTruthy();
   });
 
-  it('should handle my favorites press', () => {
-    const consoleSpy = jest.spyOn(console, 'log');
-
+  it('should navigate to body profile on press', async () => {
     render(<ProfileMenuList />);
 
-    const favoritesItem = screen.getByText('我的收藏').parent;
-    if (favoritesItem) {
-      fireEvent.press(favoritesItem);
-    }
+    const bodyProfileItem = screen.getByText('身材档案');
+    fireEvent.press(bodyProfileItem);
 
-    // Should navigate to history with favorites filter
-    // Tested via router.push mock in real integration
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/body-profile');
+    });
   });
 
-  it('should handle share history press', () => {
-    const consoleSpy = jest.spyOn(console, 'log');
-
+  it('should navigate to style profile on press', async () => {
     render(<ProfileMenuList />);
 
-    const shareItem = screen.getByText('分享记录').parent;
-    if (shareItem) {
-      fireEvent.press(shareItem);
-    }
+    const styleProfileItem = screen.getByText('风格档案');
+    fireEvent.press(styleProfileItem);
 
-    expect(consoleSpy).toHaveBeenCalledWith('Share history not yet implemented');
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/style-profile');
+    });
   });
 
-  it('should handle style profile press', () => {
-    const consoleSpy = jest.spyOn(console, 'log');
-
+  it('should navigate to settings on press', async () => {
     render(<ProfileMenuList />);
 
-    const styleItem = screen.getByText('风格档案').parent;
-    if (styleItem) {
-      fireEvent.press(styleItem);
-    }
+    const settingsItem = screen.getByText('设置');
+    fireEvent.press(settingsItem);
 
-    expect(consoleSpy).toHaveBeenCalledWith('Style profile not yet implemented');
-  });
-
-  it('should handle settings press', () => {
-    const consoleSpy = jest.spyOn(console, 'log');
-
-    render(<ProfileMenuList />);
-
-    const settingsItem = screen.getByText('设置').parent;
-    if (settingsItem) {
-      fireEvent.press(settingsItem);
-    }
-
-    expect(consoleSpy).toHaveBeenCalledWith('Settings page not yet implemented');
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/settings');
+    });
   });
 });

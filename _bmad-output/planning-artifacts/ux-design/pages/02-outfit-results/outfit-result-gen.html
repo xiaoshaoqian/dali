@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理 - 生成结果</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .device-frame {
+            width: 393px;
+            height: 852px;
+            background: linear-gradient(180deg, #848489 0%, #3A3A3C 50%, #1C1C1E 100%);
+            border-radius: 55px;
+            padding: 3px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #F2F2F7;
+            border-radius: 52px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            width: 126px;
+            height: 37px;
+            background: #000;
+            border-radius: 19px;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        /* Immersive Header */
+        .immersive-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 60px 20px 20px;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, transparent 100%);
+        }
+
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+
+        /* Result Card Carousel */
+        .results-container {
+            flex: 1;
+            padding-top: 0;
+            overflow: hidden;
+        }
+
+        .result-card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Main Generated Image (Scene) */
+        .scene-image {
+            width: 100%;
+            height: 65%;
+            /* Dominant visual */
+            background-color: #eee;
+            background-image: url('https://images.unsplash.com/photo-1550614000-4b9519e02d48?q=80&w=1000&auto=format&fit=crop');
+            /* Placeholder: Cafe scene */
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .scene-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to top, #fff 0%, transparent 100%);
+        }
+
+        /* Theory Card (Bottom Sheet style) */
+        .theory-sheet {
+            flex: 1;
+            background: #fff;
+            border-radius: 32px 32px 0 0;
+            margin-top: -30px;
+            /* Overlap */
+            position: relative;
+            padding: 30px 24px;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .drag-handle {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: #E5E5EA;
+            border-radius: 2px;
+        }
+
+        .outfit-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .outfit-title h2 {
+            font-size: 24px;
+            color: #1C1C1E;
+            margin-bottom: 4px;
+        }
+
+        .outfit-tags {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tag {
+            padding: 4px 10px;
+            background: #F2F2F7;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .tag.highlight {
+            background: #F0EFFF;
+            color: #6C63FF;
+        }
+
+        .theory-content {
+            background: #FAFAFC;
+            border-radius: 16px;
+            padding: 16px;
+            border-left: 3px solid #6C63FF;
+        }
+
+        .theory-title {
+            color: #6C63FF;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .theory-text {
+            font-size: 14px;
+            color: #3A3A3C;
+            line-height: 1.5;
+        }
+
+        .action-bar {
+            margin-top: auto;
+            display: flex;
+            gap: 12px;
+        }
+
+        .action-btn {
+            flex: 1;
+            height: 52px;
+            border-radius: 14px;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .btn-secondary {
+            background: #F2F2F7;
+            color: #1C1C1E;
+        }
+
+        .btn-primary {
+            background: #1C1C1E;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="device-frame">
+        <div class="screen">
+            <div class="dynamic-island"></div>
+
+            <div class="immersive-header">
+                <div class="back-btn"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                        viewBox="0 0 24 24">
+                        <path d="M15 18l-6-6 6-6" />
+                    </svg></div>
+                <!-- Pagination Dots -->
+                <div style="display: flex; gap: 6px;">
+                    <div style="width: 20px; height: 4px; background: #fff; border-radius: 2px;"></div>
+                    <div style="width: 4px; height: 4px; background: rgba(255,255,255,0.5); border-radius: 2px;"></div>
+                    <div style="width: 4px; height: 4px; background: rgba(255,255,255,0.5); border-radius: 2px;"></div>
+                </div>
+                <div class="back-btn">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+                        <path d="M16 6l-4-4-4 4" />
+                        <path d="M12 2v13" />
+                    </svg>
+                </div>
+            </div>
+
+            <div class="results-container">
+                <div class="result-card">
+                    <!-- AI Generated Scene -->
+                    <div class="scene-image">
+                        <!-- Label Overlay -->
+                        <div
+                            style="position: absolute; bottom: 40px; left: 20px; background: rgba(0,0,0,0.6); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 12px; backdrop-filter: blur(4px);">
+                            ✨ 休闲下午茶场景
+                        </div>
+                    </div>
+
+                    <div class="theory-sheet">
+                        <div class="drag-handle"></div>
+
+                        <div class="outfit-header">
+                            <div class="outfit-title">
+                                <h2>法式慵懒风</h2>
+                                <div class="outfit-tags">
+                                    <span class="tag">宽松</span>
+                                    <span class="tag highlight">下午茶</span>
+                                    <span class="tag">舒适</span>
+                                </div>
+                            </div>
+                            <div
+                                style="width: 40px; height: 40px; background: #F0EFFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #6C63FF;">
+                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="theory-content">
+                            <div class="theory-title">为什么这样搭</div>
+                            <div class="theory-text">
+                                卡其色风衣与白色内搭形成经典的<span
+                                    style="color: #6C63FF; font-weight: 600;">大地色系</span>组合，既保留了职场的干练，又不失休闲的松弛感。搭配牛仔裤，完美适配下午茶场景。
+                            </div>
+                        </div>
+
+                        <div class="action-bar">
+                            <button class="action-btn btn-secondary">如果不喜欢...</button>
+                            <button class="action-btn btn-primary">收入衣橱</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

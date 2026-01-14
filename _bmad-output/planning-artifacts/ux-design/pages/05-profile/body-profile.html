@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理 - 身材档案</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .device-frame {
+            width: 393px;
+            height: 852px;
+            background: linear-gradient(180deg, #848489 0%, #3A3A3C 50%, #1C1C1E 100%);
+            border-radius: 55px;
+            padding: 3px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #F2F2F7;
+            border-radius: 52px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Dynamic Island */
+        .dynamic-island {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 126px;
+            height: 37.5px;
+            background: #000;
+            border-radius: 19px;
+            z-index: 101;
+            pointer-events: none;
+        }
+
+        /* 紫色渐变头部 - Linear Gradient (Consistent with App) */
+        .header-gradient {
+            background: linear-gradient(180deg, #6C63FF 0%, #8578FF 100%);
+            padding: 0 20px;
+            padding-top: 59px;
+            /* Status Bar Height */
+            padding-bottom: 90px;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        /* Navigation Header in Gradient */
+        .nav-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 44px;
+            color: #fff;
+            position: relative;
+            z-index: 2;
+        }
+
+        .nav-back {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 17px;
+            cursor: pointer;
+            opacity: 0.9;
+        }
+
+        .nav-title {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 17px;
+            font-weight: 600;
+        }
+
+        .nav-action {
+            font-size: 17px;
+            font-weight: 500;
+            cursor: pointer;
+            opacity: 0.9;
+        }
+
+        /* 白色内容卡片 - Deep Layering */
+        .content-card {
+            background: #fff;
+            border-radius: 24px 24px 0 0;
+            margin-top: -30px;
+            /* Pull up slightly */
+            flex: 1;
+            position: relative;
+            z-index: 10;
+            padding: 24px 20px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .content-card::-webkit-scrollbar {
+            display: none;
+        }
+
+        .section-title {
+            font-size: 13px;
+            color: #8E8E93;
+            margin-bottom: 10px;
+            padding-left: 12px;
+            margin-top: 20px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title:first-child {
+            margin-top: 0;
+        }
+
+        .section-tag {
+            font-size: 11px;
+            color: #6C63FF;
+            background: rgba(108, 99, 255, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .section-tag.optional {
+            color: #8E8E93;
+            background: rgba(142, 142, 147, 0.15);
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.02);
+            margin-bottom: 8px;
+        }
+
+        .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.05);
+            min-height: 52px;
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-label {
+            font-size: 16px;
+            color: #1C1C1E;
+        }
+
+        .item-value {
+            font-size: 16px;
+            color: #8E8E93;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .item-value.placeholder {
+            color: #C7C7CC;
+        }
+
+        /* 状态栏时间 */
+        .status-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 59px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 0 24px;
+            padding-top: 16px;
+            z-index: 20;
+        }
+
+        .status-left {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: -0.3px;
+        }
+
+        .status-right {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="device-frame">
+        <div class="screen">
+            <div class="dynamic-island"></div>
+
+            <!-- Purple Header -->
+            <div class="header-gradient">
+                <div class="status-bar">
+                    <div class="status-left">9:41</div>
+                    <div class="status-right">
+                        <!-- Icons omitted for brevity, keeping layout consistent -->
+                        <svg width="68" height="14" viewBox="0 0 68 14" fill="none">
+                            <!-- Simplified Status Icons Placeholder -->
+                            <rect x="50" y="2" width="16" height="8" rx="2" fill="#fff" fill-opacity="0.9" />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="nav-header">
+                    <div class="nav-back" onclick="window.parent.switchPage('profile')">
+                        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </div>
+                    <!-- Title centered in gradient -->
+                    <div class="nav-title">身材档案</div>
+                    <div class="nav-action">编辑</div>
+                </div>
+            </div>
+
+            <!-- Content Card -->
+            <div class="content-card">
+
+                <div class="section-title">
+                    基本信息
+                    <span class="section-tag">必填</span>
+                </div>
+                <div class="card">
+                    <div class="list-item">
+                        <span class="item-label">性别</span>
+                        <span class="item-value">女</span>
+                    </div>
+                    <div class="list-item">
+                        <span class="item-label">身高</span>
+                        <span class="item-value">165 cm</span>
+                    </div>
+                    <div class="list-item">
+                        <span class="item-label">体重</span>
+                        <span class="item-value">48 kg</span>
+                    </div>
+                    <div class="list-item">
+                        <span class="item-label">体型</span>
+                        <span class="item-value">梨形身材</span>
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    外貌特征
+                    <span class="section-tag optional">选填</span>
+                </div>
+                <div class="card">
+                    <div class="list-item">
+                        <span class="item-label">脸型</span>
+                        <span class="item-value placeholder">未选择 <svg width="14" height="14" fill="none"
+                                stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M9 18l6-6-6-6" />
+                            </svg></span>
+                    </div>
+                    <div class="list-item">
+                        <span class="item-label">发型</span>
+                        <span class="item-value">长卷发</span>
+                    </div>
+                    <div class="list-item">
+                        <span class="item-label">发色</span>
+                        <span class="item-value">深棕色</span>
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    尺码参考
+                    <span class="section-tag">参考</span>
+                </div>
+                <div class="card">
+                    <div class="list-item">
+                        <span class="item-label">上装</span>
+                        <span class="item-value">S / 160</span>
+                    </div>
+                    <div class="list-item">
+                        <span class="item-label">下装</span>
+                        <span class="item-value">M / 27</span>
+                    </div>
+                    <div class="list-item">
+                        <span class="item-label">鞋码</span>
+                        <span class="item-value">37</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

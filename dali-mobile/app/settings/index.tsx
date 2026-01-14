@@ -1,10 +1,11 @@
 /**
  * Settings Screen
- * User settings and preferences
+ * Main settings page with hierarchical navigation
  *
- * @see Story 7.1 AC#8: 设置页面导航
+ * @see HTML Prototype: ux-design/pages/05-profile/settings-page.html
+ * @see Story 7.1: Correction Task #2
  */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -17,51 +18,61 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { colors, spacing, borderRadius } from '@/constants';
-// TODO: Integrate actual auth when auth system is implemented
-// import { useAuth } from '@/hooks/useAuth';
+import { colors, spacing } from '@/constants';
+import { useAuthStore } from '@/stores';
+import { useUserProfile } from '@/hooks';
+
+// Storage keys for settings persistence
+const STORAGE_KEYS = {
+  NOTIFICATIONS: '@settings/notifications_enabled',
+  DARK_MODE: '@settings/dark_mode_enabled',
+};
 
 interface SettingsItemProps {
+  icon: React.ReactNode;
   label: string;
-  value?: string;
+  value?: string | React.ReactNode;
   onPress?: () => void;
   showChevron?: boolean;
-  isDestructive?: boolean;
-  rightElement?: React.ReactNode;
 }
 
-function SettingsSection({ title, children }: { title?: string; children: React.ReactNode }) {
-  return (
-    <View style={styles.section}>
-      {title && <Text style={styles.sectionTitle}>{title}</Text>}
-      <View style={styles.sectionContent}>{children}</View>
-    </View>
-  );
+function SettingsGroup({ children }: { children: React.ReactNode }) {
+  return <View style={styles.group}>{children}</View>;
 }
 
 function SettingsItem({
+  icon,
   label,
   value,
   onPress,
   showChevron = true,
-  isDestructive = false,
-  rightElement,
 }: SettingsItemProps) {
+  const handlePress = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress?.();
+  };
+
   return (
     <TouchableOpacity
       style={styles.item}
-      onPress={onPress}
-      disabled={!onPress && !rightElement}
+      onPress={handlePress}
+      disabled={!onPress}
       activeOpacity={0.7}
     >
-      <Text style={[styles.itemLabel, isDestructive && styles.destructiveLabel]}>
-        {label}
-      </Text>
+      <View style={styles.itemLeft}>
+        {icon}
+        <Text style={styles.itemLabel}>{label}</Text>
+      </View>
       <View style={styles.itemRight}>
-        {value && <Text style={styles.itemValue}>{value}</Text>}
-        {rightElement}
-        {showChevron && !rightElement && (
+        {typeof value === 'string' ? (
+          <Text style={styles.itemValue}>{value}</Text>
+        ) : (
+          value
+        )}
+        {showChevron && (
           <Ionicons name="chevron-forward" size={20} color={colors.gray3} />
         )}
       </View>
@@ -69,9 +80,74 @@ function SettingsItem({
   );
 }
 
+function IconBox({ color, children }: { color: string; children: React.ReactNode }) {
+  return (
+    <View style={[styles.iconBox, { backgroundColor: color }]}>
+      {children}
+    </View>
+  );
+}
+
 export default function SettingsScreen() {
   const router = useRouter();
-  // const { signOut } = useAuth(); // TODO: Integrate actual auth
+  const { logout } = useAuthStore();
+  const { data: profile } = useUserProfile();
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+
+  // Load settings from storage on mount
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const [notifications, darkMode] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.NOTIFICATIONS),
+        AsyncStorage.getItem(STORAGE_KEYS.DARK_MODE),
+      ]);
+
+      if (notifications !== null) {
+        setNotificationsEnabled(notifications === 'true');
+      }
+      if (darkMode !== null) {
+        setDarkModeEnabled(darkMode === 'true');
+      }
+    } catch {
+      // Silently fail - use defaults
+    }
+  };
+
+  const handleToggleNotifications = async (value: boolean) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setNotificationsEnabled(value);
+    // Persist to storage
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, value.toString());
+    } catch {
+      // Silently fail
+    }
+  };
+
+  const handleToggleDarkMode = async (value: boolean) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setDarkModeEnabled(value);
+    // Persist to storage
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.DARK_MODE, value.toString());
+    } catch {
+      // Silently fail
+    }
+    // TODO: Apply theme changes globally when theme system is implemented
+  };
+
+  const handleProfileEdit = () => {
+    Alert.alert('账号与资料设置', '将跳转到个人资料编辑页面');
+  };
+
+  const handleBodyData = () => {
+    Alert.alert('我的身材数据', '将跳转到身体数据管理页面\n\n您可以在此更新身材类型和测量数据');
+  };
 
   const handleLogout = () => {
     Alert.alert('退出登录', '确定要退出当前账号吗?', [
@@ -81,82 +157,164 @@ export default function SettingsScreen() {
         style: 'destructive',
         onPress: async () => {
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          // await signOut();
-          router.replace('/(auth)/login'); // Assuming this route exists
+          // Clear authentication state
+          logout();
+          // Navigate to login
+          router.replace('/(auth)/phone-login');
         },
       },
     ]);
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Account Security */}
-      <SettingsSection title="账号安全">
-        <SettingsItem
-          label="修改手机号"
-          value="138****8888"
-          onPress={() => Alert.alert('提示', '功能开发中')}
-        />
-        <SettingsItem
-          label="绑定微信"
-          value="已绑定"
-          onPress={() => Alert.alert('提示', '功能开发中')}
-        />
-      </SettingsSection>
-
-      {/* Privacy Settings */}
-      <SettingsSection title="隐私设置">
-        <SettingsItem
-          label="数据管理"
-          onPress={() => Alert.alert('提示', '功能开发中')}
-        />
-        <SettingsItem
-          label="权限管理"
-          onPress={() => Alert.alert('提示', '功能开发中')}
-        />
-      </SettingsSection>
-
-      {/* Help & Feedback */}
-      <SettingsSection title="帮助反馈">
-        <SettingsItem
-          label="常见问题"
-          onPress={() => Alert.alert('提示', '功能开发中')}
-        />
-        <SettingsItem
-          label="问题反馈"
-          onPress={() => Alert.alert('提示', '功能开发中')}
-        />
-      </SettingsSection>
-
-      {/* About */}
-      <SettingsSection title="关于我们">
-        <SettingsItem
-          label="版本信息"
-          value="v1.0.0"
-          showChevron={false}
-        />
-        <SettingsItem
-          label="用户协议"
-          onPress={() => Alert.alert('提示', '功能开发中')}
-        />
-         <SettingsItem
-          label="隐私政策"
-          onPress={() => Alert.alert('提示', '功能开发中')}
-        />
-      </SettingsSection>
-
-      {/* Logout */}
-      <View style={styles.logoutSection}>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>退出登录</Text>
+    <View style={styles.container}>
+      {/* Header with gradient background */}
+      <LinearGradient
+        colors={['#6C63FF', '#8578FF']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.header}
+      >
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-      </View>
+        <Text style={styles.headerTitle}>设置</Text>
+        <View style={styles.headerPlaceholder} />
+      </LinearGradient>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Dali AI Wardrobe</Text>
-        <Text style={styles.footerText}>Designed by BMad</Text>
-      </View>
-    </ScrollView>
+      {/* Content */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Profile Edit Card */}
+        <TouchableOpacity
+          style={styles.profileCard}
+          onPress={handleProfileEdit}
+          activeOpacity={0.7}
+        >
+          <View style={styles.miniAvatar}>
+            <Ionicons name="person" size={30} color={colors.primary} />
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{profile?.nickname || '用户'}</Text>
+            <Text style={styles.profileDesc}>账号与资料设置</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={colors.gray3} />
+        </TouchableOpacity>
+
+        {/* Group 1: Account & Body */}
+        <SettingsGroup>
+          <SettingsItem
+            icon={
+              <IconBox color="#e736fe">
+                <Ionicons name="shirt-outline" size={18} color="#FFFFFF" />
+              </IconBox>
+            }
+            label="我的身材数据"
+            value="165cm / 48kg"
+            onPress={handleBodyData}
+          />
+          <SettingsItem
+            icon={
+              <IconBox color="#007AFF">
+                <Ionicons name="lock-closed-outline" size={18} color="#FFFFFF" />
+              </IconBox>
+            }
+            label="账号安全"
+            onPress={() => router.push('./security')}
+          />
+          <SettingsItem
+            icon={
+              <IconBox color="#34C759">
+                <Ionicons name="shield-checkmark-outline" size={18} color="#FFFFFF" />
+              </IconBox>
+            }
+            label="隐私设置"
+            onPress={() => router.push('./privacy')}
+          />
+        </SettingsGroup>
+
+        {/* Group 2: Preferences */}
+        <SettingsGroup>
+          <SettingsItem
+            icon={
+              <IconBox color="#FF9500">
+                <Ionicons name="notifications-outline" size={18} color="#FFFFFF" />
+              </IconBox>
+            }
+            label="新消息通知"
+            value={
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={handleToggleNotifications}
+                trackColor={{ false: '#E5E5EA', true: '#34C759' }}
+                thumbColor="#FFFFFF"
+                ios_backgroundColor="#E5E5EA"
+              />
+            }
+            showChevron={false}
+          />
+          <SettingsItem
+            icon={
+              <IconBox color="#1C1C1E">
+                <Ionicons name="moon-outline" size={18} color="#FFFFFF" />
+              </IconBox>
+            }
+            label="深色模式"
+            value={
+              <Switch
+                value={darkModeEnabled}
+                onValueChange={handleToggleDarkMode}
+                trackColor={{ false: '#E5E5EA', true: '#34C759' }}
+                thumbColor="#FFFFFF"
+                ios_backgroundColor="#E5E5EA"
+              />
+            }
+            showChevron={false}
+          />
+        </SettingsGroup>
+
+        {/* Group 3: Support */}
+        <SettingsGroup>
+          <SettingsItem
+            icon={
+              <IconBox color="#5856D6">
+                <Ionicons name="help-circle-outline" size={18} color="#FFFFFF" />
+              </IconBox>
+            }
+            label="帮助与反馈"
+            onPress={() => router.push('./help')}
+          />
+          <SettingsItem
+            icon={
+              <IconBox color="#8E8E93">
+                <Ionicons name="information-circle-outline" size={18} color="#FFFFFF" />
+              </IconBox>
+            }
+            label="关于我们"
+            value="v1.0.2"
+            onPress={() => router.push('./about')}
+          />
+        </SettingsGroup>
+
+        {/* Logout */}
+        <SettingsGroup>
+          <TouchableOpacity
+            style={styles.logoutItem}
+            onPress={handleLogout}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.logoutText}>退出登录</Text>
+          </TouchableOpacity>
+        </SettingsGroup>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -164,40 +322,109 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.gray4,
-    paddingVertical: spacing.l,
   },
-  section: {
-    marginBottom: spacing.l,
+  header: {
+    paddingTop: 59,
+    paddingBottom: 16,
+    paddingHorizontal: spacing.l,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  sectionTitle: {
-    fontSize: 13,
-    color: colors.gray2,
-    marginLeft: spacing.l,
-    marginBottom: spacing.xs,
-    textTransform: 'uppercase',
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  sectionContent: {
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  headerPlaceholder: {
+    width: 40,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: spacing.l,
+    paddingBottom: 40,
+  },
+  profileCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.divider,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: spacing.l,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(0, 0, 0, 0.02)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.02,
+    shadowRadius: 16,
+    elevation: 2,
+  },
+  miniAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.gray5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.m,
+    borderWidth: 2,
+    borderColor: 'rgba(108, 99, 255, 0.1)',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.gray1,
+    marginBottom: 4,
+  },
+  profileDesc: {
+    fontSize: 13,
+    color: colors.gray3,
+  },
+  group: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    overflow: 'hidden',
+    marginBottom: spacing.l,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(0, 0, 0, 0.02)',
   },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.m,
-    paddingHorizontal: spacing.l,
-    backgroundColor: '#FFFFFF',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.divider,
+    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  itemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.m,
+    flex: 1,
+  },
+  iconBox: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   itemLabel: {
     fontSize: 16,
     color: colors.gray1,
-  },
-  destructiveLabel: {
-    color: colors.error,
+    fontWeight: '500',
   },
   itemRight: {
     flexDirection: 'row',
@@ -205,33 +432,16 @@ const styles = StyleSheet.create({
     gap: spacing.s,
   },
   itemValue: {
-    fontSize: 16,
+    fontSize: 15,
     color: colors.gray3,
   },
-  logoutSection: {
-    marginTop: spacing.l,
-    marginBottom: spacing.xl,
-  },
-  logoutButton: {
-    backgroundColor: '#FFFFFF',
-    paddingVertical: spacing.m,
+  logoutItem: {
+    paddingVertical: 16,
     alignItems: 'center',
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderColor: colors.divider,
   },
   logoutText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: colors.error,
-  },
-  footer: {
-    alignItems: 'center',
-    marginBottom: spacing.xxl,
-  },
-  footerText: {
-    fontSize: 12,
-    color: colors.gray3,
-    marginBottom: 4,
+    fontWeight: '500',
+    color: '#FF3B30',
   },
 });

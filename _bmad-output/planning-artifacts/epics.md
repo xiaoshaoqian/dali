@@ -604,115 +604,87 @@ So that photos are securely stored and accessible for AI processing.
 
 **Goal**: Integrate Alibaba Vision API for garment recognition, implement AI orchestrator to generate 3 outfit recommendations within 5 seconds (NFR-P1), display results with skeleton loading UX, and support 6 occasion types with >75% recommendation accuracy (NFR-AI2).
 
-### Story 3.1: AI Image Recognition Integration
-
-As a **system**,
-I want to use Alibaba Cloud Vision API to identify garment type, color, and style,
-So that outfit recommendations are based on accurate clothing attributes.
-
-**Acceptance Criteria:**
-
-**Given** user photo is uploaded to OSS
-**When** backend receives photo URL
-**Then** Vision API is called via `app/integrations/alibaba_vision.py`
-**And** API request includes: image URL, detection types (garment classification, color extraction, style analysis)
-
-**Given** Vision API responds successfully
-**When** response is parsed
-**Then** extracted attributes include:
-  - Garment type: 上衣 | 裤子 | 裙子 | 外套 | 配饰 (FR13)
-  - Primary colors: array of hex colors (FR14)
-  - Style tags: 简约 | 时尚 | 休闲 | 正式 etc. (FR15)
-**And** recognition accuracy is >90% per NFR-AI1
-
-**Given** recognition succeeds
-**When** attributes are stored
-**Then** garment data is saved to `outfit_items` table with fields:
-  - `garment_type`, `primary_colors` (JSON array), `style_tags` (JSON array)
-  - `image_url` (OSS path)
-  - `user_id` (foreign key)
-
-**Given** recognition fails (unclear image, API error)
-**When** error occurs
-**Then** friendly error is returned to mobile: "抱歉，我没看清这件衣服，能换个角度再拍一张吗？"
-**And** user can retake/reselect photo
-**And** failure rate is <5% per NFR-AI4
-
-### Story 3.2: Occasion-Based Recommendation Engine
-
+### Story 3.1: Garment Recognition & Selection
 As a **user**,
-I want to select an occasion (e.g., romantic date, business meeting) and receive 3 tailored outfit recommendations,
-So that the AI provides contextually appropriate styling suggestions.
+I want the app to identify my uploaded garment and let me confirm or select it,
+So that the recommendations are accurate and I don't have to manually label everything.
 
 **Acceptance Criteria:**
 
-**Given** photo recognition is complete
-**When** I see the occasion selector modal (HTML: `07-flow-pages/occasion-selector.html`)
-**Then** I see 6 occasion options as icon cards:
-  - 浪漫约会 💕 (Romantic Date)
-  - 商务会议 💼 (Business Meeting)
-  - 职场通勤 🏢 (Workplace Commute)
-  - 朋友聚会 🎉 (Friend Gathering)
-  - 日常出行 ☕ (Daily Casual)
-  - 居家休闲 🏠 (Home Leisure)
+**Given** user uploads a photo
+**When** the image is analyzed
+**Then** AI identifies the main garment type, color, and pattern
+**And** returns a confidence score
 
-**Given** occasion options are displayed
-**When** backend analyzes context (time of day, weather via location)
-**Then** a default occasion is suggested and highlighted (e.g., weekday morning → 职场通勤)
-**And** I can override by tapping a different occasion
+**Given** recognition confidence is >85% (Zero Friction)
+**When** analysis completes
+**Then** the app automatically selects the identified garment
+**And** proceeds to the next step immediately
+**And** shows a subtle toast/banner: "Identified as [Color] [Type]. Tap to edit."
 
-**Given** I select an occasion and tap "生成搭配"
-**When** AI generation starts
-**Then** backend calls `app/services/ai_orchestrator.py` with inputs:
-  - Garment attributes (type, colors, style)
-  - User preferences (body type, style preferences from onboarding)
-  - Selected occasion
-  - Weather data (temperature, conditions via FR56-57)
+**Given** recognition confidence is <85% or multiple items detected
+**When** analysis completes
+**Then** user sees selection boxes over the image
+**And** must tap one to confirm "This is the item to style"
 
-**Given** AI orchestrator processes the request
-**When** recommendation logic runs
-**Then** 3 outfit combinations are generated using:
-  - Rule engine baseline (500 expert-annotated outfit examples)
-  - GPT-4 / Tongyi Qianwen API for creative variations
-  - Personalization layer based on user's past likes/saves (FR27)
-**And** total generation time is <5 seconds per NFR-P1
+**Given** selection is confirmed
+**When** saving data
+**Then** store as "Invisible Wardrobe" entry:
+  - Original Image
+  - AI Generated Description (e.g., "Vintage Blue Denim Jacket")
+  - No need for precise segmentation mask for MVP
 
-### Story 3.3: AI Generation Loading Experience (Skeleton + Progress)
-
+### Story 3.2: Scenario-Based Generation Strategy
 As a **user**,
-I want to see an engaging loading animation during the 5-second AI generation,
-So that the wait feels purposeful and doesn't cause anxiety.
+I want outfit suggestions tailored to my specific occasion (e.g., Date, Work),
+So that I look appropriate and feel confident.
 
 **Acceptance Criteria:**
 
-**Given** I tap "生成搭配" after selecting occasion
-**When** AI generation starts
-**Then** I am navigated to loading screen (HTML: `07-flow-pages/ai-loading.html`)
-**And** I see:
-  - 紫色极光渐变背景 (Purple mesh gradient per UX spec)
-  - 3 outfit card skeletons with pulsing shimmer animation (1.5s cycle, opacity 0.3 → 0.7)
-  - Progress bar or circular progress (0% → 100% over 5 seconds)
-  - Rotating text messages every 1.5 seconds:
-    1. "AI 正在为你挑选最佳搭配..."
-    2. "分析配色原理中..."
-    3. "匹配你的风格偏好..."
-    4. "马上就好，请稍等~"
+**Given** garment is selected
+**When** user proceeds
+**Then** show "Occasion Selector" if not already set (Context Awareness)
 
-**Given** skeleton screen is showing
-**When** first outfit completes generation (progressive loading)
-**Then** first skeleton is replaced with actual outfit card
-**And** other 2 skeletons continue pulsing
+**Given** occasion is set (e.g., "Date")
+**When** generation begins
+**Then** AI first generates a **Text Strategy**:
+  - "For a Date, let's pair this [Blue Jacket] with a [White Slip Dress] for a balance of casual and romantic."
+**And** this strategy text is displayed IMMEDIATELY (within 1-3s) to engage user
 
-**Given** all 3 outfits are generated
-**When** 5-second generation completes
-**Then** loading screen transitions to results screen with slide-up animation
-**And** skeleton loader completes (SkeletonLoader component)
+**Given** strategy is generated
+**When** preparing visual generation
+**Then** construct a rich prompt including:
+  - Garment visual features
+  - User body type/style preference
+  - Selected Occasion (defining the background/vibe)
+  - Theoretical "Why" (e.g., "Complementary colors")
 
-**Given** AI generation fails or times out (>8 seconds)
-**When** error occurs
-**Then** fallback rule engine generates basic outfits
-**And** message shows: "AI 正在学习你的风格，多点几次赞会更准确哦！"
-**And** degraded experience still delivers 3 outfit options
+### Story 3.3: Progressive Visual Generation & Theory
+As a **user**,
+I want to see the progress of the creation and understand why the outfit works,
+So that waiting is interesting and I learn something.
+
+**Acceptance Criteria:**
+
+**Given** text strategy is displayed
+**When** image generation is executing (taking 10-30s)
+**Then** show "Theory Injection" cards:
+  - "Analyzing Color Harmony..."
+  - "Matching with [User Style]..."
+  - "Applying [Occasion] context..."
+
+**Given** image generation completes
+**When** results are ready
+**Then** fade in the **Visual Outfit**:
+  - Realistic composite of User Garment + Generated Items
+  - Background matches the Occasion (e.g., Café background for Date)
+  - User garment details (pattern/texture) are preserved
+
+**Given** results are displayed
+**When** reviewing
+**Then** show "Why this works":
+  - Color Theory (e.g., "Blue + Orange = Complementary")
+  - Style Logic (e.g., "Structured jacket balances soft dress")
 
 ### Story 3.4: Outfit Results Display with Theory Visualization
 

@@ -1,12 +1,9 @@
 /**
  * Profile Screen (我的)
- * User profile with stats and quick action menu
+ * User profile with stats and grouped menu
  *
  * @see Story 7.1: Profile Screen with User Stats
- * @see Story 7.2: ProgressCircle Component (AI Learning Visualization)
- * @see Story 7.3: PreferenceCloud Component and Edit Preferences
- * @see Story 8.3: Network Reconnection and Auto-Sync (AC#12)
- * @see ux-design/pages/05-profile/profile-page.html
+ * @see HTML Prototype: ux-design/pages/05-profile/profile-page.html
  */
 import React from 'react';
 import {
@@ -28,31 +25,19 @@ import {
   ProfileStats,
   ProfileMenuList,
   EditNicknameModal,
-  AILearningSection,
-  PreferencesReminderBanner,
-  SyncStatusSection,
 } from '@/components/profile';
-import { Toast } from '@/components/ui';
 import {
   useUserProfile,
   useUserStats,
   useUpdateUserProfile,
   useUploadAvatar,
-  usePreferences,
-  usePreferencesNeedUpdate,
-  useNetworkSync,
 } from '@/hooks';
 import { colors, spacing } from '@/constants';
-
-/** Toast duration for progress improvement notification (AC#8) */
-const PROGRESS_TOAST_DURATION = 3000;
 
 export default function ProfileScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [isNicknameModalVisible, setIsNicknameModalVisible] = React.useState(false);
-  const [isProgressToastVisible, setIsProgressToastVisible] = React.useState(false);
-  const [isReminderDismissed, setIsReminderDismissed] = React.useState(false);
 
   // Fetch profile and stats
   const {
@@ -64,17 +49,8 @@ export default function ProfileScreen() {
 
   const {
     data: stats,
-    isLoading: isStatsLoading,
-    error: statsError,
     refetch: refetchStats,
   } = useUserStats();
-
-  // Fetch preferences for reminder check (AC#9)
-  const { data: preferences } = usePreferences();
-  const showPreferencesReminder = usePreferencesNeedUpdate(preferences?.updatedAt) && !isReminderDismissed;
-
-  // Sync status hook (Story 8.3: AC#12)
-  const { triggerSync } = useNetworkSync();
 
   // Mutations
   const updateProfileMutation = useUpdateUserProfile();
@@ -95,8 +71,7 @@ export default function ProfileScreen() {
       await uploadAvatarMutation.mutateAsync(imageUri);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert('成功', '头像已更新');
-    } catch (error) {
-      // Error handled by Alert, can be logged to Sentry in production
+    } catch {
       Alert.alert('上传失败', '请重试');
     }
   };
@@ -108,8 +83,7 @@ export default function ProfileScreen() {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setIsNicknameModalVisible(false);
       Alert.alert('成功', '昵称已更新');
-    } catch (error) {
-      // Error handled by Alert, can be logged to Sentry in production
+    } catch {
       Alert.alert('更新失败', '请重试');
     }
   };
@@ -117,31 +91,6 @@ export default function ProfileScreen() {
   // Settings handler
   const handleSettings = () => {
     router.push('/settings');
-  };
-
-  // Progress improvement handler (AC#8)
-  const handleProgressImprovement = () => {
-    setIsProgressToastVisible(true);
-  };
-
-  // Toast dismiss handler
-  const handleProgressToastDismiss = () => {
-    setIsProgressToastVisible(false);
-  };
-
-  // Preferences reminder handlers (AC#9)
-  const handlePreferencesReminderPress = () => {
-    router.push('/edit-preferences');
-  };
-
-  const handlePreferencesReminderDismiss = () => {
-    setIsReminderDismissed(true);
-  };
-
-  // Manual sync handler (Story 8.3: AC#12)
-  const handleManualSync = async () => {
-    await triggerSync();
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
   // Loading state
@@ -156,7 +105,7 @@ export default function ProfileScreen() {
     );
   }
 
-  // Error state - show error message with retry button
+  // Error state
   if (profileError || !profile) {
     return (
       <View style={styles.container}>
@@ -191,7 +140,7 @@ export default function ProfileScreen() {
           />
         }
       >
-        {/* Purple Header with Avatar */}
+        {/* Purple Gradient Header with Avatar */}
         <ProfileHeader
           profile={profile}
           onAvatarUpdated={handleAvatarUpdated}
@@ -199,33 +148,12 @@ export default function ProfileScreen() {
           onSettingsPress={handleSettings}
         />
 
-        {/* White Content Card */}
+        {/* White Content Card - overlaps header */}
         <View style={styles.contentCard}>
-          {/* Stats Card - Floating above */}
+          {/* Stats Grid 2x1 */}
           {stats && <ProfileStats stats={stats} />}
 
-          {/* AI Learning Progress Section */}
-          {stats && (
-            <AILearningSection
-              aiAccuracy={stats.aiAccuracy}
-              totalOutfits={stats.totalOutfits}
-              favoriteCount={stats.favoriteCount}
-              onProgressImprovement={handleProgressImprovement}
-            />
-          )}
-
-          {/* Preferences Update Reminder (AC#9) */}
-          {showPreferencesReminder && (
-            <PreferencesReminderBanner
-              onPress={handlePreferencesReminderPress}
-              onDismiss={handlePreferencesReminderDismiss}
-            />
-          )}
-
-          {/* Sync Status Section (Story 8.3: AC#12) */}
-          <SyncStatusSection onSyncPress={handleManualSync} />
-
-          {/* Menu List */}
+          {/* Grouped Menu List */}
           <View style={styles.menuSection}>
             <ProfileMenuList />
           </View>
@@ -239,15 +167,6 @@ export default function ProfileScreen() {
         onSave={handleNicknameSave}
         onCancel={() => setIsNicknameModalVisible(false)}
         isLoading={updateProfileMutation.isPending}
-      />
-
-      {/* Progress Improvement Toast (AC#8) */}
-      <Toast
-        message="你的风格档案更完善了 🎉"
-        type="success"
-        duration={PROGRESS_TOAST_DURATION}
-        visible={isProgressToastVisible}
-        onDismiss={handleProgressToastDismiss}
       />
     </View>
   );
@@ -304,15 +223,15 @@ const styles = StyleSheet.create({
   },
   contentCard: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    marginTop: -60,
-    paddingTop: 100, // Space for floating stats card
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -100,
+    paddingTop: 24,
     paddingHorizontal: spacing.l,
     paddingBottom: spacing.l,
     position: 'relative',
   },
   menuSection: {
-    marginTop: spacing.l,
+    marginTop: spacing.xl,
   },
 });

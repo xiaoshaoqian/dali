@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理 - 渐进式生成</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .device-frame {
+            width: 393px;
+            height: 852px;
+            background: linear-gradient(180deg, #848489 0%, #3A3A3C 50%, #1C1C1E 100%);
+            border-radius: 55px;
+            padding: 3px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            /* V1 Visuals: Unified Mesh Gradient */
+            background:
+                radial-gradient(circle at 100% 0%, #8B7FFF 0%, transparent 50%),
+                radial-gradient(circle at 0% 0%, #6C63FF 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, #5D55E6 0%, transparent 50%),
+                #6C63FF;
+            border-radius: 52px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            width: 126px;
+            height: 37px;
+            background: #000;
+            border-radius: 19px;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        /* AI Core (V1 Style) */
+        .ai-core-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 60px auto 30px;
+            /* Centered top margin */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Transformation state for Phase 2 */
+        .ai-core-container.phase-2 {
+            margin: 40px auto 20px;
+            transform: scale(0.6);
+            /* Shrink slightly to make room */
+        }
+
+        .ai-core {
+            width: 40px;
+            height: 40px;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            background: linear-gradient(135deg, #fff 0%, #E0E0FF 100%);
+            /* Lighter for contrast on purple */
+            filter: blur(8px);
+            animation: morph 2s ease-in-out infinite alternate, breathe 2s ease-in-out infinite alternate;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+        }
+
+        .ai-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: spin 8s linear infinite;
+        }
+
+        .ai-ring:nth-child(2) {
+            width: 80%;
+            height: 80%;
+            border-style: dashed;
+            animation-direction: reverse;
+            animation-duration: 12s;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 0 24px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            perspective: 1000px;
+        }
+
+        /* Streaming Text Card (Glassmorphism over Gradient) */
+        .strategy-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            color: #fff;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .strategy-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Streaming Text Cursor */
+        .cursor::after {
+            content: '|';
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        .strategy-text {
+            font-size: 17px;
+            line-height: 1.6;
+            font-weight: 500;
+            min-height: 80px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .highlight {
+            color: #FFD6E5;
+            /* Soft Pink highlight */
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(255, 214, 229, 0.5);
+        }
+
+        /* Loading Status Indicator (Bottom) */
+        .loading-status {
+            margin-top: auto;
+            text-align: center;
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            border-radius: 2px;
+            transition: width 0.1s linear;
+        }
+
+        /* Keyframes from V1 */
+        @keyframes morph {
+            0% {
+                border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+                transform: rotate(0deg);
+            }
+
+            50% {
+                border-radius: 70% 30% 40% 60% / 60% 40% 60% 40%;
+            }
+
+            100% {
+                border-radius: 40% 60% 30% 70% / 70% 30% 30% 70%;
+                transform: rotate(180deg);
+            }
+        }
+
+        @keyframes breathe {
+            0% {
+                transform: scale(1);
+                filter: blur(5px);
+            }
+
+            100% {
+                transform: scale(1.2);
+                filter: blur(8px);
+            }
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="device-frame">
+        <div class="screen">
+            <div class="dynamic-island"></div>
+
+            <!-- AI Core (Always present, but moves) -->
+            <div class="ai-core-container" id="aiCore">
+                <div class="ai-ring"></div>
+                <div class="ai-ring"></div>
+                <div class="ai-core"></div>
+            </div>
+
+            <div class="content">
+                <!-- Text Strategy Card -->
+                <div class="strategy-card" id="strategyCard">
+                    <div class="card-header">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        搭配策略生成中
+                    </div>
+                    <div class="strategy-text" id="typewriterText"></div>
+                </div>
+
+                <!-- Loading Footer -->
+                <div class="loading-status">
+                    <div class="status-text" id="statusText">正在分析视觉特征...</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data for simulation
+        const strategyContent = [
+            { text: "为了应对", highlight: false },
+            { text: " casual 约会", highlight: true },
+            { text: " 场合，", highlight: false },
+            { text: "AI 建议采用", highlight: false },
+            { text: "“材质对撞”", highlight: true },
+            { text: "法则。\n\n", highlight: false }, // Newline
+            { text: "米色风衣的", highlight: false },
+            { text: "挺括感", highlight: true },
+            { text: "与内搭的柔软针织形成互补，", highlight: false },
+            { text: "既保留职场专业度，又不失亲和力。", highlight: false }
+        ];
+
+        const loadingStates = [
+            "正在分析视觉特征...",
+            "构思搭配策略...",
+            "渲染光影细节...",
+            "即将完成..."
+        ];
+
+        // Logic
+        const aiCore = document.getElementById('aiCore');
+        const strategyCard = document.getElementById('strategyCard');
+        const typewriterEl = document.getElementById('typewriterText');
+        const statusText = document.getElementById('statusText');
+        const progressBar = document.getElementById('progressBar');
+
+        // Phase 1: Initial Analysis (0-2s)
+        setTimeout(() => {
+            progressBar.style.width = "20%";
+        }, 500);
+
+        // Phase 2: Strategy Reveal & Streaming (2s-8s)
+        setTimeout(() => {
+            aiCore.classList.add('phase-2');
+            strategyCard.classList.add('visible');
+            statusText.innerText = loadingStates[1];
+            progressBar.style.width = "40%";
+
+            startTypewriter();
+        }, 2000);
+
+        // Phase 3: Image Rendering (8s-15s)
+        setTimeout(() => {
+            statusText.innerText = loadingStates[2];
+            progressBar.style.width = "80%";
+        }, 8000);
+
+        // Finish
+        setTimeout(() => {
+            statusText.innerText = loadingStates[3];
+            progressBar.style.width = "100%";
+        }, 14000);
+
+        // Typewriter function
+        function startTypewriter() {
+            let chunkIndex = 0;
+            let charIndex = 0;
+            let currentSpan = null;
+
+            function typeNextChar() {
+                if (chunkIndex >= strategyContent.length) {
+                    typewriterEl.classList.remove('cursor'); // Remove cursor at end
+                    return;
+                }
+
+                typewriterEl.classList.add('cursor');
+                const chunk = strategyContent[chunkIndex];
+
+                if (!currentSpan) {
+                    currentSpan = document.createElement('span');
+                    if (chunk.highlight) currentSpan.classList.add('highlight');
+                    typewriterEl.appendChild(currentSpan);
+                }
+
+                if (charIndex < chunk.text.length) {
+                    const char = chunk.text[charIndex];
+                    if (char === '\n') {
+                        currentSpan.appendChild(document.createElement('br'));
+                    } else {
+                        currentSpan.innerHTML += char;
+                    }
+                    charIndex++;
+                    setTimeout(typeNextChar, 50); // Typing speed
+                } else {
+                    chunkIndex++;
+                    charIndex = 0;
+                    currentSpan = null; // Reset for next chunk
+                    setTimeout(typeNextChar, 50);
+                }
+            }
+
+            typeNextChar();
+        }
+
+    </script>
+</body>
+
+</html>
