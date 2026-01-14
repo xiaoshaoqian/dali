@@ -181,11 +181,20 @@
             <button class="nav-btn" onclick="switchPage('photo', this)">
                 <span>📸</span> 创建搭配
             </button>
+            <button class="nav-btn" onclick="switchPage('recognition', this)">
+                <span>🔍</span> 识别确认
+            </button>
             <button class="nav-btn" onclick="switchPage('loading', this)">
                 <span>⏳</span> AI生成中
             </button>
+            <button class="nav-btn" onclick="switchPage('loading-v2', this)">
+                <span>⏳</span> 渐进生成
+            </button>
             <button class="nav-btn" onclick="switchPage('results', this)">
                 <span>✨</span> 搭配方案
+            </button>
+            <button class="nav-btn" onclick="switchPage('results-gen', this)">
+                <span>🖼️</span> 场景成图
             </button>
             <button class="nav-btn" onclick="switchPage('detail', this)">
                 <span>🎨</span> 方案详情
@@ -198,6 +207,12 @@
             </button>
             <button class="nav-btn" onclick="switchPage('profile', this)">
                 <span></span> 个人页
+            </button>
+            <button class="nav-btn" onclick="switchPage('body-profile', this)">
+                <span>📏</span> 身材档案
+            </button>
+            <button class="nav-btn" onclick="switchPage('style-profile', this)">
+                <span>🎨</span> 风格档案
             </button>
             <button class="nav-btn" onclick="switchPage('share', this)">
                 <span>🔗</span> 分享模板
@@ -226,12 +241,17 @@
         <iframe id="iframe-home" src="01-home/home-page.html"></iframe>
         <iframe id="iframe-home-empty" src="01-home/home-page-empty.html"></iframe>
         <iframe id="iframe-photo" src="07-flow-pages/photo-occasion.html"></iframe>
+        <iframe id="iframe-recognition" src="07-flow-pages/recognition-selection.html"></iframe>
         <iframe id="iframe-loading" src="07-flow-pages/ai-loading.html"></iframe>
+        <iframe id="iframe-loading-v2" src="07-flow-pages/ai-loading-v2.html"></iframe>
         <iframe id="iframe-results" src="02-outfit-results/outfit-results-page.html"></iframe>
+        <iframe id="iframe-results-gen" src="02-outfit-results/outfit-result-gen.html"></iframe>
         <iframe id="iframe-detail" src="03-outfit-detail/outfit-detail-page.html"></iframe>
         <iframe id="iframe-try-on" src="09-try-on/try-on-result.html"></iframe>
         <iframe id="iframe-outfit" src="04-wardrobe/outfit-page.html"></iframe>
         <iframe id="iframe-profile" src="05-profile/profile-page.html"></iframe>
+        <iframe id="iframe-body-profile" src="05-profile/body-profile.html"></iframe>
+        <iframe id="iframe-style-profile" src="05-profile/style-profile.html"></iframe>
         <iframe id="iframe-share" src="08-share/share-templates.html"></iframe>
         <iframe id="iframe-settings" src="05-profile/settings-page.html"></iframe>
         <iframe id="iframe-settings-security" src="05-profile/settings-security.html"></iframe>
@@ -263,12 +283,17 @@
             'home': '首页',
             'home-empty': '首页空状态',
             'photo': '创建搭配',
+            'recognition': '识别确认',
             'loading': 'AI生成中',
+            'loading-v2': '渐进式生成',
             'results': '搭配方案',
+            'results-gen': '场景化大图',
             'detail': '方案详情',
             'try-on': 'AI试穿',
             'outfit': '搭配',
             'profile': '个人页',
+            'body-profile': '身材档案',
+            'style-profile': '风格档案',
             'share': '分享模板',
             'settings': '设置',
             'settings-security': '账号安全',
@@ -313,9 +338,8 @@
             document.getElementById('current-page-name').textContent = pageNames[pageId] || pageId;
         }
 
-        // 键盘快捷键支持
         document.addEventListener('keydown', function (e) {
-            const pages = ['welcome', 'home', 'home-empty', 'photo', 'loading', 'results', 'detail', 'try-on', 'outfit', 'profile', 'share', 'settings', 'settings-security', 'settings-privacy', 'settings-help', 'settings-about'];
+            const pages = ['welcome', 'home', 'home-empty', 'photo', 'recognition', 'loading', 'loading-v2', 'results', 'results-gen', 'detail', 'try-on', 'outfit', 'profile', 'body-profile', 'style-profile', 'share', 'settings', 'settings-security', 'settings-privacy', 'settings-help', 'settings-about'];
             const currentIndex = pages.findIndex(p => {
                 const iframe = document.getElementById('iframe-' + p);
                 return iframe && iframe.classList.contains('active');

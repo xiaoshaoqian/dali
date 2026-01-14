@@ -57,31 +57,21 @@
 
         /* Nav Bar Background - Mesh Gradient (Dimmed) */
         .nav-header {
-            background:
-                radial-gradient(circle at 100% 0%, #8B7FFF 0%, transparent 50%),
-                radial-gradient(circle at 0% 0%, #6C63FF 0%, transparent 50%),
-                #6C63FF;
-            padding: 59px 20px 16px;
-            /* PT for status bar */
+            background: linear-gradient(180deg, #6C63FF 0%, #8578FF 100%);
+            padding: 59px 20px 90px;
+            /* Combined padding with bottom spacer */
             position: relative;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
             overflow: hidden;
+            flex-shrink: 0;
+            margin-bottom: -30px;
+            /* Negative margin for overlap */
         }
 
         /* Subtle noise texture */
-        .nav-header::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-            opacity: 0.4;
-            pointer-events: none;
-        }
+
 
         .back-btn {
             width: 40px;
@@ -109,6 +99,13 @@
             flex: 1;
             overflow-y: auto;
             padding: 24px 20px 40px;
+            background: #F2F2F7;
+            position: relative;
+            z-index: 10;
+            border-radius: 24px 24px 0 0;
+            /* Add rounded top */
+            margin-top: -30px;
+            /* Pull up overlap */
         }
 
         .scroll-content::-webkit-scrollbar {
@@ -276,6 +273,7 @@
             <!-- Header -->
             <div class="nav-header">
                 <!-- Status Bar (Absolute) -->
+                <!-- Status Bar (Absolute) -->
                 <div
                     style="position: absolute; top: 0; left: 0; right: 0; height: 59px; display: flex; justify-content: space-between; align-items: flex-start; padding: 16px 24px 0;">
                     <div style="font-size: 15px; font-weight: 600; color: #fff; letter-spacing: -0.3px;">9:41</div>
@@ -311,9 +309,11 @@
                         <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
                 </div>
-                <div class="page-title">设置</div>
+                <div class="page-title" style="top: 69px;">设置</div> <!-- Adjusted Title pos -->
                 <div style="width: 40px;"></div> <!-- Spacer -->
             </div>
+
+            <!-- Removed the Spacer inside content if needed, but here we just start content -->
 
             <!-- Content -->
             <div class="scroll-content">

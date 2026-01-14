@@ -58,23 +58,35 @@ _Critical rules and patterns that AI agents must follow when implementing code. 
 
 **UI implementation MUST follow the HTML prototypes in `_bmad-output/planning-artifacts/ux-design/pages/`**
 
+⚠️ **Priority Rule: HTML > Markdown**
+- **HTML 原型文件是第一优先级** - 直接提取样式、布局、交互
+- **Markdown 设计文档是辅助参考** - 仅用于理解意图和组件说明
+- 当 HTML 和 Markdown 有差异时，**始终以 HTML 为准**
+
 | Page | HTML Prototype Path |
 |------|---------------------|
 | 首页 (空状态) | `ux-design/pages/01-home/home-page-empty.html` |
 | 首页 (有数据) | `ux-design/pages/01-home/home-page.html` |
 | 搭配历史 | `ux-design/pages/04-wardrobe/outfit-page.html` |
 | 我的 | `ux-design/pages/05-profile/profile-page.html` |
+| 身材档案 | `ux-design/pages/05-profile/body-profile.html` |
+| 风格档案 | `ux-design/pages/05-profile/style-profile.html` |
+| 设置 | `ux-design/pages/05-profile/settings-page.html` |
+| 设置-账号安全 | `ux-design/pages/05-profile/settings-security.html` |
+| 设置-隐私 | `ux-design/pages/05-profile/settings-privacy.html` |
+| 设置-帮助 | `ux-design/pages/05-profile/settings-help.html` |
+| 设置-关于 | `ux-design/pages/05-profile/settings-about.html` |
 | 搭配结果 | `ux-design/pages/02-outfit-results/outfit-results-page.html` |
 | 搭配详情 | `ux-design/pages/03-outfit-detail/outfit-detail-page.html` |
-| 设置 | `ux-design/pages/05-profile/settings-page.html` |
 | AI加载 | `ux-design/pages/07-flow-pages/ai-loading.html` |
 | 分享模板 | `ux-design/pages/08-share/share-templates.html` |
 
 **Before implementing ANY screen:**
-1. Read the corresponding HTML prototype file completely
-2. Extract exact colors, spacing, typography from the CSS
+1. **Read the corresponding HTML prototype file completely** (this is the source of truth)
+2. Extract exact colors, spacing, typography from the CSS in HTML
 3. Use SVG icons from the prototype (not emoji)
-4. Match the exact layout structure
+4. Match the exact layout structure from HTML
+5. Only refer to .md files for component naming and intent clarification
 
 **Key Design Elements:**
 - Primary color: `#6C63FF` (purple)

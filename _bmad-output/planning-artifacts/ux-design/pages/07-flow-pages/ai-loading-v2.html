@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搭理 - 渐进式生成</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .device-frame {
+            width: 393px;
+            height: 852px;
+            background: linear-gradient(180deg, #848489 0%, #3A3A3C 50%, #1C1C1E 100%);
+            border-radius: 55px;
+            padding: 3px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #1C1C1E;
+            /* Dark Mode base */
+            border-radius: 52px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .dynamic-island {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            width: 126px;
+            height: 37px;
+            background: #000;
+            border-radius: 19px;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        /* Unified Mesh Gradient Background */
+        .glass-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:
+                radial-gradient(circle at 0% 0%, #6C63FF 0%, transparent 40%),
+                radial-gradient(circle at 100% 100%, #FF6B9D 0%, transparent 40%);
+            opacity: 0.2;
+            z-index: 0;
+        }
+
+        .content {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            padding: 80px 24px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        /* Step 1: Text Strategy (Unlocked) */
+        .strategy-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .step-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #FF6B9D;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .strategy-text {
+            color: #fff;
+            font-size: 18px;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .highlight-word {
+            color: #9D94FF;
+            font-weight: 700;
+        }
+
+        /* Step 2: Visual Generation (Loading) */
+        .visual-loader {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 24px;
+            padding: 4px;
+            /* Frame */
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .shimmer-placeholder {
+            width: 100%;
+            height: 360px;
+            background: #2C2C2E;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Scan line animation */
+        .scan-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: #6C63FF;
+            box-shadow: 0 0 10px #6C63FF;
+            animation: scanVertical 3s ease-in-out infinite;
+            z-index: 5;
+        }
+
+        .loader-content {
+            text-align: center;
+            z-index: 2;
+        }
+
+        .loader-icon {
+            font-size: 32px;
+            margin-bottom: 16px;
+            animation: float 2s ease-in-out infinite;
+        }
+
+        .progress-container {
+            width: 180px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            width: 60%;
+            height: 100%;
+            background: #fff;
+            border-radius: 2px;
+            animation: progress 15s linear forwards;
+            /* Simulated 15s load */
+        }
+
+        .progress-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 13px;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes scanVertical {
+            0% {
+                top: 0;
+            }
+
+            50% {
+                top: 100%;
+            }
+
+            100% {
+                top: 0;
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes progress {
+            0% {
+                width: 0%;
+            }
+
+            100% {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="device-frame">
+        <div class="screen">
+            <div class="dynamic-island"></div>
+            <div class="glass-bg"></div>
+
+            <div class="content">
+                <!-- Step 1 Complete -->
+                <div class="strategy-card">
+                    <div class="step-label">
+                        <svg width="12" height="12" fill="#FF6B9D" viewBox="0 0 24 24">
+                            <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
+                        </svg>
+                        搭配策略已生成 (1/2)
+                    </div>
+                    <p class="strategy-text">
+                        为了打造<span class="highlight-word">休闲约会</span>的氛围，我们选择了<span class="highlight-word">撞色技巧</span>。
+                        <br><br>
+                        米色风衣的温润感，与内搭的<span class="highlight-word">克莱因蓝</span>形成视觉张力，既显白又充满活力。
+                    </p>
+                </div>
+
+                <!-- Step 2 Loading -->
+                <div class="visual-loader">
+                    <div class="shimmer-placeholder">
+                        <div class="scan-line"></div>
+
+                        <!-- Ghost Image Reveal Effect (Optional/Advanced, simplified here) -->
+                        <div class="loader-content">
+                            <div class="loader-icon">🎨</div>
+                            <div class="progress-container">
+                                <div class="progress-bar"></div>
+                            </div>
+                            <div class="progress-text">正在渲染光影与细节...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</body>
+
+</html>

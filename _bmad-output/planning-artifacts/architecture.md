@@ -518,6 +518,14 @@ _Decisions made collaboratively with Xiaoshaoqian on 2026-01-01._
 
 **API Endpoint Structure:**
 
+### AI Service Standardization (OpenAI-Compatible)
+
+To ensure future flexibility and avoid vendor lock-in, all AI service integrations (LLM and Image Generation) MUST be encapsulated behind an **OpenAI-compatible API functionality**.
+
+- **Interface Standard**: Mimic OpenAI's `/v1/chat/completions` (for text) and `/v1/images/generations` (for images) endpoints.
+- **Abstraction Layer**: Create an internal service wrapper (`AIServiceWrapper`) that translates internal standardized requests to specific vendor APIs (Alibaba Tongyi, Tencent, etc.).
+- **Benefit**: Allows seamless switching between models (e.g., swapping Tongyi Qianwen for GPT-4 or a local LLM) without changing business logic code.
+
 ```
 /api/v1/
 ├── /auth

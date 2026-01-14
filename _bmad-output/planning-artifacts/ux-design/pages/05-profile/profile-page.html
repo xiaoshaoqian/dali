@@ -102,32 +102,18 @@
             z-index: 101;
         }
 
-        /* 紫色渐变头部 - Mesh Gradient */
+        /* 紫色渐变头部 - Linear Gradient (Matched with Home Page) */
         .header-gradient {
-            background:
-                radial-gradient(circle at 100% 0%, #8B7FFF 0%, transparent 50%),
-                radial-gradient(circle at 0% 0%, #6C63FF 0%, transparent 50%),
-                radial-gradient(circle at 50% 100%, #5D55E6 0%, transparent 50%),
-                #6C63FF;
+            background: linear-gradient(180deg, #6C63FF 0%, #8578FF 100%);
             padding: 0 20px;
-            padding-top: 59px;
-            padding-bottom: 90px;
-            /* Increased padding for deeper overlap */
+            padding-top: 90px;
+            /* Match Home Page padding */
+            padding-bottom: 110px;
+            /* Match Home Page bottom padding */
             position: relative;
             overflow: hidden;
-        }
-
-        /* Subtle noise texture overlay */
-        .header-gradient::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-            opacity: 0.4;
-            pointer-events: none;
+            margin-top: -59px;
+            /* Pull up to cover status bar like Home Page */
         }
 
         .status-bar {
@@ -226,32 +212,33 @@
             color: rgba(255, 255, 255, 0.8);
         }
 
-        /* 白色内容卡片 - Deep Layering */
+        /* 白色内容卡片 - Deep Layering (Matched with Home Page) */
         .content-card {
             background: #fff;
-            border-radius: 32px 32px 0 0;
-            /* Softer corners */
-            margin-top: -60px;
-            /* Pull up nicely */
+            border-radius: 24px 24px 0 0;
+            /* Matched 24px radius */
+            margin-top: -100px;
+            /* Matched -100px margin */
             position: relative;
             z-index: 10;
-            padding: 32px 24px 100px;
+            padding: 24px 20px 100px;
+            /* Matched padding */
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.05);
-            /* Top shadow for depth */
         }
 
-        /* 数据仪表盘 Grid */
+        /* 数据仪表盘 - Simplified Row */
         .stats-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 32px;
         }
 
         .stats-item {
             background: #F9F9FB;
             border-radius: 20px;
-            padding: 24px 16px;
-            /* Taller padding */
+            padding: 16px 8px;
+            /* Compact padding */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -466,12 +453,16 @@
         .menu-list {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 24px;
             /* Spacing between groups */
-            background: transparent;
-            border-radius: 0;
-            overflow: visible;
-            border: none;
+        }
+
+        .menu-title {
+            font-size: 13px;
+            color: #8E8E93;
+            margin-bottom: 10px;
+            padding-left: 12px;
+            font-weight: 500;
         }
 
         .menu-group {
@@ -648,20 +639,20 @@
 
                 <!-- 白色内容卡片 -->
                 <div class="content-card">
-                    <!-- 数据仪表盘 -->
+                    <!-- 数据仪表盘 (3 items) -->
                     <div class="stats-grid">
+
                         <!-- 搭配总数 -->
                         <div class="stats-item primary">
                             <div class="stats-icon-bg">
                                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
                                     viewBox="0 0 24 24">
-                                    <!-- Modern T-shirt Icon Path (Borrowed from Tabs) -->
                                     <path
                                         d="M20.38 3.46L16 2h-2c0 2-3 2-4 0H8L3.62 3.46a2 2 0 0 0-1.08 2.22l.52 2.62a2 2 0 0 0 1.63 1.58L6 10v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9l1.31-.12a2 2 0 0 0 1.63-1.58l.52-2.62a2 2 0 0 0-1.08-2.22z" />
                                 </svg>
                             </div>
                             <div class="stats-val">28</div>
-                            <div class="stats-key">搭配方案</div>
+                            <div class="stats-key">搭配</div>
                         </div>
                         <!-- 收藏喜爱 -->
                         <div class="stats-item warning">
@@ -673,183 +664,27 @@
                                 </svg>
                             </div>
                             <div class="stats-val">12</div>
-                            <div class="stats-key">我的收藏</div>
-                        </div>
-                        <!-- 衣橱单品 -->
-                        <div class="stats-item success">
-                            <div class="stats-icon-bg">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
-                                    <rect x="3" y="3" width="7" height="7" rx="1" />
-                                    <rect x="14" y="3" width="7" height="7" rx="1" />
-                                    <rect x="14" y="14" width="7" height="7" rx="1" />
-                                    <rect x="3" y="14" width="7" height="7" rx="1" />
-                                </svg>
-                            </div>
-                            <div class="stats-val">108</div>
-                            <div class="stats-key">衣橱单品</div>
-                        </div>
-                        <!-- 历史记录 -->
-                        <div class="stats-item info">
-                            <div class="stats-icon-bg">
-                                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <polyline points="12 6 12 12 16 14" />
-                                </svg>
-                            </div>
-                            <div class="stats-val">99+</div>
-                            <div class="stats-key">历史记录</div>
-                        </div>
-                    </div>
-
-                    <!-- AI学习进度 -->
-                    <div class="learning-section">
-                        <h3 class="section-title">AI 学习进度</h3>
-                        <div class="progress-circle">
-                            <svg class="progress-svg" width="160" height="160" viewBox="0 0 160 160">
-                                <defs>
-                                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                        <stop offset="0%" stop-color="#6C63FF" />
-                                        <stop offset="100%" stop-color="#8B7FFF" />
-                                    </linearGradient>
-                                </defs>
-                                <circle class="progress-bg" cx="80" cy="80" r="60" />
-                                <circle class="progress-fill" cx="80" cy="80" r="60" />
-                            </svg>
-                            <div class="progress-text">
-                                <div class="progress-percent">75%</div>
-                                <div class="progress-label">AI 越来越懂你了</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 我的尺码 (Body Profile) -->
-                    <div class="learning-section">
-                        <div class="style-bar-header">
-                            <h3 class="section-title">我的身材档案</h3>
-                            <!-- Direct link to settings for editing -->
-                            <div class="view-all" onclick="window.parent.switchPage('settings')"
-                                style="cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                                <span style="font-size: 13px; color: #6C63FF;">修改</span>
-                                <svg width="12" height="12" fill="none" stroke="#6C63FF" stroke-width="2"
-                                    viewBox="0 0 24 24">
-                                    <path d="M9 18l6-6-6-6" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="size-card"
-                            style="background: #F9F9FB; border-radius: 20px; padding: 20px; border: 1px solid rgba(0,0,0,0.02);">
-                            <div class="size-grid"
-                                style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
-                                <!-- Primary Metrics -->
-                                <div class="size-item">
-                                    <div style="font-size: 12px; color: #8E8E93; margin-bottom: 4px;">身高</div>
-                                    <div style="font-size: 16px; font-weight: 600; color: #1C1C1E;">165 <span
-                                            style="font-size:12px; font-weight:400;">cm</span></div>
-                                </div>
-                                <div class="size-item">
-                                    <div style="font-size: 12px; color: #8E8E93; margin-bottom: 4px;">体重</div>
-                                    <div style="font-size: 16px; font-weight: 600; color: #1C1C1E;">48 <span
-                                            style="font-size:12px; font-weight:400;">kg</span></div>
-                                </div>
-                                <div class="size-item">
-                                    <div style="font-size: 12px; color: #8E8E93; margin-bottom: 4px;">体型</div>
-                                    <div style="font-size: 16px; font-weight: 600; color: #1C1C1E;">梨形</div>
-                                </div>
-                                <!-- Divider -->
-                                <div
-                                    style="grid-column: 1 / -1; height: 1px; background: rgba(0,0,0,0.05); margin: 4px 0;">
-                                </div>
-                                <!-- Sizes -->
-                                <div class="size-item">
-                                    <div style="font-size: 12px; color: #8E8E93; margin-bottom: 4px;">上装</div>
-                                    <div style="font-size: 16px; font-weight: 600; color: #1C1C1E;">S</div>
-                                </div>
-                                <div class="size-item">
-                                    <div style="font-size: 12px; color: #8E8E93; margin-bottom: 4px;">下装</div>
-                                    <div style="font-size: 16px; font-weight: 600; color: #1C1C1E;">M</div>
-                                </div>
-                                <div class="size-item">
-                                    <div style="font-size: 12px; color: #8E8E93; margin-bottom: 4px;">鞋码</div>
-                                    <div style="font-size: 16px; font-weight: 600; color: #1C1C1E;">37</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 样式偏好 (Existing) -->
-                    <div class="learning-section">
-                        <h3 class="section-title">你的风格偏好</h3>
-                        <div class="preference-cloud">
-                            <span class="preference-tag large">简约</span>
-                            <span class="preference-tag medium">通勤</span>
-                            <span class="preference-tag">时尚</span>
-                            <span class="preference-tag medium">休闲</span>
-                            <span class="preference-tag">甜美</span>
-                            <span class="preference-tag">约会</span>
-                        </div>
-                    </div>
-
-                    <!-- 风格档案 -->
-                    <div class="learning-section">
-                        <h3 class="section-title">风格分布</h3>
-                        <div class="style-bars">
-                            <div class="style-bar">
-                                <div class="style-bar-header">
-                                    <span class="style-name">简约风</span>
-                                    <span class="style-percent">45%</span>
-                                </div>
-                                <div class="style-bar-track">
-                                    <div class="style-bar-fill" style="width: 45%"></div>
-                                </div>
-                            </div>
-                            <div class="style-bar">
-                                <div class="style-bar-header">
-                                    <span class="style-name">时尚感</span>
-                                    <span class="style-percent">30%</span>
-                                </div>
-                                <div class="style-bar-track">
-                                    <div class="style-bar-fill" style="width: 30%"></div>
-                                </div>
-                            </div>
-                            <div class="style-bar">
-                                <div class="style-bar-header">
-                                    <span class="style-name">甜美风</span>
-                                    <span class="style-percent">15%</span>
-                                </div>
-                                <div class="style-bar-track">
-                                    <div class="style-bar-fill" style="width: 15%"></div>
-                                </div>
-                            </div>
-                            <div class="style-bar">
-                                <div class="style-bar-header">
-                                    <span class="style-name">知性风</span>
-                                    <span class="style-percent">10%</span>
-                                </div>
-                                <div class="style-bar-track">
-                                    <div class="style-bar-fill" style="width: 10%"></div>
-                                </div>
-                            </div>
+                            <div class="stats-key">收藏</div>
                         </div>
                     </div>
 
                     <!-- 菜单列表 -->
-                    <div class="learning-section">
-                        <h3 class="section-title">更多</h3>
-                        <!-- 菜单列表 -->
-                        <div class="menu-list">
-                            <!-- Group 1: Account -->
+                    <div class="menu-list">
+
+                        <!-- Group 1: My Archives -->
+                        <div>
+                            <div class="menu-title">我的档案</div>
                             <div class="menu-group">
-                                <div class="menu-item">
-                                    <div class="menu-icon" style="background: rgba(255, 149, 0, 0.1); color: #FF9500;">
+                                <!-- Body Profile -->
+                                <div class="menu-item" onclick="window.parent.switchPage('body-profile')">
+                                    <div class="menu-icon" style="background: rgba(108, 99, 255, 0.1); color: #6C63FF;">
                                         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
                                             viewBox="0 0 24 24">
-                                            <polygon
-                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="12" cy="7" r="4"></circle>
                                         </svg>
                                     </div>
-                                    <div class="menu-text">我的会员</div>
+                                    <div class="menu-text">身材档案</div>
                                     <div class="menu-arrow">
                                         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
                                             viewBox="0 0 24 24">
@@ -857,6 +692,33 @@
                                         </svg>
                                     </div>
                                 </div>
+                                <!-- Style Profile -->
+                                <div class="menu-item" onclick="window.parent.switchPage('style-profile')">
+                                    <div class="menu-icon" style="background: rgba(255, 45, 85, 0.1); color: #FF2D55;">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                                            viewBox="0 0 24 24">
+                                            <polygon
+                                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                                            </polygon>
+                                        </svg>
+                                    </div>
+                                    <div class="menu-text">风格档案</div>
+                                    <div class="menu-arrow">
+                                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                                            viewBox="0 0 24 24">
+                                            <path d="M9 18l6-6-6-6" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Group 2: Account -->
+                        <div>
+                            <div class="menu-title">账户</div>
+                            <div class="menu-group">
+
+                                <!-- Settings -->
                                 <div class="menu-item" onclick="window.parent.switchPage('settings')">
                                     <div class="menu-icon"
                                         style="background: rgba(142, 142, 147, 0.1); color: #8E8E93;">
@@ -877,44 +739,46 @@
                                 </div>
                             </div>
                         </div>
-                    </div> <!-- End content-card -->
-                </div> <!-- End scroll-view -->
 
-                <!-- Tab Bar (Fixed at bottom) -->
-                <div class="tab-bar">
-                    <a href="#" class="tab-item">
-                        <div class="tab-icon">
-                            <svg class="icon" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-                            </svg>
-                        </div>
-                        <span class="tab-label">首页</span>
-                    </a>
-                    <a href="#" class="tab-item">
-                        <div class="tab-icon">
-                            <svg class="icon" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24">
-                                <!-- Wide T-shirt Stroke -->
-                                <path
-                                    d="M20.38 3.46L16 2h-2c0 2-3 2-4 0H8L3.62 3.46a2 2 0 0 0-1.08 2.22l.52 2.62a2 2 0 0 0 1.63 1.58L6 10v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9l1.31-.12a2 2 0 0 0 1.63-1.58l.52-2.62a2 2 0 0 0-1.08-2.22z"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        <span class="tab-label">搭配</span>
-                    </a>
-                    <a href="#" class="tab-item active">
-                        <div class="tab-icon">
-                            <svg class="icon" fill="#6C63FF" viewBox="0 0 24 24">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                                <circle cx="12" cy="7" r="4" />
-                            </svg>
-                        </div>
-                        <span class="tab-label">我的</span>
-                    </a>
-                </div> <!-- End tab-bar -->
-                <!-- Home Indicator -->
-                <div class="home-indicator"></div>
-            </div>
+                    </div> <!-- End menu-list -->
+                </div> <!-- End content-card -->
+            </div> <!-- End scroll-view -->
+
+            <!-- Tab Bar (Fixed at bottom) -->
+            <div class="tab-bar">
+                <a href="#" class="tab-item">
+                    <div class="tab-icon">
+                        <svg class="icon" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                        </svg>
+                    </div>
+                    <span class="tab-label">首页</span>
+                </a>
+                <a href="#" class="tab-item">
+                    <div class="tab-icon">
+                        <svg class="icon" fill="none" stroke="#8E8E93" stroke-width="2" viewBox="0 0 24 24">
+                            <!-- Wide T-shirt Stroke -->
+                            <path
+                                d="M20.38 3.46L16 2h-2c0 2-3 2-4 0H8L3.62 3.46a2 2 0 0 0-1.08 2.22l.52 2.62a2 2 0 0 0 1.63 1.58L6 10v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9l1.31-.12a2 2 0 0 0 1.63-1.58l.52-2.62a2 2 0 0 0-1.08-2.22z"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </div>
+                    <span class="tab-label">搭配</span>
+                </a>
+                <a href="#" class="tab-item active">
+                    <div class="tab-icon">
+                        <svg class="icon" fill="#6C63FF" viewBox="0 0 24 24">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                    </div>
+                    <span class="tab-label">我的</span>
+                </a>
+            </div> <!-- End tab-bar -->
+            <!-- Home Indicator -->
+            <div class="home-indicator"></div>
         </div>
+    </div>
 </body>
 
 </html>
