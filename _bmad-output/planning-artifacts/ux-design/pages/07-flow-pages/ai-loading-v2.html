@@ -35,8 +35,12 @@
         .screen {
             width: 100%;
             height: 100%;
-            background: #1C1C1E;
-            /* Dark Mode base */
+            /* V1 Visuals: Unified Mesh Gradient */
+            background:
+                radial-gradient(circle at 100% 0%, #8B7FFF 0%, transparent 50%),
+                radial-gradient(circle at 0% 0%, #6C63FF 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, #5D55E6 0%, transparent 50%),
+                #6C63FF;
             border-radius: 52px;
             overflow: hidden;
             position: relative;
@@ -56,180 +60,193 @@
             z-index: 100;
         }
 
-        /* Unified Mesh Gradient Background */
-        .glass-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background:
-                radial-gradient(circle at 0% 0%, #6C63FF 0%, transparent 40%),
-                radial-gradient(circle at 100% 100%, #FF6B9D 0%, transparent 40%);
-            opacity: 0.2;
-            z-index: 0;
-        }
-
-        .content {
+        /* AI Core (V1 Style) */
+        .ai-core-container {
             position: relative;
-            z-index: 10;
-            flex: 1;
-            padding: 80px 24px 40px;
-            display: flex;
-            flex-direction: column;
-            gap: 32px;
-        }
-
-        /* Step 1: Text Strategy (Unlocked) */
-        .strategy-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            animation: slideDown 0.8s ease-out;
-        }
-
-        .step-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #FF6B9D;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
+            width: 80px;
+            height: 80px;
+            margin: 60px auto 30px;
+            /* Centered top margin */
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Transformation state for Phase 2 */
+        .ai-core-container.phase-2 {
+            margin: 40px auto 20px;
+            transform: scale(0.6);
+            /* Shrink slightly to make room */
+        }
+
+        .ai-core {
+            width: 40px;
+            height: 40px;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            background: linear-gradient(135deg, #fff 0%, #E0E0FF 100%);
+            /* Lighter for contrast on purple */
+            filter: blur(8px);
+            animation: morph 2s ease-in-out infinite alternate, breathe 2s ease-in-out infinite alternate;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+        }
+
+        .ai-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            animation: spin 8s linear infinite;
+        }
+
+        .ai-ring:nth-child(2) {
+            width: 80%;
+            height: 80%;
+            border-style: dashed;
+            animation-direction: reverse;
+            animation-duration: 12s;
+        }
+
+        /* Content Area */
+        .content {
+            flex: 1;
+            padding: 0 24px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            perspective: 1000px;
+        }
+
+        /* Streaming Text Card (Glassmorphism over Gradient) */
+        .strategy-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            color: #fff;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .strategy-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Streaming Text Cursor */
+        .cursor::after {
+            content: '|';
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
         }
 
         .strategy-text {
-            color: #fff;
-            font-size: 18px;
-            line-height: 1.5;
+            font-size: 17px;
+            line-height: 1.6;
+            font-weight: 500;
+            min-height: 80px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .highlight {
+            color: #FFD6E5;
+            /* Soft Pink highlight */
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(255, 214, 229, 0.5);
+        }
+
+        /* Loading Status Indicator (Bottom) */
+        .loading-status {
+            margin-top: auto;
+            text-align: center;
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 12px;
             font-weight: 500;
         }
 
-        .highlight-word {
-            color: #9D94FF;
-            font-weight: 700;
-        }
-
-        /* Step 2: Visual Generation (Loading) */
-        .visual-loader {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 24px;
-            padding: 4px;
-            /* Frame */
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .shimmer-placeholder {
-            width: 100%;
-            height: 360px;
-            background: #2C2C2E;
-            border-radius: 20px;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Scan line animation */
-        .scan-line {
-            position: absolute;
-            top: 0;
-            left: 0;
+        .progress-bar-container {
             width: 100%;
             height: 4px;
-            background: #6C63FF;
-            box-shadow: 0 0 10px #6C63FF;
-            animation: scanVertical 3s ease-in-out infinite;
-            z-index: 5;
-        }
-
-        .loader-content {
-            text-align: center;
-            z-index: 2;
-        }
-
-        .loader-icon {
-            font-size: 32px;
-            margin-bottom: 16px;
-            animation: float 2s ease-in-out infinite;
-        }
-
-        .progress-container {
-            width: 180px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 2px;
-            margin-bottom: 12px;
             overflow: hidden;
+            position: relative;
         }
 
         .progress-bar {
-            width: 60%;
+            width: 0%;
             height: 100%;
             background: #fff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
             border-radius: 2px;
-            animation: progress 15s linear forwards;
-            /* Simulated 15s load */
+            transition: width 0.1s linear;
         }
 
-        .progress-text {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 13px;
+        /* Keyframes from V1 */
+        @keyframes morph {
+            0% {
+                border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+                transform: rotate(0deg);
+            }
+
+            50% {
+                border-radius: 70% 30% 40% 60% / 60% 40% 60% 40%;
+            }
+
+            100% {
+                border-radius: 40% 60% 30% 70% / 70% 30% 30% 70%;
+                transform: rotate(180deg);
+            }
         }
 
-        @keyframes slideDown {
+        @keyframes breathe {
+            0% {
+                transform: scale(1);
+                filter: blur(5px);
+            }
+
+            100% {
+                transform: scale(1.2);
+                filter: blur(8px);
+            }
+        }
+
+        @keyframes spin {
             from {
-                transform: translateY(-20px);
-                opacity: 0;
+                transform: rotate(0deg);
             }
 
             to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes scanVertical {
-            0% {
-                top: 0;
-            }
-
-            50% {
-                top: 100%;
-            }
-
-            100% {
-                top: 0;
-            }
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-10px);
-            }
-        }
-
-        @keyframes progress {
-            0% {
-                width: 0%;
-            }
-
-            100% {
-                width: 100%;
+                transform: rotate(360deg);
             }
         }
     </style>
@@ -239,43 +256,136 @@
     <div class="device-frame">
         <div class="screen">
             <div class="dynamic-island"></div>
-            <div class="glass-bg"></div>
+
+            <!-- AI Core (Always present, but moves) -->
+            <div class="ai-core-container" id="aiCore">
+                <div class="ai-ring"></div>
+                <div class="ai-ring"></div>
+                <div class="ai-core"></div>
+            </div>
 
             <div class="content">
-                <!-- Step 1 Complete -->
-                <div class="strategy-card">
-                    <div class="step-label">
-                        <svg width="12" height="12" fill="#FF6B9D" viewBox="0 0 24 24">
-                            <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
+                <!-- Text Strategy Card -->
+                <div class="strategy-card" id="strategyCard">
+                    <div class="card-header">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        搭配策略已生成 (1/2)
+                        搭配策略生成中
                     </div>
-                    <p class="strategy-text">
-                        为了打造<span class="highlight-word">休闲约会</span>的氛围，我们选择了<span class="highlight-word">撞色技巧</span>。
-                        <br><br>
-                        米色风衣的温润感，与内搭的<span class="highlight-word">克莱因蓝</span>形成视觉张力，既显白又充满活力。
-                    </p>
+                    <div class="strategy-text" id="typewriterText"></div>
                 </div>
 
-                <!-- Step 2 Loading -->
-                <div class="visual-loader">
-                    <div class="shimmer-placeholder">
-                        <div class="scan-line"></div>
-
-                        <!-- Ghost Image Reveal Effect (Optional/Advanced, simplified here) -->
-                        <div class="loader-content">
-                            <div class="loader-icon">🎨</div>
-                            <div class="progress-container">
-                                <div class="progress-bar"></div>
-                            </div>
-                            <div class="progress-text">正在渲染光影与细节...</div>
-                        </div>
+                <!-- Loading Footer -->
+                <div class="loading-status">
+                    <div class="status-text" id="statusText">正在分析视觉特征...</div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar"></div>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
+
+    <script>
+        // Data for simulation
+        const strategyContent = [
+            { text: "为了应对", highlight: false },
+            { text: " casual 约会", highlight: true },
+            { text: " 场合，", highlight: false },
+            { text: "AI 建议采用", highlight: false },
+            { text: "“材质对撞”", highlight: true },
+            { text: "法则。\n\n", highlight: false }, // Newline
+            { text: "米色风衣的", highlight: false },
+            { text: "挺括感", highlight: true },
+            { text: "与内搭的柔软针织形成互补，", highlight: false },
+            { text: "既保留职场专业度，又不失亲和力。", highlight: false }
+        ];
+
+        const loadingStates = [
+            "正在分析视觉特征...",
+            "构思搭配策略...",
+            "渲染光影细节...",
+            "即将完成..."
+        ];
+
+        // Logic
+        const aiCore = document.getElementById('aiCore');
+        const strategyCard = document.getElementById('strategyCard');
+        const typewriterEl = document.getElementById('typewriterText');
+        const statusText = document.getElementById('statusText');
+        const progressBar = document.getElementById('progressBar');
+
+        // Phase 1: Initial Analysis (0-2s)
+        setTimeout(() => {
+            progressBar.style.width = "20%";
+        }, 500);
+
+        // Phase 2: Strategy Reveal & Streaming (2s-8s)
+        setTimeout(() => {
+            aiCore.classList.add('phase-2');
+            strategyCard.classList.add('visible');
+            statusText.innerText = loadingStates[1];
+            progressBar.style.width = "40%";
+
+            startTypewriter();
+        }, 2000);
+
+        // Phase 3: Image Rendering (8s-15s)
+        setTimeout(() => {
+            statusText.innerText = loadingStates[2];
+            progressBar.style.width = "80%";
+        }, 8000);
+
+        // Finish
+        setTimeout(() => {
+            statusText.innerText = loadingStates[3];
+            progressBar.style.width = "100%";
+        }, 14000);
+
+        // Typewriter function
+        function startTypewriter() {
+            let chunkIndex = 0;
+            let charIndex = 0;
+            let currentSpan = null;
+
+            function typeNextChar() {
+                if (chunkIndex >= strategyContent.length) {
+                    typewriterEl.classList.remove('cursor'); // Remove cursor at end
+                    return;
+                }
+
+                typewriterEl.classList.add('cursor');
+                const chunk = strategyContent[chunkIndex];
+
+                if (!currentSpan) {
+                    currentSpan = document.createElement('span');
+                    if (chunk.highlight) currentSpan.classList.add('highlight');
+                    typewriterEl.appendChild(currentSpan);
+                }
+
+                if (charIndex < chunk.text.length) {
+                    const char = chunk.text[charIndex];
+                    if (char === '\n') {
+                        currentSpan.appendChild(document.createElement('br'));
+                    } else {
+                        currentSpan.innerHTML += char;
+                    }
+                    charIndex++;
+                    setTimeout(typeNextChar, 50); // Typing speed
+                } else {
+                    chunkIndex++;
+                    charIndex = 0;
+                    currentSpan = null; // Reset for next chunk
+                    setTimeout(typeNextChar, 50);
+                }
+            }
+
+            typeNextChar();
+        }
+
+    </script>
 </body>
 
 </html>
