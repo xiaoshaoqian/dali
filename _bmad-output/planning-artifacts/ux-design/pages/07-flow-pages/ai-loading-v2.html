@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>搭理 - 渐进式生成</title>
+    <title>搭理 - 渐进式生成 (Seamless Detail)</title>
     <style>
         * {
             margin: 0;
@@ -32,12 +32,12 @@
             position: relative;
         }
 
+        /* Screen Container */
         .screen {
             width: 100%;
             height: 100%;
-            /* V1 Visuals: Unified Mesh Gradient */
-            background:
-                radial-gradient(circle at 100% 0%, #8B7FFF 0%, transparent 50%),
+            /* Initial State: Loading Gradient */
+            background: radial-gradient(circle at 100% 0%, #8B7FFF 0%, transparent 50%),
                 radial-gradient(circle at 0% 0%, #6C63FF 0%, transparent 50%),
                 radial-gradient(circle at 50% 100%, #5D55E6 0%, transparent 50%),
                 #6C63FF;
@@ -46,39 +46,55 @@
             position: relative;
             display: flex;
             flex-direction: column;
+            transition: background 1.5s ease-in-out;
+        }
+
+        .screen.result-mode {
+            background: #F2F2F7;
+            /* Final result background (Detail Page light gray) */
         }
 
         .dynamic-island {
             position: absolute;
             top: 16px;
             left: 50%;
+            transform: translateX(-50%);
             width: 126px;
-            height: 37px;
+            height: 37.5px;
             background: #000;
             border-radius: 19px;
-            transform: translateX(-50%);
-            z-index: 100;
+            z-index: 101;
         }
 
-        /* AI Core (V1 Style) */
+        /* Loading Phase Elements */
+
+        .loading-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 100px;
+            transition: opacity 0.8s;
+        }
+
+        .loading-layer.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
         .ai-core-container {
-            position: relative;
             width: 80px;
             height: 80px;
-            margin: 60px auto 30px;
-            /* Centered top margin */
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Transformation state for Phase 2 */
-        .ai-core-container.phase-2 {
-            margin: 40px auto 20px;
-            transform: scale(0.6);
-            /* Shrink slightly to make room */
+            margin-bottom: 24px;
         }
 
         .ai-core {
@@ -86,12 +102,8 @@
             height: 40px;
             border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
             background: linear-gradient(135deg, #fff 0%, #E0E0FF 100%);
-            /* Lighter for contrast on purple */
             filter: blur(8px);
-            animation: morph 2s ease-in-out infinite alternate, breathe 2s ease-in-out infinite alternate;
-            position: relative;
-            z-index: 10;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            animation: morph 2s ease-in-out infinite alternate;
         }
 
         .ai-ring {
@@ -103,288 +115,374 @@
             animation: spin 8s linear infinite;
         }
 
-        .ai-ring:nth-child(2) {
-            width: 80%;
-            height: 80%;
-            border-style: dashed;
-            animation-direction: reverse;
-            animation-duration: 12s;
-        }
-
-        /* Content Area */
-        .content {
-            flex: 1;
-            padding: 0 24px 40px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            perspective: 1000px;
-        }
-
-        /* Streaming Text Card (Glassmorphism over Gradient) */
-        .strategy-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border-radius: 24px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            color: #fff;
-            opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-
-        .strategy-card.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        /* Streaming Text Cursor */
-        .cursor::after {
-            content: '|';
-            animation: blink 1s step-end infinite;
-        }
-
-        @keyframes blink {
-            50% {
-                opacity: 0;
-            }
-        }
-
-        .strategy-text {
-            font-size: 17px;
-            line-height: 1.6;
-            font-weight: 500;
-            min-height: 80px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .highlight {
-            color: #FFD6E5;
-            /* Soft Pink highlight */
-            font-weight: 700;
-            text-shadow: 0 0 10px rgba(255, 214, 229, 0.5);
-        }
-
-        /* Loading Status Indicator (Bottom) */
-        .loading-status {
-            margin-top: auto;
-            text-align: center;
-        }
-
-        .status-text {
-            font-size: 14px;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 12px;
-            font-weight: 500;
-        }
-
-        .progress-bar-container {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .progress-bar {
-            width: 0%;
-            height: 100%;
-            background: #fff;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-            border-radius: 2px;
-            transition: width 0.1s linear;
-        }
-
-        /* Keyframes from V1 */
         @keyframes morph {
             0% {
                 border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
                 transform: rotate(0deg);
             }
 
-            50% {
-                border-radius: 70% 30% 40% 60% / 60% 40% 60% 40%;
-            }
-
             100% {
-                border-radius: 40% 60% 30% 70% / 70% 30% 30% 70%;
+                border-radius: 70% 30% 40% 60% / 60% 40% 60% 40%;
                 transform: rotate(180deg);
             }
         }
 
-        @keyframes breathe {
-            0% {
-                transform: scale(1);
-                filter: blur(5px);
-            }
-
-            100% {
-                transform: scale(1.2);
-                filter: blur(8px);
-            }
-        }
-
         @keyframes spin {
-            from {
-                transform: rotate(0deg);
-            }
-
             to {
                 transform: rotate(360deg);
             }
+        }
+
+        .loading-text {
+            color: #fff;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        /* Strategy Card (Thinking Box) */
+        .strategy-card {
+            width: 90%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 24px;
+            transform-origin: bottom center;
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .strategy-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #6C63FF;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+        }
+
+        .streaming-text {
+            font-size: 18px;
+            color: #1C1C1E;
+            line-height: 1.6;
+            min-height: 120px;
+        }
+
+        /* 
+           Result Detail Layer (Replicates Outfit Detail Page)
+           Initially Hidden/Transformed 
+        */
+        .detail-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            opacity: 0;
+            transform: translateY(100px) scale(0.95);
+            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            background: #F2F2F7;
+            overflow-y: auto;
+            /* Hide scrollbar */
+            scrollbar-width: none;
+        }
+
+        .detail-layer::-webkit-scrollbar {
+            display: none;
+        }
+
+        .detail-layer.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* DETAIL PAGE CSS (Compact) */
+        .hero-section {
+            width: 100%;
+            height: 460px;
+            position: relative;
+            background: #E0E7FF;
+            overflow: hidden;
+        }
+
+        .hero-section::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 32px;
+            background: #F2F2F7;
+            border-radius: 32px 32px 0 0;
+            z-index: 5;
+        }
+
+        .hero-img-placeholder {
+            width: 100%;
+            height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=1000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .content-sheet {
+            padding: 0 20px 100px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .floating-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .outfit-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1C1C1E;
+            margin-bottom: 12px;
+        }
+
+        .tag-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tag {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .tag.style {
+            background: #F0EFFF;
+            color: #6C63FF;
+        }
+
+        .tag.occasion {
+            background: #F2F2F7;
+            color: #3A3A3C;
+        }
+
+        .item-row {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .item-thumb {
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
+            background: #eee;
+            flex-shrink: 0;
+        }
+
+        .bottom-action-bar {
+            position: fixed;
+            bottom: 30px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            gap: 12px;
+            z-index: 100;
+        }
+
+        .try-on-btn {
+            flex: 1;
+            height: 56px;
+            background: linear-gradient(135deg, #6C63FF 0%, #7B72FF 100%);
+            border-radius: 28px;
+            border: none;
+            color: #fff;
+            font-size: 17px;
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(108, 99, 255, 0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* Top Nav Placeholder */
+        .top-nav {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 60px;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            padding: 16px 20px;
+            pointer-events: none;
+            /* Let clicks pass if needed */
         }
     </style>
 </head>
 
 <body>
     <div class="device-frame">
-        <div class="screen">
+        <div class="side-buttons">
+            <div class="mute-switch"></div>
+            <div class="volume-up"></div>
+            <div class="volume-down"></div>
+        </div>
+        <div class="power-button"></div>
+
+        <div class="screen" id="mainScreen">
             <div class="dynamic-island"></div>
 
-            <!-- AI Core (Always present, but moves) -->
-            <div class="ai-core-container" id="aiCore">
-                <div class="ai-ring"></div>
-                <div class="ai-ring"></div>
-                <div class="ai-core"></div>
+            <!-- LOADING LAYER (Purple AI) -->
+            <div class="loading-layer" id="loadingLayer">
+                <div class="ai-core-container">
+                    <div class="ai-ring"></div>
+                    <div class="ai-ring" style="width:80%; height:80%; animation-direction:reverse;"></div>
+                    <div class="ai-core"></div>
+                </div>
+                <div class="loading-text">AI 正在构思方案...</div>
+
+                <div class="strategy-card" id="strategyCard">
+                    <div class="strategy-title">• 搭配策略流</div>
+                    <div class="streaming-text" id="streamTarget"></div>
+                    <!-- Progress -->
+                    <div
+                        style="margin-top:20px; width:100%; height:2px; background:#F2F2F7; position:relative; overflow:hidden;">
+                        <div id="progress"
+                            style="position:absolute; left:0; top:0; height:100%; width:0%; background:#6C63FF; transition:width 0.1s linear;">
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="content">
-                <!-- Text Strategy Card -->
-                <div class="strategy-card" id="strategyCard">
-                    <div class="card-header">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-                            viewBox="0 0 24 24">
-                            <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-                        </svg>
-                        搭配策略生成中
-                    </div>
-                    <div class="strategy-text" id="typewriterText"></div>
+            <!-- RESULT DETAIL LAYER (Hidden by default) -->
+            <div class="detail-layer" id="detailLayer">
+                <div class="hero-section">
+                    <div class="hero-img-placeholder"></div>
                 </div>
 
-                <!-- Loading Footer -->
-                <div class="loading-status">
-                    <div class="status-text" id="statusText">正在分析视觉特征...</div>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" id="progressBar"></div>
+                <div class="content-sheet">
+                    <!-- Title -->
+                    <div class="floating-card">
+                        <h1 class="outfit-title">韩系简约通勤风</h1>
+                        <div class="tag-row">
+                            <span class="tag style">简约</span>
+                            <span class="tag occasion">通勤</span>
+                            <span class="tag occasion">AI 强推</span>
+                        </div>
+                    </div>
+
+                    <!-- Logic -->
+                    <div class="floating-card">
+                        <div style="font-weight:600; margin-bottom:10px; color:#6C63FF;">✨ 搭配逻辑</div>
+                        <p style="font-size:14px; color:#333; line-height:1.5;">
+                            基于你选择的<b>米色风衣</b>，AI 运用了经典的“同色系+撞色”法则。
+                            内搭选择黑色修身打底，下身搭配深色阔腿裤，形成外松内紧的视觉效果，既显瘦又保留了职场的正式感。
+                        </p>
+                    </div>
+
+                    <!-- Items -->
+                    <div class="floating-card">
+                        <div style="font-weight:600; margin-bottom:10px;">包含单品</div>
+                        <div class="item-row">
+                            <div class="item-thumb" style="background:#ddd;"></div> <!-- Coat -->
+                            <div class="item-thumb" style="background:#333;"></div> <!-- Pants -->
+                            <div class="item-thumb" style="background:#fff; border:1px solid #eee;"></div>
+                            <!-- Shirt -->
+                            <div class="item-thumb" style="background:#555;"></div> <!-- Shoes -->
+                        </div>
                     </div>
                 </div>
+
+                <!-- Bottom Bar -->
+                <div class="bottom-action-bar">
+                    <div
+                        style="width:56px; height:56px; border-radius:28px; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                        </svg>
+                    </div>
+                    <button class="try-on-btn" onclick="window.parent.switchPage('try-on')">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M15 4V2" />
+                            <path d="M15 16v-2" />
+                            <path d="M8 9h2" />
+                            <path d="M20 9h2" />
+                            <path d="M15 9l-5.65 5.65a2.5 2.5 0 1 1-3.53-3.53l6.59-6.59" />
+                        </svg>
+                        一键上身试穿
+                    </button>
+                </div>
+            </div>
+
+            <div class="home-indicator"
+                style="position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; background:rgba(0,0,0,0.2); border-radius:3px; z-index:200;">
             </div>
         </div>
     </div>
 
     <script>
-        // Data for simulation
-        const strategyContent = [
-            { text: "为了应对", highlight: false },
-            { text: " casual 约会", highlight: true },
-            { text: " 场合，", highlight: false },
-            { text: "AI 建议采用", highlight: false },
-            { text: "“材质对撞”", highlight: true },
-            { text: "法则。\n\n", highlight: false }, // Newline
-            { text: "米色风衣的", highlight: false },
-            { text: "挺括感", highlight: true },
-            { text: "与内搭的柔软针织形成互补，", highlight: false },
-            { text: "既保留职场专业度，又不失亲和力。", highlight: false }
-        ];
-
-        const loadingStates = [
-            "正在分析视觉特征...",
-            "构思搭配策略...",
-            "渲染光影细节...",
-            "即将完成..."
-        ];
-
-        // Logic
-        const aiCore = document.getElementById('aiCore');
+        const loadingLayer = document.getElementById('loadingLayer');
+        const detailLayer = document.getElementById('detailLayer');
+        const mainScreen = document.getElementById('mainScreen');
         const strategyCard = document.getElementById('strategyCard');
-        const typewriterEl = document.getElementById('typewriterText');
-        const statusText = document.getElementById('statusText');
-        const progressBar = document.getElementById('progressBar');
 
-        // Phase 1: Initial Analysis (0-2s)
-        setTimeout(() => {
-            progressBar.style.width = "20%";
-        }, 500);
+        const streamTarget = document.getElementById('streamTarget');
+        const progressBar = document.getElementById('progress');
 
-        // Phase 2: Strategy Reveal & Streaming (2s-8s)
-        setTimeout(() => {
-            aiCore.classList.add('phase-2');
-            strategyCard.classList.add('visible');
-            statusText.innerText = loadingStates[1];
-            progressBar.style.width = "40%";
+        const thinkingLines = [
+            "主体：米色风衣 (98%)",
+            "搜索风格库：韩系简约...",
+            "匹配下装：深色阔腿裤",
+            "生成视觉预览...",
+            "最终渲染完成"
+        ];
 
-            startTypewriter();
-        }, 2000);
+        // Start
+        let lineIndex = 0;
+        setTimeout(startStreaming, 800);
 
-        // Phase 3: Image Rendering (8s-15s)
-        setTimeout(() => {
-            statusText.innerText = loadingStates[2];
-            progressBar.style.width = "80%";
-        }, 8000);
-
-        // Finish
-        setTimeout(() => {
-            statusText.innerText = loadingStates[3];
-            progressBar.style.width = "100%";
-        }, 14000);
-
-        // Typewriter function
-        function startTypewriter() {
-            let chunkIndex = 0;
-            let charIndex = 0;
-            let currentSpan = null;
-
-            function typeNextChar() {
-                if (chunkIndex >= strategyContent.length) {
-                    typewriterEl.classList.remove('cursor'); // Remove cursor at end
-                    return;
-                }
-
-                typewriterEl.classList.add('cursor');
-                const chunk = strategyContent[chunkIndex];
-
-                if (!currentSpan) {
-                    currentSpan = document.createElement('span');
-                    if (chunk.highlight) currentSpan.classList.add('highlight');
-                    typewriterEl.appendChild(currentSpan);
-                }
-
-                if (charIndex < chunk.text.length) {
-                    const char = chunk.text[charIndex];
-                    if (char === '\n') {
-                        currentSpan.appendChild(document.createElement('br'));
-                    } else {
-                        currentSpan.innerHTML += char;
-                    }
-                    charIndex++;
-                    setTimeout(typeNextChar, 50); // Typing speed
-                } else {
-                    chunkIndex++;
-                    charIndex = 0;
-                    currentSpan = null; // Reset for next chunk
-                    setTimeout(typeNextChar, 50);
-                }
+        function startStreaming() {
+            if (lineIndex >= thinkingLines.length) {
+                setTimeout(revealDetail, 600);
+                return;
             }
 
-            typeNextChar();
+            const text = thinkingLines[lineIndex];
+            const p = document.createElement('div');
+            p.style.marginBottom = "6px";
+            p.textContent = "> " + text;
+            streamTarget.appendChild(p);
+
+            const progress = ((lineIndex + 1) / thinkingLines.length) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            lineIndex++;
+            setTimeout(startStreaming, 800);
         }
 
+        function revealDetail() {
+            // 1. Hide Loading Layer
+            loadingLayer.classList.add('hidden');
+
+            // 2. Expand Strategy Card visual trick (Optional, but here we just crossfade to detail)
+            // But let's make the background change first
+            mainScreen.classList.add('result-mode');
+
+            // 3. Slide Up Detail
+            setTimeout(() => {
+                detailLayer.classList.add('visible');
+            }, 300);
+        }
     </script>
 </body>
 

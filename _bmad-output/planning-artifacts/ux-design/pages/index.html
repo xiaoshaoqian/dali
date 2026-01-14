@@ -184,6 +184,9 @@
             <button class="nav-btn" onclick="switchPage('recognition', this)">
                 <span>🔍</span> 识别确认
             </button>
+            <button class="nav-btn" onclick="switchPage('recognition-multi', this)">
+                <span>🔍+</span> 多选识别
+            </button>
             <button class="nav-btn" onclick="switchPage('loading', this)">
                 <span>⏳</span> AI生成中
             </button>
@@ -242,6 +245,7 @@
         <iframe id="iframe-home-empty" src="01-home/home-page-empty.html"></iframe>
         <iframe id="iframe-photo" src="07-flow-pages/photo-occasion.html"></iframe>
         <iframe id="iframe-recognition" src="07-flow-pages/recognition-selection.html"></iframe>
+        <iframe id="iframe-recognition-multi" src="07-flow-pages/recognition-selection-multi.html"></iframe>
         <iframe id="iframe-loading" src="07-flow-pages/ai-loading.html"></iframe>
         <iframe id="iframe-loading-v2" src="07-flow-pages/ai-loading-v2.html"></iframe>
         <iframe id="iframe-results" src="02-outfit-results/outfit-results-page.html"></iframe>
@@ -284,6 +288,7 @@
             'home-empty': '首页空状态',
             'photo': '创建搭配',
             'recognition': '识别确认',
+            'recognition-multi': '多选识别确认',
             'loading': 'AI生成中',
             'loading-v2': '渐进式生成',
             'results': '搭配方案',
@@ -339,7 +344,7 @@
         }
 
         document.addEventListener('keydown', function (e) {
-            const pages = ['welcome', 'home', 'home-empty', 'photo', 'recognition', 'loading', 'loading-v2', 'results', 'results-gen', 'detail', 'try-on', 'outfit', 'profile', 'body-profile', 'style-profile', 'share', 'settings', 'settings-security', 'settings-privacy', 'settings-help', 'settings-about'];
+            const pages = ['welcome', 'home', 'home-empty', 'photo', 'recognition', 'recognition-multi', 'loading', 'loading-v2', 'results', 'results-gen', 'detail', 'try-on', 'outfit', 'profile', 'body-profile', 'style-profile', 'share', 'settings', 'settings-security', 'settings-privacy', 'settings-help', 'settings-about'];
             const currentIndex = pages.findIndex(p => {
                 const iframe = document.getElementById('iframe-' + p);
                 return iframe && iframe.classList.contains('active');
