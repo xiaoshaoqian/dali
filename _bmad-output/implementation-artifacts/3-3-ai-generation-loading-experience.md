@@ -76,3 +76,4 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 ## Change Log
 - 2026-01-05: Story created, implementation already complete from Story 3.2
+- 2026-01-15: AC updated per sprint-change-proposal-2026-01-15.md - Rewritten to v2 immersive loading with blur-to-clear effect by Code Review Agent

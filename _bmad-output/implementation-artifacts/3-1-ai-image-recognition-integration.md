@@ -112,3 +112,4 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 
 - 2026-01-05: Story created and implementation started (Claude Opus 4.5)
 - 2026-01-05: Code review completed - console.error removed (Review Agent)
+- 2026-01-15: AC updated per sprint-change-proposal-2026-01-15.md - Added recognition-selection and recognition-multi pages by Code Review Agent
