@@ -181,10 +181,9 @@ This document provides the complete epic and story breakdown for 搭理app (dali
 
 **UX 设计要求:**
 
-1. **Design Direction**: Direction L4 - 精致层叠卡片设计
-   - iPhone 15 Pro 精确尺寸 (393×852px)
-   - 紫色渐变头部 + 白色内容卡片上浮布局
-   - 毛玻璃 Tab Bar 效果
+1. **Design Direction**: Direction L4 - 精致层叠卡片设计 (Functional Pages) + **L5 - 沉浸式主角布局 (Content Pages)**
+   - L4: iPhone 15 Pro 精确尺寸 (393×852px), 紫色渐变头部 + 白色内容卡片上浮布局, 毛玻璃 Tab Bar
+   - **L5 (Loading/Result/Detail)**: Hero 占 52% 高度, Content Sheet 32px 圆角叠加, 透明悬浮导航
 
 2. **Color System (Mandatory)**:
    - Primary Purple: `#6C63FF`
@@ -205,9 +204,9 @@ This document provides the complete epic and story breakdown for 搭理app (dali
 5. **HTML Prototype Replication (CRITICAL)**:
    - **所有 UI 实现必须一比一复刻 HTML 原型文件**
    - 原型位置: `_bmad-output/planning-artifacts/ux-design/pages/`
-   - 共 17 个 HTML 原型页面，包括：
-     - 核心功能: 欢迎页、首页、搭配列表、个人页、首页空状态
-     - 搭配生成流程: 场合选择、拍照+场合、AI生成中、搭配结果、方案详情、虚拟试穿
+   - 共 16 个 HTML 原型页面（V2 整合后），包括：
+     - 核心功能: 欢迎页、首页、个人页、首页空状态
+     - 搭配生成流程: 场合选择、拍照+场合、**渐进生成 (ai-loading-v2.html)**、**搭配方案 (outfit-result-gen-v2.html)**、虚拟试穿
      - 设置中心: 设置首页、账号安全、隐私设置、帮助反馈、关于我们
      - 分享功能: 分享模板选择
    - MD 文档仅供参考，HTML 为最终实现标准
@@ -612,27 +611,80 @@ So that the recommendations are accurate and I don't have to manually label ever
 **Acceptance Criteria:**
 
 **Given** user uploads a photo
-**When** the image is analyzed
-**Then** AI identifies the main garment type, color, and pattern
-**And** returns a confidence score
+**When** the image is analyzed by AI
+**Then** AI identifies garment(s) with bounding boxes and confidence scores
+**And** returns recognition results to the mobile app
 
-**Given** recognition confidence is >85% (Zero Friction)
+---
+
+#### Scenario A: Single Item High Confidence (>85%)
+
+**Given** recognition returns single item with confidence >85%
 **When** analysis completes
-**Then** the app automatically selects the identified garment
-**And** proceeds to the next step immediately
-**And** shows a subtle toast/banner: "Identified as [Color] [Type]. Tap to edit."
+**Then** navigate directly to **Recognition Confirmation Page** (HTML: `07-flow-pages/recognition-selection.html`)
+**And** display:
+  - Full-screen photo background with dim overlay (`rgba(0,0,0,0.4)`)
+  - Single bounding box with pulsing border animation (`pulse-border 2s infinite`)
+  - Corner accents in purple (`#6C63FF`, 4px border, 20×20px)
+  - Confidence tag above box: purple background, "已识别 98%" text
+  - Recognition card at bottom (slide-up animation 0.5s):
+    - Item name (e.g., "米色经典风衣")
+    - Category + Style + Season tags
+    - "修改" edit button (purple text)
+    - "开始搭配" confirm button (black background, 50px height)
 
-**Given** recognition confidence is <85% or multiple items detected
+**Given** user taps "开始搭配"
+**When** confirmation is received
+**Then** save garment to Invisible Wardrobe (local SQLite)
+**And** navigate to Occasion Selector or AI Loading page
+
+---
+
+#### Scenario B: Multiple Items or Low Confidence (<85%)
+
+**Given** recognition returns multiple items OR confidence <85%
 **When** analysis completes
-**Then** user sees selection boxes over the image
-**And** must tap one to confirm "This is the item to style"
+**Then** navigate to **Multi-Selection Page** (HTML: `07-flow-pages/recognition-selection-multi.html`)
+**And** display full-screen photo with multiple bounding boxes
 
-**Given** selection is confirmed
-**When** saving data
-**Then** store as "Invisible Wardrobe" entry:
-  - Original Image
-  - AI Generated Description (e.g., "Vintage Blue Denim Jacket")
-  - No need for precise segmentation mask for MVP
+**Multi-Selection Page UI Specifications:**
+
+1. **Bounding Boxes (on photo)**
+   - Each detected item has a bounding box
+   - Unselected: `border: 2px solid rgba(255,255,255,0.4)`, `border-radius: 12px`
+   - Selected: `border-color: #6C63FF`, `box-shadow: 0 0 0 9999px rgba(0,0,0,0.5)` (dim overlay)
+   - Confidence tag appears only on selected box: "已选主体" with checkmark icon
+
+2. **Selection Footer (bottom gradient area)**
+   - Background: `linear-gradient(to top, #000 0%, rgba(0,0,0,0.95) 85%, transparent 100%)`
+   - Padding: `50px 0 30px`
+   - Header: "选择主体" (18px semibold) + "请选择一件物品作为搭配核心" (13px gray)
+
+3. **Items Carousel**
+   - Horizontal scroll, gap: 12px, padding: 0 24px
+   - Card size: 100×140px
+   - Card style: `rgba(255,255,255,0.1)` background, `backdrop-filter: blur(20px)`, 16px border-radius
+   - Selected card: white background, `scale(1.05)`, elevated shadow
+
+4. **Card Content**
+   - Thumbnail image: 100% width, 80px height, 10px border-radius
+   - Item name: 12px, centered
+   - Radio indicator: 16px circle, purple fill when selected with white inner dot
+
+5. **Action Button**
+   - "开始搭配" button: purple `#6C63FF`, 56px height, 28px border-radius
+   - Right arrow icon included
+
+**Given** user taps a bounding box or carousel card
+**When** selection changes
+**Then** update both bounding box and carousel card to selected state
+**And** scroll selected card into view (smooth scroll, center alignment)
+**And** apply dim overlay to non-selected areas
+
+**Given** user taps "开始搭配" with item selected
+**When** button is pressed
+**Then** save selected garment to Invisible Wardrobe
+**And** navigate to AI Loading page (ai-loading-v2.html)
 
 ### Story 3.2: Scenario-Based Generation Strategy
 As a **user**,
@@ -668,47 +720,145 @@ So that waiting is interesting and I learn something.
 
 **Given** text strategy is displayed
 **When** image generation is executing (taking 10-30s)
-**Then** show "Theory Injection" cards:
-  - "Analyzing Color Harmony..."
-  - "Matching with [User Style]..."
-  - "Applying [Occasion] context..."
+**Then** show **Immersive Loading Page** (HTML: `07-flow-pages/ai-loading-v2.html`) with L5 layout:
+  - **Hero Section**: 52% screen height, dark placeholder background
+  - **Content Sheet**: 32px top radius, margin-top -32px overlap, white background
+  - **Header**: Floating, transparent with brand purple gradient (`rgba(28, 28, 46, 0.7)` → `rgba(44, 44, 84, 0.4)` → transparent)
+
+**Given** loading page is displayed
+**When** AI is generating
+**Then** show **Blur-to-Clear** effect on Hero image:
+  - Initial: `filter: blur(20px); opacity: 0.6`
+  - Progressive: blur reduces linearly as progress increases (0% → 100% = 20px → 0px)
+  - Final: `filter: blur(0); opacity: 1`
+**And** show **Purple Pulse Overlay** (`mix-blend-mode: overlay`, `pulse-purple 3s infinite alternate` animation)
+**And** show **Scan Line** animation (2.5s sweep from top to bottom)
+**And** show **Streaming Text** in Content Sheet's Logic Box:
+  - Each character appears with `blur-in` animation (0.4s duration)
+  - Highlighted keywords use `#6C63FF` purple color
+  - Blinking cursor at end of stream
 
 **Given** image generation completes
 **When** results are ready
-**Then** fade in the **Visual Outfit**:
-  - Realistic composite of User Garment + Generated Items
-  - Background matches the Occasion (e.g., Café background for Date)
-  - User garment details (pattern/texture) are preserved
+**Then** fade overlay opacity to 0
+**And** transition to **Result Page** (HTML: `02-outfit-results/outfit-result-gen-v2.html`)
+**And** transition is seamless (Layout Shift = 0) because both pages share identical Hero + Sheet structure
 
 **Given** results are displayed
 **When** reviewing
-**Then** show "Why this works":
+**Then** show "Why this works" in the Logic Echo Box:
   - Color Theory (e.g., "Blue + Orange = Complementary")
   - Style Logic (e.g., "Structured jacket balances soft dress")
 
 ### Story 3.4: Outfit Results Display with Theory Visualization
 
 As a **user**,
-I want to see 3 generated outfit recommendations with visual styling and professional theory explanations,
+I want to see generated outfit recommendations with visual styling and professional theory explanations,
 So that I understand why each outfit works and can learn styling principles.
 
 **Acceptance Criteria:**
 
 **Given** AI generation is complete
-**When** results screen loads (HTML: `02-outfit-results/outfit-results-page.html`)
-**Then** I see 3 outfit cards displayed vertically with:
-  - High-resolution product images for each recommended item (top, bottom, accessory)
-  - Outfit name (e.g., "职场优雅风")
-  - Style tags (简约, 通勤) rendered as StyleTagChip components
-  - Like count + heart icon for liking (FR25)
-  - Save icon for favoriting (FR26)
+**When** results screen loads
+**Then** display **Immersive Result Page** (HTML: `02-outfit-results/outfit-result-gen-v2.html`)
+**And** use L5 layout structure (Hero 52% + Content Sheet overlap)
 
-**Given** I see the outfit cards
-**When** I swipe left/right or tap a card
-**Then** card enlarges slightly (scale 1.02) with subtle shadow
-**And** I can navigate between the 3 outfits
+---
 
-**Given** I tap an outfit card
+#### L5 Layout Structure
+
+1. **Hero Section (52% screen height)**
+   - Full-width outfit image, `filter: brightness(0.95)`
+   - Floating image tags at bottom-left:
+     - Style: `rgba(0,0,0,0.5)` background, `backdrop-filter: blur(8px)`
+     - Border: `1px solid rgba(255,255,255,0.2)`
+     - Examples: "✨ 韩系简约", "💼 职场通勤"
+
+2. **Floating Header**
+   - Position: absolute, top: 0
+   - Background: `linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%)`
+   - Nav buttons: 36×36px, `rgba(255,255,255,0.2)` background, blur effect
+   - Left: Back button (chevron icon)
+   - Right: Share button (upload icon)
+
+3. **Content Sheet (overlapping)**
+   - Background: white `#fff`
+   - Border-radius: `32px 32px 0 0`
+   - Margin-top: `-32px` (overlap effect)
+   - Box-shadow: `0 -10px 40px rgba(0,0,0,0.1)`
+   - Padding: `24px 20px 100px` (bottom for FAB)
+
+4. **Sheet Handle**
+   - Width: 36px, Height: 4px
+   - Background: `#E5E5EA`, border-radius: 2px
+   - Centered, margin-bottom: 8px
+
+---
+
+#### Content Sheet Components
+
+5. **Info Header**
+   - Flex layout: space-between
+   - Left side:
+     - Outfit title: 24px, font-weight 700, color `#1C1C1E`
+     - Subtitle: 13px, color `#8E8E93`, "由 AI 视觉引擎生成"
+   - Right side:
+     - Match score badge: `#F0EFFF` background, `#6C63FF` text
+     - Format: "98%", 14px font-weight 700
+
+6. **Logic Echo Box (AI 搭配策略)**
+   - Background: `#FAFAFC`, border-radius: 16px
+   - Border: `1px solid #F2F2F7`
+   - Padding: 16px
+   - Title: 12px uppercase, `#8E8E93`, with info icon
+   - Content: 14px, line-height 1.6, color `#3A3A3C`
+   - Highlighted keywords: `.hl { color: #6C63FF; font-weight: 600 }`
+
+7. **Items Row (包含单品)**
+   - Section label: 15px, font-weight 600, margin-bottom 12px
+   - Horizontal scroll, gap: 12px
+   - Item thumbnail: 72×72px, `#F9F9F9` background, 16px border-radius
+   - Border: `1px solid #F2F2F7`
+   - Content: emoji icons (🧥👖👚👠👜)
+
+---
+
+#### Bottom Action Bar
+
+8. **Bottom Bar (fixed)**
+   - Position: absolute, bottom: 30px
+   - Left/right: 20px padding
+   - Flex layout, gap: 12px
+
+9. **Retry Button**
+   - Flex: 1
+   - Height: 56px, border-radius: 28px
+   - Background: white, color: `#1C1C1E`
+   - Icon: refresh/retry icon
+   - Shadow: `0 8px 24px rgba(0,0,0,0.15)`
+
+10. **Try-On Button (Primary)**
+    - Flex: 2
+    - Height: 56px, border-radius: 28px
+    - Background: `#1C1C1E`, color: white
+    - Text: "一键上身" with eye icon
+    - Shadow: `0 8px 24px rgba(0,0,0,0.15)`
+
+---
+
+#### Interaction Scenarios
+
+**Given** user taps retry button
+**When** button is pressed
+**Then** navigate back to AI Loading page (ai-loading-v2.html)
+**And** regenerate outfit with same garment
+
+**Given** user taps "一键上身" button
+**When** button is pressed
+**Then** navigate to Virtual Try-On page
+**And** pass current outfit data
+
+**Given** user taps an outfit detail area
 **When** detail view opens (HTML: `03-outfit-detail/outfit-detail-page.html`)
 **Then** I see expanded view with:
   - **配色理论可视化** (TheoryVisualization component):

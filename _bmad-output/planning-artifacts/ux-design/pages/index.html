@@ -193,14 +193,8 @@
             <button class="nav-btn" onclick="switchPage('loading-v2', this)">
                 <span>⏳</span> 渐进生成
             </button>
-            <button class="nav-btn" onclick="switchPage('results', this)">
+            <button class="nav-btn" onclick="switchPage('results-gen-v2', this)">
                 <span>✨</span> 搭配方案
-            </button>
-            <button class="nav-btn" onclick="switchPage('results-gen', this)">
-                <span>🖼️</span> 场景成图
-            </button>
-            <button class="nav-btn" onclick="switchPage('detail', this)">
-                <span>🎨</span> 方案详情
             </button>
             <button class="nav-btn" onclick="switchPage('try-on', this)">
                 <span>🪄</span> AI试穿
@@ -248,9 +242,8 @@
         <iframe id="iframe-recognition-multi" src="07-flow-pages/recognition-selection-multi.html"></iframe>
         <iframe id="iframe-loading" src="07-flow-pages/ai-loading.html"></iframe>
         <iframe id="iframe-loading-v2" src="07-flow-pages/ai-loading-v2.html"></iframe>
-        <iframe id="iframe-results" src="02-outfit-results/outfit-results-page.html"></iframe>
-        <iframe id="iframe-results-gen" src="02-outfit-results/outfit-result-gen.html"></iframe>
-        <iframe id="iframe-detail" src="03-outfit-detail/outfit-detail-page.html"></iframe>
+        <!-- Replaces Results, Gen V1, and Detail -->
+        <iframe id="iframe-results-gen-v2" src="02-outfit-results/outfit-result-gen-v2.html"></iframe>
         <iframe id="iframe-try-on" src="09-try-on/try-on-result.html"></iframe>
         <iframe id="iframe-outfit" src="04-wardrobe/outfit-page.html"></iframe>
         <iframe id="iframe-profile" src="05-profile/profile-page.html"></iframe>
@@ -291,9 +284,7 @@
             'recognition-multi': '多选识别确认',
             'loading': 'AI生成中',
             'loading-v2': '渐进式生成',
-            'results': '搭配方案',
-            'results-gen': '场景化大图',
-            'detail': '方案详情',
+            'results-gen-v2': '搭配方案',
             'try-on': 'AI试穿',
             'outfit': '搭配',
             'profile': '个人页',
@@ -344,7 +335,7 @@
         }
 
         document.addEventListener('keydown', function (e) {
-            const pages = ['welcome', 'home', 'home-empty', 'photo', 'recognition', 'recognition-multi', 'loading', 'loading-v2', 'results', 'results-gen', 'detail', 'try-on', 'outfit', 'profile', 'body-profile', 'style-profile', 'share', 'settings', 'settings-security', 'settings-privacy', 'settings-help', 'settings-about'];
+            const pages = ['welcome', 'home', 'home-empty', 'photo', 'recognition', 'recognition-multi', 'loading', 'loading-v2', 'results-gen-v2', 'try-on', 'outfit', 'profile', 'body-profile', 'style-profile', 'share', 'settings', 'settings-security', 'settings-privacy', 'settings-help', 'settings-about'];
             const currentIndex = pages.findIndex(p => {
                 const iframe = document.getElementById('iframe-' + p);
                 return iframe && iframe.classList.contains('active');

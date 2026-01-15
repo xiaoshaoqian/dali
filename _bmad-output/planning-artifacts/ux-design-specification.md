@@ -1140,6 +1140,54 @@ completed: true
 - `_bmad-output/planning-artifacts/ux-design-direction-l3.html`（优化迭代版本）
 - `_bmad-output/planning-artifacts/ux-design-direction-l2.html`（基础优化版本）
 
+### L5 演进: 沉浸式主角布局 (Immersive Hero Layout)
+
+基于 L4 层叠卡片的基础，针对**内容消费型页面**（Loading、Result、Detail）进行专项优化，引入 **Immersive Hero Mode**。
+
+**适用场景：**
+- AI 生成等待页 (`ai-loading-v2.html`)
+- 搭配结果详情页 (`outfit-result-gen-v2.html`)
+- 单品详情页 (未来)
+
+**L5 核心设计特征：**
+
+**1. 沉浸式主角区域 (Hero Section)**
+- 高度占比：屏幕高度的 **52%**
+- 背景处理：全出血图像，无边距
+- 顶部渐变：品牌紫色调透明渐变 `linear-gradient(180deg, rgba(28, 28, 46, 0.7) 0%, rgba(44, 44, 84, 0.4) 60%, transparent 100%)`
+- 导航浮层：透明背景 + 毛玻璃圆形按钮 (36px × 36px)
+
+**2. 叠加内容卡片 (Content Sheet)**
+- 圆角：**32px**（顶部左右）
+- 上移叠加：**margin-top: -32px**（与 Hero 形成 32px 重叠）
+- 拖拽把手：宽 36px，高 4px，圆角 2px，居中
+- 阴影：`0 -10px 40px rgba(0, 0, 0, 0.1)`
+
+**3. 等待体验优化 (Progressive Visual Disclosure)**
+- **模糊显影图 (Blur-to-Clear)**：
+  - 初始模糊：`filter: blur(20px)`
+  - 完成时：`filter: blur(0px)`
+  - 过渡时长：5-15 秒，跟随实际生成进度
+- **紫色脉冲覆盖层 (Purple Pulse Overlay)**：
+  - 渐变：`linear-gradient(135deg, rgba(108, 99, 255, 0.4) 0%, rgba(108, 99, 255, 0.1) 100%)`
+  - 混合模式：`mix-blend-mode: overlay`
+  - 动画：`pulse-purple 3s infinite alternate` (opacity 0.3 ↔ 0.7)
+- **思维流文字 (Streaming Text)**：
+  - 逐字显现效果：每字符带 `blur-in` 动画 (0.4s)
+  - 初始：`opacity: 0; filter: blur(4px); transform: translateY(2px)`
+  - 完成：`opacity: 1; filter: blur(0); transform: translateY(0)`
+  - 高亮关键词：`#6C63FF` 品牌紫色
+  - 光标闪烁效果
+
+**4. 无缝过渡设计**
+- Loading 页与 Result 页的 **Hero Section** 和 **Content Sheet** 布局完全一致
+- 过渡时无可感知的布局跳变 (Layout Shift = 0)
+- Loading 完成后自动跳转到 Result 页
+
+**参考文件：**
+- `_bmad-output/planning-artifacts/ux-design/pages/07-flow-pages/ai-loading-v2.html` (Loading 页)
+- `_bmad-output/planning-artifacts/ux-design/pages/02-outfit-results/outfit-result-gen-v2.html` (Result 页)
+
 ## User Journey Flows
 
 基于 PRD 中定义的 4 个核心用户旅程，设计详细的交互流程。

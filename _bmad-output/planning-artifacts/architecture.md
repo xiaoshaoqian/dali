@@ -388,7 +388,9 @@ Based on PRD functional requirements, these must be added during implementation:
 **UI & Styling**:
 - `react-native-reanimated` - Smooth animations for theory visualizations
 - `react-native-svg` - SVG support for color theory wheels (FR28-34)
-- Custom component library per UX specification
+- Custom component library per UX specification:
+  - **L4 (Functional Pages)**: OutfitCard, StyleTagChip, ProgressCircle, PreferenceCloud, ShareTemplate, SkeletonLoader
+  - **L5 (Immersive Content Pages)**: HeroMediaLayout (52% height, overlapping sheet), ProgressiveBlurImage (blur-to-clear effect), StreamingTextView (blur-in char-by-char animation)
 
 **Note:** Project initialization using this command should be the **first implementation story** in Epic 0 (Project Setup). This establishes the architectural foundation that all subsequent development builds upon.
 

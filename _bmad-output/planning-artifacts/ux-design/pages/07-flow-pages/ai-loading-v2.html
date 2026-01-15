@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>搭理 - 渐进式生成 (Seamless Detail)</title>
+    <title>搭理 - 渐进式生成 (Immersive Loading)</title>
     <style>
         * {
             margin: 0;
@@ -32,457 +32,489 @@
             position: relative;
         }
 
-        /* Screen Container */
         .screen {
             width: 100%;
             height: 100%;
-            /* Initial State: Loading Gradient */
-            background: radial-gradient(circle at 100% 0%, #8B7FFF 0%, transparent 50%),
-                radial-gradient(circle at 0% 0%, #6C63FF 0%, transparent 50%),
-                radial-gradient(circle at 50% 100%, #5D55E6 0%, transparent 50%),
-                #6C63FF;
+            background: #F2F2F7;
             border-radius: 52px;
             overflow: hidden;
             position: relative;
             display: flex;
             flex-direction: column;
-            transition: background 1.5s ease-in-out;
-        }
-
-        .screen.result-mode {
-            background: #F2F2F7;
-            /* Final result background (Detail Page light gray) */
         }
 
         .dynamic-island {
             position: absolute;
             top: 16px;
             left: 50%;
-            transform: translateX(-50%);
             width: 126px;
-            height: 37.5px;
+            height: 37px;
             background: #000;
             border-radius: 19px;
+            transform: translateX(-50%);
             z-index: 101;
         }
 
-        /* Loading Phase Elements */
-
-        .loading-layer {
+        /* --- Header (Shared) --- */
+        .header {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            z-index: 50;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 100px;
-            transition: opacity 0.8s;
-        }
-
-        .loading-layer.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .ai-core-container {
-            width: 80px;
-            height: 80px;
-            position: relative;
+            height: 120px;
+            background: linear-gradient(180deg, rgba(28, 28, 46, 0.7) 0%, rgba(44, 44, 84, 0.4) 60%, transparent 100%);
+            /* Brand Purple Tint to match App Style */
+            z-index: 100;
+            padding: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 24px;
         }
 
-        .ai-core {
-            width: 40px;
-            height: 40px;
-            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-            background: linear-gradient(135deg, #fff 0%, #E0E0FF 100%);
-            filter: blur(8px);
-            animation: morph 2s ease-in-out infinite alternate;
+        .loading-title {
+            margin-top: 50px;
+            /* Push down below Dynamic Island */
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 6px 14px;
+            border-radius: 20px;
         }
 
-        .ai-ring {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            animation: spin 8s linear infinite;
-        }
-
-        @keyframes morph {
-            0% {
-                border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-                transform: rotate(0deg);
-            }
-
-            100% {
-                border-radius: 70% 30% 40% 60% / 60% 40% 60% 40%;
-                transform: rotate(180deg);
-            }
-        }
-
-        @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .loading-text {
-            color: #fff;
-            text-align: center;
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 40px;
-            opacity: 0.9;
-        }
-
-        /* Strategy Card (Thinking Box) */
-        .strategy-card {
-            width: 90%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 24px;
-            transform-origin: bottom center;
-            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-
-        .strategy-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #6C63FF;
-            text-transform: uppercase;
-            margin-bottom: 12px;
-            letter-spacing: 1px;
-        }
-
-        .streaming-text {
-            font-size: 18px;
-            color: #1C1C1E;
-            line-height: 1.6;
-            min-height: 120px;
-        }
-
-        /* 
-           Result Detail Layer (Replicates Outfit Detail Page)
-           Initially Hidden/Transformed 
-        */
-        .detail-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 20;
-            opacity: 0;
-            transform: translateY(100px) scale(0.95);
-            transition: all 1s cubic-bezier(0.2, 0.8, 0.2, 1);
-            background: #F2F2F7;
-            overflow-y: auto;
-            /* Hide scrollbar */
-            scrollbar-width: none;
-        }
-
-        .detail-layer::-webkit-scrollbar {
-            display: none;
-        }
-
-        .detail-layer.visible {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-
-        /* DETAIL PAGE CSS (Compact) */
+        /* --- Hero Section (Immersive) --- */
         .hero-section {
+            height: 52%;
             width: 100%;
-            height: 460px;
             position: relative;
-            background: #E0E7FF;
+            background: #2C2C2E;
+            /* Dark placeholder */
             overflow: hidden;
         }
 
-        .hero-section::after {
-            content: "";
+        /* Generating Layer with Purple Pulse Effect */
+        .gen-layer {
+            width: 100%;
+            height: 100%;
+            background-image: url('https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=10&w=200&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            filter: blur(20px) contrast(1.1) brightness(0.9);
+            opacity: 0.6;
+            transition: all 0.5s ease-out;
+            transform: scale(1.1);
+        }
+
+        .gen-overlay {
             position: absolute;
-            bottom: 0;
+            top: 0;
             left: 0;
             width: 100%;
-            height: 32px;
-            background: #F2F2F7;
-            border-radius: 32px 32px 0 0;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(108, 99, 255, 0.4) 0%, rgba(108, 99, 255, 0.1) 100%);
+            mix-blend-mode: overlay;
+            animation: pulse-purple 3s infinite alternate;
             z-index: 5;
         }
 
-        .hero-img-placeholder {
-            width: 100%;
-            height: 100%;
-            background-image: url('https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=1000&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
+        @keyframes pulse-purple {
+            0% {
+                opacity: 0.3;
+            }
+
+            100% {
+                opacity: 0.7;
+            }
         }
 
-        .content-sheet {
-            padding: 0 20px 100px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .floating-card {
-            background: #fff;
-            border-radius: 20px;
-            padding: 24px 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .outfit-title {
-            font-size: 28px;
-            font-weight: 700;
-            color: #1C1C1E;
-            margin-bottom: 12px;
-        }
-
-        .tag-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        .tag {
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .tag.style {
-            background: #F0EFFF;
-            color: #6C63FF;
-        }
-
-        .tag.occasion {
-            background: #F2F2F7;
-            color: #3A3A3C;
-        }
-
-        .item-row {
-            display: flex;
-            gap: 12px;
-            overflow-x: auto;
-            padding-bottom: 5px;
-        }
-
-        .item-thumb {
-            width: 70px;
-            height: 70px;
-            border-radius: 12px;
-            background: #eee;
-            flex-shrink: 0;
-        }
-
-        .bottom-action-bar {
-            position: fixed;
-            bottom: 30px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            gap: 12px;
-            z-index: 100;
-        }
-
-        .try-on-btn {
-            flex: 1;
-            height: 56px;
-            background: linear-gradient(135deg, #6C63FF 0%, #7B72FF 100%);
-            border-radius: 28px;
-            border: none;
-            color: #fff;
-            font-size: 17px;
-            font-weight: 600;
-            box-shadow: 0 8px 24px rgba(108, 99, 255, 0.4);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        /* Top Nav Placeholder */
-        .top-nav {
+        /* Scanning Effects */
+        .scan-line {
             position: absolute;
             top: 0;
+            left: 0;
             width: 100%;
-            height: 60px;
-            z-index: 100;
+            height: 2px;
+            background: #fff;
+            box-shadow: 0 0 10px #fff, 0 0 20px #6C63FF;
+            animation: scan 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            opacity: 0.8;
+            z-index: 10;
+        }
+
+        .pulse-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            z-index: 15;
+            animation: breathe 3s infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: translate(-50%, -50%) scale(0.95);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.05);
+            }
+        }
+
+        /* --- Overlapping Content Sheet --- */
+        .content-sheet {
+            flex: 1;
+            background: #fff;
+            border-radius: 32px 32px 0 0;
+            margin-top: -32px;
+            position: relative;
+            z-index: 20;
+            padding: 24px 20px;
             display: flex;
-            justify-content: space-between;
-            padding: 16px 20px;
-            pointer-events: none;
-            /* Let clicks pass if needed */
+            flex-direction: column;
+            gap: 20px;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .sheet-handle {
+            width: 36px;
+            height: 4px;
+            background: #E5E5EA;
+            border-radius: 2px;
+            align-self: center;
+            margin-bottom: 8px;
+        }
+
+        /* Placeholder Title Skeleton */
+        .skeleton-title {
+            width: 60%;
+            height: 24px;
+            background: #F2F2F7;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .skeleton-subtitle {
+            width: 40%;
+            height: 14px;
+            background: #F2F2F7;
+            border-radius: 4px;
+            animation: pulse 1.5s infinite 0.2s;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* Streaming Logic Box */
+        .logic-box {
+            background: #FAFAFC;
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid #F2F2F7;
+            flex: 1;
+            /* Take remaining space */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logic-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #8E8E93;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid #E5E5EA;
+            padding-bottom: 8px;
+        }
+
+        .stream-container {
+            font-size: 14px;
+            line-height: 1.7;
+            color: #3A3A3C;
+            flex: 1;
+        }
+
+        /* Blur-Type Animation */
+        .stream-char {
+            display: inline-block;
+            opacity: 0;
+            filter: blur(4px);
+            animation: blur-in 0.4s forwards cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes blur-in {
+            0% {
+                opacity: 0;
+                filter: blur(4px);
+                transform: translateY(2px);
+            }
+
+            100% {
+                opacity: 1;
+                filter: blur(0);
+                transform: translateY(0);
+            }
+        }
+
+        .hl {
+            color: #6C63FF;
+            font-weight: 600;
+        }
+
+        .cursor::after {
+            content: '';
+            display: inline-block;
+            width: 2px;
+            height: 14px;
+            background: #6C63FF;
+            margin-left: 2px;
+            vertical-align: middle;
+            animation: blink 0.8s infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* Progress Bar (Bottom) */
+        .progress-area {
+            margin-top: auto;
+        }
+
+        .progress-status {
+            font-size: 12px;
+            color: #8E8E93;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 4px;
+            background: #F2F2F7;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            background: #6C63FF;
+            transition: width 0.3s;
         }
     </style>
 </head>
 
 <body>
     <div class="device-frame">
-        <div class="side-buttons">
-            <div class="mute-switch"></div>
-            <div class="volume-up"></div>
-            <div class="volume-down"></div>
-        </div>
-        <div class="power-button"></div>
-
-        <div class="screen" id="mainScreen">
+        <div class="screen">
             <div class="dynamic-island"></div>
 
-            <!-- LOADING LAYER (Purple AI) -->
-            <div class="loading-layer" id="loadingLayer">
-                <div class="ai-core-container">
-                    <div class="ai-ring"></div>
-                    <div class="ai-ring" style="width:80%; height:80%; animation-direction:reverse;"></div>
-                    <div class="ai-core"></div>
-                </div>
-                <div class="loading-text">AI 正在构思方案...</div>
-
-                <div class="strategy-card" id="strategyCard">
-                    <div class="strategy-title">• 搭配策略流</div>
-                    <div class="streaming-text" id="streamTarget"></div>
-                    <!-- Progress -->
-                    <div
-                        style="margin-top:20px; width:100%; height:2px; background:#F2F2F7; position:relative; overflow:hidden;">
-                        <div id="progress"
-                            style="position:absolute; left:0; top:0; height:100%; width:0%; background:#6C63FF; transition:width 0.1s linear;">
-                        </div>
-                    </div>
+            <div class="header">
+                <div class="loading-title">
+                    <svg class="spinner" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="3">
+                        <path
+                            d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83">
+                        </path>
+                        <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="2s"
+                            repeatCount="indefinite" />
+                    </svg>
+                    AI 思考中...
                 </div>
             </div>
 
-            <!-- RESULT DETAIL LAYER (Hidden by default) -->
-            <div class="detail-layer" id="detailLayer">
-                <div class="hero-section">
-                    <div class="hero-img-placeholder"></div>
-                </div>
-
-                <div class="content-sheet">
-                    <!-- Title -->
-                    <div class="floating-card">
-                        <h1 class="outfit-title">韩系简约通勤风</h1>
-                        <div class="tag-row">
-                            <span class="tag style">简约</span>
-                            <span class="tag occasion">通勤</span>
-                            <span class="tag occasion">AI 强推</span>
-                        </div>
-                    </div>
-
-                    <!-- Logic -->
-                    <div class="floating-card">
-                        <div style="font-weight:600; margin-bottom:10px; color:#6C63FF;">✨ 搭配逻辑</div>
-                        <p style="font-size:14px; color:#333; line-height:1.5;">
-                            基于你选择的<b>米色风衣</b>，AI 运用了经典的“同色系+撞色”法则。
-                            内搭选择黑色修身打底，下身搭配深色阔腿裤，形成外松内紧的视觉效果，既显瘦又保留了职场的正式感。
-                        </p>
-                    </div>
-
-                    <!-- Items -->
-                    <div class="floating-card">
-                        <div style="font-weight:600; margin-bottom:10px;">包含单品</div>
-                        <div class="item-row">
-                            <div class="item-thumb" style="background:#ddd;"></div> <!-- Coat -->
-                            <div class="item-thumb" style="background:#333;"></div> <!-- Pants -->
-                            <div class="item-thumb" style="background:#fff; border:1px solid #eee;"></div>
-                            <!-- Shirt -->
-                            <div class="item-thumb" style="background:#555;"></div> <!-- Shoes -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bottom Bar -->
-                <div class="bottom-action-bar">
-                    <div
-                        style="width:56px; height:56px; border-radius:28px; background:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
-                            viewBox="0 0 24 24">
-                            <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                        </svg>
-                    </div>
-                    <button class="try-on-btn" onclick="window.parent.switchPage('try-on')">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
-                            viewBox="0 0 24 24">
-                            <path d="M15 4V2" />
-                            <path d="M15 16v-2" />
-                            <path d="M8 9h2" />
-                            <path d="M20 9h2" />
-                            <path d="M15 9l-5.65 5.65a2.5 2.5 0 1 1-3.53-3.53l6.59-6.59" />
-                        </svg>
-                        一键上身试穿
-                    </button>
-                </div>
+            <!-- Immersive Hero -->
+            <div class="hero-section">
+                <div class="gen-layer" id="genLayer"></div>
+                <!-- Enhanced Visuals: Purple Pulse Overlay -->
+                <div class="gen-overlay" id="genOverlay"></div>
+                <div class="scan-line" id="scanLine"></div>
+                <div class="pulse-text" id="imgStatus">Rendering 0%</div>
             </div>
 
-            <div class="home-indicator"
-                style="position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; background:rgba(0,0,0,0.2); border-radius:3px; z-index:200;">
+            <!-- Overlapping Sheet -->
+            <div class="content-sheet">
+                <div class="sheet-handle"></div>
+
+                <!-- Skeleton Info -->
+                <div>
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-title" style="width: 30%;"></div>
+                </div>
+
+                <!-- Streaming Logic -->
+                <div class="logic-box">
+                    <div class="logic-title">
+                        Thinking Stream
+                    </div>
+                    <div class="stream-container" id="streamTarget"></div>
+
+                    <div class="progress-area">
+                        <div class="progress-status" id="statusText">初始化...</div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 
     <script>
-        const loadingLayer = document.getElementById('loadingLayer');
-        const detailLayer = document.getElementById('detailLayer');
-        const mainScreen = document.getElementById('mainScreen');
-        const strategyCard = document.getElementById('strategyCard');
-
-        const streamTarget = document.getElementById('streamTarget');
-        const progressBar = document.getElementById('progress');
-
-        const thinkingLines = [
-            "主体：米色风衣 (98%)",
-            "搜索风格库：韩系简约...",
-            "匹配下装：深色阔腿裤",
-            "生成视觉预览...",
-            "最终渲染完成"
+        const textStream = [
+            { text: "识别主体：", highlight: false },
+            { text: "米色风衣\n", highlight: true },
+            { text: "匹配风格库：", highlight: false },
+            { text: "职场简约 / 韩系通勤\n\n", highlight: true },
+            { text: "配色策略：", highlight: false },
+            { text: "高对比度·黑白经典法则\n", highlight: true },
+            { text: "视觉优化：", highlight: false },
+            { text: "拉长腿部线条，收缩视觉重心。", highlight: false }
         ];
 
-        // Start
-        let lineIndex = 0;
-        setTimeout(startStreaming, 800);
+        const genLayer = document.getElementById('genLayer');
+        const overlay = document.getElementById('genOverlay');
+        const imgStatus = document.getElementById('imgStatus');
+        const streamTarget = document.getElementById('streamTarget');
+        const progressFill = document.getElementById('progressFill');
+        const statusText = document.getElementById('statusText');
 
-        function startStreaming() {
-            if (lineIndex >= thinkingLines.length) {
-                setTimeout(revealDetail, 600);
-                return;
+        let progress = 0;
+        let streamIdx = 0;
+        let charIdx = 0;
+
+        // 1. Image Rendering Simulation
+        function simulateRender() {
+            const interval = setInterval(() => {
+                progress += Math.random() * 2;
+                if (progress > 100) progress = 100;
+
+                // Update UI
+                progressFill.style.width = progress + "%";
+                imgStatus.innerText = `Rendering ${Math.floor(progress)}%`;
+
+                // Update Blur
+                const blurVal = 20 - (progress * 0.2); // 20px -> 0px
+                genLayer.style.filter = `blur(${blurVal}px)`;
+
+                if (progress >= 30) genLayer.style.opacity = 0.7;
+                if (progress >= 60) genLayer.style.opacity = 0.85;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    genLayer.style.opacity = 1;
+                    genLayer.style.filter = "blur(0)";
+                    finish();
+                }
+            }, 50);
+        }
+
+        // 2. Text Streaming with Blur-Type Effect
+        function streamLogic() {
+            if (streamIdx >= textStream.length) return;
+
+            streamTarget.classList.add('cursor');
+            const chunk = textStream[streamIdx];
+
+            // Container span for chunk
+            const chunkSpan = document.createElement('span');
+            if (chunk.highlight) chunkSpan.classList.add('hl');
+            streamTarget.appendChild(chunkSpan);
+
+            function type() {
+                if (charIdx < chunk.text.length) {
+                    const char = chunk.text[charIdx];
+                    if (char === '\n') {
+                        streamTarget.appendChild(document.createElement('br'));
+                    } else {
+                        // Blur-in Char
+                        const charSpan = document.createElement('span');
+                        charSpan.textContent = char;
+                        charSpan.className = 'stream-char';
+                        chunkSpan.appendChild(charSpan);
+                    }
+                    charIdx++;
+                    setTimeout(type, 30); // Dynamic typing speed
+                } else {
+                    streamIdx++;
+                    charIdx = 0;
+                    setTimeout(streamLogic, 100);
+                }
             }
-
-            const text = thinkingLines[lineIndex];
-            const p = document.createElement('div');
-            p.style.marginBottom = "6px";
-            p.textContent = "> " + text;
-            streamTarget.appendChild(p);
-
-            const progress = ((lineIndex + 1) / thinkingLines.length) * 100;
-            progressBar.style.width = `${progress}%`;
-
-            lineIndex++;
-            setTimeout(startStreaming, 800);
+            type();
         }
 
-        function revealDetail() {
-            // 1. Hide Loading Layer
-            loadingLayer.classList.add('hidden');
+        function finish() {
+            statusText.innerText = "生成完毕";
+            streamTarget.classList.remove('cursor');
 
-            // 2. Expand Strategy Card visual trick (Optional, but here we just crossfade to detail)
-            // But let's make the background change first
-            mainScreen.classList.add('result-mode');
+            // Fade out overlay
+            if (overlay) overlay.style.opacity = 0;
 
-            // 3. Slide Up Detail
             setTimeout(() => {
-                detailLayer.classList.add('visible');
-            }, 300);
+                if (window.parent && window.parent.switchPage) {
+                    // Seamless transition to Result V2
+                    window.parent.switchPage('results-gen-v2');
+                } else {
+                    window.location.href = '../02-outfit-results/outfit-result-gen-v2.html';
+                }
+            }, 800);
         }
+
+        // Start
+        setTimeout(() => {
+            simulateRender();
+            streamLogic();
+        }, 500);
+
     </script>
 </body>
 

@@ -55,23 +55,23 @@
             z-index: 100;
         }
 
-        /* Immersive Header */
+        /* Immersive Header (Transparent) */
         .immersive-header {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             padding: 60px 20px 20px;
-            z-index: 10;
+            z-index: 20;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, transparent 100%);
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.3) 0%, transparent 100%);
         }
 
-        .back-btn {
-            width: 36px;
-            height: 36px;
+        .icon-btn {
+            width: 40px;
+            height: 40px;
             background: rgba(255, 255, 255, 0.2);
             backdrop-filter: blur(10px);
             border-radius: 50%;
@@ -79,153 +79,218 @@
             align-items: center;
             justify-content: center;
             color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
         }
 
-        /* Result Card Carousel */
-        .results-container {
-            flex: 1;
-            padding-top: 0;
-            overflow: hidden;
-        }
-
-        .result-card {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Main Generated Image (Scene) */
+        /* Main Generated Image */
         .scene-image {
             width: 100%;
             height: 65%;
-            /* Dominant visual */
+            /* Dominant visual area */
             background-color: #eee;
             background-image: url('https://images.unsplash.com/photo-1550614000-4b9519e02d48?q=80&w=1000&auto=format&fit=crop');
-            /* Placeholder: Cafe scene */
             background-size: cover;
             background-position: center;
             position: relative;
         }
 
-        .scene-overlay {
+        /* Floating Actions on Image */
+        .image-actions {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100px;
-            background: linear-gradient(to top, #fff 0%, transparent 100%);
+            right: 16px;
+            bottom: 40px;
+            /* Above the sheet */
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        /* Theory Card (Bottom Sheet style) */
-        .theory-sheet {
+        .float-action {
+            width: 44px;
+            height: 44px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Refresh Button (Top Right of Sheet area overlap) */
+        .refresh-pill {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 25;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .refresh-pill:active {
+            transform: scale(0.95);
+        }
+
+        /* Detail Sheet (Bottom) */
+        .detail-sheet {
             flex: 1;
             background: #fff;
             border-radius: 32px 32px 0 0;
             margin-top: -30px;
-            /* Overlap */
+            /* Overlap image */
             position: relative;
-            padding: 30px 24px;
+            padding: 30px 24px 100px;
+            /* Padding bottom for fixed action bar */
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            overflow-y: auto;
         }
 
         .drag-handle {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
             width: 40px;
             height: 4px;
             background: #E5E5EA;
             border-radius: 2px;
+            margin: 0 auto 20px;
         }
 
-        .outfit-header {
+        .title-row {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            margin-bottom: 8px;
         }
 
-        .outfit-title h2 {
+        .outfit-name {
             font-size: 24px;
+            font-weight: 700;
             color: #1C1C1E;
-            margin-bottom: 4px;
         }
 
-        .outfit-tags {
+        .match-score {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #F2F2F7;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .score-val {
+            font-size: 14px;
+            font-weight: 800;
+            color: #6C63FF;
+        }
+
+        .score-label {
+            font-size: 10px;
+            color: #8E8E93;
+        }
+
+        .tags-row {
             display: flex;
             gap: 8px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
         }
 
         .tag {
-            padding: 4px 10px;
-            background: #F2F2F7;
+            padding: 6px 12px;
             border-radius: 8px;
             font-size: 12px;
-            color: #666;
-            font-weight: 500;
+            font-weight: 600;
         }
 
-        .tag.highlight {
+        .tag.primary {
             background: #F0EFFF;
             color: #6C63FF;
         }
 
-        .theory-content {
-            background: #FAFAFC;
-            border-radius: 16px;
-            padding: 16px;
-            border-left: 3px solid #6C63FF;
+        .tag.normal {
+            background: #F2F2F7;
+            color: #666;
         }
 
-        .theory-title {
-            color: #6C63FF;
+        /* Theory Section (Echoes Loading Card) */
+        .theory-section {
+            background: #FAFAFC;
+            border: 1px solid #E5E5EA;
+            border-radius: 16px;
+            padding: 16px;
+            position: relative;
+        }
+
+        .theory-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
             font-size: 12px;
             font-weight: 700;
             text-transform: uppercase;
-            margin-bottom: 6px;
-            letter-spacing: 0.5px;
+            color: #6C63FF;
         }
 
         .theory-text {
             font-size: 14px;
             color: #3A3A3C;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
-        .action-bar {
-            margin-top: auto;
+        /* Bottom Fixed Action Bar */
+        .bottom-actions {
+            position: absolute;
+            bottom: 30px;
+            left: 24px;
+            right: 24px;
             display: flex;
             gap: 12px;
         }
 
-        .action-btn {
-            flex: 1;
-            height: 52px;
-            border-radius: 14px;
+        .btn {
+            height: 54px;
+            border-radius: 27px;
             border: none;
             font-size: 16px;
             font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
             cursor: pointer;
+            transition: all 0.2s;
         }
 
         .btn-secondary {
+            width: 54px;
             background: #F2F2F7;
             color: #1C1C1E;
         }
 
         .btn-primary {
+            flex: 1;
             background: #1C1C1E;
+            /* Black Theme */
             color: #fff;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            gap: 8px;
+        }
+
+        .btn-ghost {
+            flex: 1;
+            background: #fff;
+            border: 1px solid #E5E5EA;
+            color: #1C1C1E;
         }
     </style>
 </head>
@@ -236,72 +301,94 @@
             <div class="dynamic-island"></div>
 
             <div class="immersive-header">
-                <div class="back-btn"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
-                        viewBox="0 0 24 24">
-                        <path d="M15 18l-6-6 6-6" />
-                    </svg></div>
-                <!-- Pagination Dots -->
-                <div style="display: flex; gap: 6px;">
-                    <div style="width: 20px; height: 4px; background: #fff; border-radius: 2px;"></div>
-                    <div style="width: 4px; height: 4px; background: rgba(255,255,255,0.5); border-radius: 2px;"></div>
-                    <div style="width: 4px; height: 4px; background: rgba(255,255,255,0.5); border-radius: 2px;"></div>
-                </div>
-                <div class="back-btn">
+                <div class="icon-btn" onclick="history.back()">
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
-                        <path d="M16 6l-4-4-4 4" />
-                        <path d="M12 2v13" />
+                        <path d="M15 18l-6-6 6-6" />
                     </svg>
                 </div>
+
+                <!-- "Regenerate" Button placed in header or floating? Let's use header for easy access or pill -->
+                <div class="refresh-pill" onclick="window.parent.switchPage('loading-v2')">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    重试
+                </div>
             </div>
 
-            <div class="results-container">
-                <div class="result-card">
-                    <!-- AI Generated Scene -->
-                    <div class="scene-image">
-                        <!-- Label Overlay -->
-                        <div
-                            style="position: absolute; bottom: 40px; left: 20px; background: rgba(0,0,0,0.6); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 12px; backdrop-filter: blur(4px);">
-                            ✨ 休闲下午茶场景
-                        </div>
+            <div class="scene-image">
+                <!-- No carousel dots, just single focus -->
+                <div
+                    style="position: absolute; bottom: 40px; left: 20px; background: rgba(0,0,0,0.6); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 12px; backdrop-filter: blur(4px);">
+                    ✨ 休闲下午茶场景
+                </div>
+            </div>
+
+            <div class="detail-sheet">
+                <div class="drag-handle"></div>
+
+                <div class="title-row">
+                    <div class="outfit-name">韩系简约风</div>
+                    <div class="match-score">
+                        <span class="score-val">98%</span>
+                        <span class="score-label">匹配度</span>
                     </div>
+                </div>
 
-                    <div class="theory-sheet">
-                        <div class="drag-handle"></div>
+                <div class="tags-row">
+                    <span class="tag primary">同色系</span>
+                    <span class="tag primary">外松内紧</span>
+                    <span class="tag normal">通勤/约会</span>
+                </div>
 
-                        <div class="outfit-header">
-                            <div class="outfit-title">
-                                <h2>法式慵懒风</h2>
-                                <div class="outfit-tags">
-                                    <span class="tag">宽松</span>
-                                    <span class="tag highlight">下午茶</span>
-                                    <span class="tag">舒适</span>
-                                </div>
-                            </div>
-                            <div
-                                style="width: 40px; height: 40px; background: #F0EFFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #6C63FF;">
-                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                                </svg>
-                            </div>
+                <!-- Called back to the "Thinking Process" card -->
+                <div class="theory-section">
+                    <div class="theory-header">
+                        <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                        </svg>
+                        AI 搭配策略
+                    </div>
+                    <div class="theory-text">
+                        基于你的<b>米色风衣</b>，AI 选择了深色阔腿裤作为下装，利用<b>“上浅下深”</b>的配色法则稳定视觉重心。内搭黑色修身T恤，既与裤装呼应，又显瘦干练。
+                    </div>
+                </div>
+
+                <!-- Maybe items list here as well? -->
+                <div style="margin-top: 24px;">
+                    <div style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #1C1C1E;">包含单品</div>
+                    <div style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 10px;">
+                        <div style="width: 72px; height: 72px; background: #eee; border-radius: 12px; flex-shrink: 0;">
                         </div>
-
-                        <div class="theory-content">
-                            <div class="theory-title">为什么这样搭</div>
-                            <div class="theory-text">
-                                卡其色风衣与白色内搭形成经典的<span
-                                    style="color: #6C63FF; font-weight: 600;">大地色系</span>组合，既保留了职场的干练，又不失休闲的松弛感。搭配牛仔裤，完美适配下午茶场景。
-                            </div>
+                        <div style="width: 72px; height: 72px; background: #333; border-radius: 12px; flex-shrink: 0;">
                         </div>
-
-                        <div class="action-bar">
-                            <button class="action-btn btn-secondary">如果不喜欢...</button>
-                            <button class="action-btn btn-primary">收入衣橱</button>
+                        <div
+                            style="width: 72px; height: 72px; background: #fff; border: 1px solid #eee; border-radius: 12px; flex-shrink: 0;">
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Fixed Bottom Actions -->
+            <div class="bottom-actions">
+                <button class="btn btn-secondary">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                </button>
+                <button class="btn btn-primary" onclick="window.parent.switchPage('try-on')">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    一键试穿
+                </button>
+            </div>
+
         </div>
     </div>
 </body>
