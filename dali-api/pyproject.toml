@@ -28,6 +28,7 @@ python-jose = {extras = ["cryptography"], version = "^3.5.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 alibabacloud-dysmsapi20170525 = "^4.3.1"
 oss2 = "^2.19.1"
+alibabacloud-imageseg20191230 = "^4.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.2"
