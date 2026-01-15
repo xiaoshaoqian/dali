@@ -1,75 +1,101 @@
 /**
  * ProfileStats Component
- * User statistics card with outfit count, favorites, and shares
+ * User statistics grid with outfit count and favorites
+ * Updated to match profile-page.html prototype - 2x1 grid layout
  *
  * @see Story 7.1: Profile Screen with User Stats
- * @see AC#2: 统计数据卡片
+ * @see HTML Prototype: ux-design/pages/05-profile/profile-page.html
  */
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 import type { UserStats } from '@/types/user';
-import { colors, spacing, borderRadius, shadows } from '@/constants';
+import { colors, spacing } from '@/constants';
 
 interface ProfileStatsProps {
   stats: UserStats;
 }
 
 interface StatItemProps {
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   value: number;
   label: string;
+  iconBgColor: string;
+  iconColor: string;
 }
 
-function StatItem({ icon, value, label }: StatItemProps): React.ReactElement {
+function StatItem({ icon, value, label, iconBgColor, iconColor }: StatItemProps): React.ReactElement {
   return (
-    <View style={styles.statItem}>
-      <Text style={styles.statIcon}>{icon}</Text>
+    <TouchableOpacity style={styles.statItem} activeOpacity={0.7}>
+      <View style={[styles.iconBg, { backgroundColor: iconBgColor }]}>
+        <Ionicons name={icon} size={20} color={iconColor} />
+      </View>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 
 export function ProfileStats({ stats }: ProfileStatsProps): React.ReactElement {
   return (
     <View style={styles.container}>
-      <StatItem icon="✨" value={stats.totalOutfits} label="生成次数" />
-      <StatItem icon="⭐" value={stats.favoriteCount} label="收藏数量" />
-      <StatItem icon="↗️" value={stats.shareCount} label="分享次数" />
+      {/* 搭配总数 */}
+      <StatItem
+        icon="shirt-outline"
+        value={stats.totalOutfits}
+        label="搭配"
+        iconBgColor="rgba(108, 99, 255, 0.1)"
+        iconColor="#6C63FF"
+      />
+      {/* 收藏喜爱 */}
+      <StatItem
+        icon="heart-outline"
+        value={stats.favoriteCount}
+        label="收藏"
+        iconBgColor="rgba(255, 149, 0, 0.1)"
+        iconColor="#FF9500"
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    position: 'absolute',
-    top: -80, // Float above header
-    left: spacing.l,
-    right: spacing.l,
-    backgroundColor: '#FFFFFF',
-    borderRadius: borderRadius.xlarge,
-    padding: spacing.l,
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    ...shadows.light,
+    gap: 12,
+    marginBottom: 32,
   },
   statItem: {
+    flex: 1,
+    backgroundColor: '#F9F9FB',
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
     alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.02)',
   },
-  statIcon: {
-    fontSize: 24,
-    marginBottom: spacing.xs,
+  iconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
   },
   statValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: colors.primary,
-    marginBottom: 2,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1C1C1E',
+    marginBottom: 4,
+    lineHeight: 28,
   },
   statLabel: {
     fontSize: 13,
-    color: colors.gray3,
+    fontWeight: '500',
+    color: '#8E8E93',
   },
 });
 

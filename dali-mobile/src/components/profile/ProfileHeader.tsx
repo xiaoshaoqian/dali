@@ -1,10 +1,10 @@
 /**
  * ProfileHeader Component
- * User profile header with avatar, nickname, and settings button
+ * User profile header with avatar, nickname, bio, and settings button
+ * Updated to match profile-page.html prototype
  *
  * @see Story 7.1: Profile Screen with User Stats
- * @see AC#1: 个人页面头部布局
- * @see AC#5: 头像编辑功能
+ * @see HTML Prototype: ux-design/pages/05-profile/profile-page.html
  */
 import React from 'react';
 import {
@@ -17,6 +17,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
@@ -38,6 +39,7 @@ export function ProfileHeader({
   onNicknamePress,
   onSettingsPress,
 }: ProfileHeaderProps): React.ReactElement {
+  const insets = useSafeAreaInsets();
   const [isUploading, setIsUploading] = React.useState(false);
 
   const handleAvatarPress = async () => {
@@ -58,7 +60,6 @@ export function ProfileHeader({
         }
       );
     } else {
-      // Android: 直接显示Alert选择
       Alert.alert('选择照片', '请选择获取照片的方式', [
         { text: '取消', style: 'cancel' },
         { text: '从相册选择', onPress: pickImageFromLibrary },
@@ -107,87 +108,133 @@ export function ProfileHeader({
   const uploadAvatar = async (imageUri: string) => {
     try {
       setIsUploading(true);
-      // Pass image URI to parent component which handles actual upload via useUploadAvatar hook
       onAvatarUpdated(imageUri);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } catch (error) {
-      // Error will be handled by parent component, display user-friendly message
+    } catch {
       Alert.alert('上传失败', '请重试');
     } finally {
       setIsUploading(false);
     }
   };
 
+  // Get user bio or use default
+  const userBio = profile.bio || '穿搭新手 · 风格探索中';
+
   return (
-    <LinearGradient colors={[colors.primary, '#8578FF']} style={styles.container}>
-      {/* Settings Button */}
+    <LinearGradient
+      colors={[colors.primary, '#8578FF']}
+      style={[styles.container, { paddingTop: insets.top + 10 }]}
+    >
+      {/* Settings Button - glassmorphism style */}
       <TouchableOpacity
         style={styles.settingsButton}
         onPress={onSettingsPress}
         activeOpacity={0.7}
         testID="settings-button"
       >
-        <Ionicons name="settings" size={24} color="#FFFFFF" testID="settings-icon" />
+        <Ionicons name="settings-outline" size={22} color="#FFFFFF" />
       </TouchableOpacity>
 
-      {/* Avatar */}
-      <TouchableOpacity
-        style={styles.avatarContainer}
-        onPress={handleAvatarPress}
-        disabled={isUploading}
-        activeOpacity={0.8}
-      >
-        {profile.avatar ? (
-          <Image source={{ uri: profile.avatar }} style={styles.avatar} />
-        ) : (
-          <View style={styles.avatarPlaceholder}>
-            <Ionicons name="person" size={40} color={colors.gray3} />
+      {/* Profile Info - Centered */}
+      <View style={styles.profileInfo}>
+        {/* Avatar with double glow effect */}
+        <TouchableOpacity
+          style={styles.avatarContainer}
+          onPress={handleAvatarPress}
+          disabled={isUploading}
+          activeOpacity={0.8}
+        >
+          <View style={styles.avatarOuter}>
+            <View style={styles.avatarInner}>
+              {profile.avatar ? (
+                <Image source={{ uri: profile.avatar }} style={styles.avatar} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Ionicons name="person" size={40} color={colors.primary} />
+                </View>
+              )}
+            </View>
           </View>
-        )}
-        {isUploading && (
-          <View style={styles.uploadingOverlay}>
-            <Text style={styles.uploadingText}>上传中...</Text>
-          </View>
-        )}
-      </TouchableOpacity>
+          {isUploading && (
+            <View style={styles.uploadingOverlay}>
+              <Text style={styles.uploadingText}>上传中...</Text>
+            </View>
+          )}
+        </TouchableOpacity>
 
-      {/* Nickname */}
-      <TouchableOpacity
-        style={styles.nicknameContainer}
-        onPress={onNicknamePress}
-        activeOpacity={0.8}
-        testID="nickname-button"
-      >
-        <Text style={styles.nickname}>{profile.nickname}</Text>
-        <Ionicons name="pencil" size={16} color="#FFFFFF" />
-      </TouchableOpacity>
+        {/* Username */}
+        <TouchableOpacity
+          onPress={onNicknamePress}
+          activeOpacity={0.8}
+          testID="nickname-button"
+        >
+          <Text style={styles.username}>{profile.nickname}</Text>
+        </TouchableOpacity>
+
+        {/* User Bio */}
+        <Text style={styles.userBio}>{userBio}</Text>
+      </View>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 60, // Space for status bar + margin
-    paddingBottom: 100, // Extra space for floating stats card
-    paddingHorizontal: spacing.l,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 110, // Extra space for content card overlap
     position: 'relative',
   },
+
+  // Settings button - glassmorphism
   settingsButton: {
     position: 'absolute',
-    top: 60,
-    right: spacing.l,
-    padding: spacing.s,
+    top: 59,
+    right: 20,
+    width: 40,
+    height: 40,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    zIndex: 20,
   },
+
+  // Profile info centered
+  profileInfo: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+
+  // Avatar with double glow effect (96px as in prototype)
   avatarContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    marginBottom: 16,
+    position: 'relative',
+  },
+  avatarOuter: {
+    width: 104, // 96 + 8 for outer glow
+    height: 104,
+    borderRadius: 52,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInner: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     borderWidth: 4,
-    borderColor: '#FFFFFF',
+    borderColor: 'rgba(255, 255, 255, 0.3)',
     overflow: 'hidden',
-    marginBottom: spacing.m,
+    backgroundColor: '#FFFFFF',
+    // Double shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.2,
+    shadowRadius: 30,
+    elevation: 10,
   },
   avatar: {
     width: '100%',
@@ -196,7 +243,7 @@ const styles = StyleSheet.create({
   avatarPlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: colors.gray4,
+    backgroundColor: '#F2F2F7',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -205,20 +252,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
+    borderRadius: 52,
   },
   uploadingText: {
     color: '#FFFFFF',
     fontSize: 12,
   },
-  nicknameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  nickname: {
+
+  // Username
+  username: {
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#FFFFFF',
+    marginBottom: 4,
+  },
+
+  // User bio
+  userBio: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
   },
 });
 

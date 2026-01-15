@@ -9,6 +9,7 @@ export interface UserProfile {
   wechatId?: string;
   nickname: string;
   avatar?: string;
+  bio?: string; // User bio/tagline for profile display
   createdAt: string;
   updatedAt: string;
 }

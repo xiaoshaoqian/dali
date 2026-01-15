@@ -135,9 +135,9 @@ export default function AlbumEditorScreen() {
           // Ignore cleanup errors
         }
 
-        // Navigate to occasion selector with cloud URL
+        // Navigate to recognition page for garment detection
         router.replace({
-          pathname: '/occasion' as never,
+          pathname: '/recognition' as never,
           params: { photoUrl: uploadResult.photoUrl },
         });
       } else {

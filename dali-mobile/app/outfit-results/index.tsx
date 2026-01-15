@@ -103,9 +103,10 @@ function InfoHeader({
 }
 
 // Logic Echo Box - AI strategy explanation
-function LogicEchoBox({ content }: { content: string }) {
+function LogicEchoBox({ content }: { content?: string }) {
   // Parse content for highlighted keywords
   const renderContent = () => {
+    if (!content) return <Text style={styles.logicContent}>AI 正在分析搭配逻辑...</Text>;
     // Simple regex to find text wrapped in ** for highlighting
     const parts = content.split(/(\*\*[^*]+\*\*)/g);
     return parts.map((part, index) => {
@@ -199,16 +200,30 @@ export default function OutfitResultScreen() {
     }
   }, [params.recommendations]);
 
-  // Mock data for demo if no recommendation
-  const displayData = recommendation || {
-    id: 'mock-1',
-    outfitName: '职场优雅·风衣Look',
-    theoryExplanation: '识别到**米色风衣**主体，匹配**职场简约**风格库。采用**"高对比度·黑白经典"**配色法则。内搭选用白色提亮肤色，下装搭配黑色阔腿裤视觉收缩，营造干练形象。',
-    matchScore: 98,
-    styleTags: ['✨ 韩系简约', '💼 职场通勤'],
-    items: ['🧥', '👖', '👚', '👠', '👜'],
-    imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop',
-  };
+  // Build display data from recommendation or fallback to mock
+  const displayData = React.useMemo(() => {
+    if (recommendation) {
+      return {
+        id: recommendation.id,
+        outfitName: recommendation.name || '推荐搭配',
+        theoryExplanation: recommendation.theory?.fullExplanation || recommendation.theory?.explanation || '',
+        matchScore: Math.round((recommendation.confidence || 0.98) * 100),
+        styleTags: recommendation.styleTags?.map(tag => `✨ ${tag}`) || ['✨ 简约'],
+        items: recommendation.items?.map(item => item.name || '👕') || ['🧥', '👖', '👚'],
+        imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop',
+      };
+    }
+    // Fallback mock data
+    return {
+      id: 'mock-1',
+      outfitName: '职场优雅·风衣Look',
+      theoryExplanation: '识别到**米色风衣**主体，匹配**职场简约**风格库。采用**高对比度·黑白经典**配色法则。内搭选用白色提亮肤色，下装搭配黑色阔腿裤视觉收缩，营造干练形象。',
+      matchScore: 98,
+      styleTags: ['✨ 韩系简约', '💼 职场通勤'],
+      items: ['🧥', '👖', '👚', '👠', '👜'],
+      imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop',
+    };
+  }, [recommendation]);
 
   // Navigation handlers
   const handleBack = useCallback(() => {

@@ -225,11 +225,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    marginTop: -100,
+    marginTop: -100, // Overlap with header as in prototype
     paddingTop: 24,
     paddingHorizontal: spacing.l,
-    paddingBottom: spacing.l,
+    paddingBottom: 100,
     position: 'relative',
+    // Match prototype shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 40,
+    elevation: 5,
   },
   menuSection: {
     marginTop: spacing.xl,
