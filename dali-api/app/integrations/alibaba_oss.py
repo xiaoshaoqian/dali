@@ -19,9 +19,18 @@ class OSSClient:
             settings.ALIBABA_ACCESS_KEY_ID,
             settings.ALIBABA_ACCESS_KEY_SECRET,
         )
+        
+        # Ensure endpoint uses HTTPS (required for bucket policy)
+        endpoint = settings.ALIBABA_OSS_ENDPOINT
+        if not endpoint.startswith("http://") and not endpoint.startswith("https://"):
+            endpoint = f"https://{endpoint}"
+        elif endpoint.startswith("http://"):
+            # Force HTTPS
+            endpoint = endpoint.replace("http://", "https://", 1)
+        
         self._bucket = oss2.Bucket(
             self._auth,
-            settings.ALIBABA_OSS_ENDPOINT,
+            endpoint,
             settings.ALIBABA_OSS_BUCKET,
         )
 
