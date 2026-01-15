@@ -14,6 +14,7 @@ import {
     Dimensions,
     Image,
     ScrollView,
+    ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -29,6 +30,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 
 import { colors } from '@/constants';
+import { visionService } from '@/services';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -41,6 +43,17 @@ const OCCASIONS = [
     { id: 'travel', label: '出游度假', emoji: '✈️' },
     { id: 'formal', label: '正式场合', emoji: '👔' },
 ];
+
+// Helper to load image dimensions
+function loadImageDimensions(url: string): Promise<{ width: number; height: number }> {
+    return new Promise((resolve, reject) => {
+        Image.getSize(
+            url,
+            (width, height) => resolve({ width, height }),
+            (error) => reject(error)
+        );
+    });
+}
 
 // Bounding box with pulsing animation
 function BoundingBox({
@@ -214,23 +227,77 @@ export default function RecognitionSelectionScreen() {
 
     const insets = useSafeAreaInsets();
     const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [imageError, setImageError] = useState<string | null>(null);
+    const [boundingBox, setBoundingBox] = useState({
+        top: SCREEN_HEIGHT * 0.15,
+        left: SCREEN_WIDTH * 0.15,
+        width: SCREEN_WIDTH * 0.7,
+        height: SCREEN_HEIGHT * 0.35,
+    });
 
-    // Parse recognition data
-    const photoUrl = params.photoUrl || 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800';
+    // Parse recognition data - decode URL if needed
+    const rawPhotoUrl = params.photoUrl;
+    const photoUrl = rawPhotoUrl
+        ? decodeURIComponent(rawPhotoUrl)
+        : 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800';
+
+    // Debug logging
+    useEffect(() => {
+        console.log('[Recognition] Raw photoUrl param:', rawPhotoUrl);
+        console.log('[Recognition] Decoded photoUrl:', photoUrl);
+    }, [rawPhotoUrl, photoUrl]);
     const confidence = parseFloat(params.confidence || '0.98');
 
-    // Mock recognition result
+    // Recognition result (can be enhanced with garmentService.analyzeGarment later)
     const recognitionResult = {
-        itemName: '米色经典风衣',
+        itemName: '全身穿搭',
         category: '外套',
         style: '简约',
-        boundingBox: {
-            top: SCREEN_HEIGHT * 0.15,
-            left: SCREEN_WIDTH * 0.15,
-            width: SCREEN_WIDTH * 0.7,
-            height: SCREEN_HEIGHT * 0.35,
-        },
     };
+
+    // Fetch detection on mount
+    useEffect(() => {
+        async function loadDetection() {
+            setIsLoading(true);
+            console.log('[Recognition] Starting detection for:', photoUrl);
+            try {
+                // 1. Get image dimensions for scaling
+                console.log('[Recognition] Getting image dimensions...');
+                const imageDimensions = await loadImageDimensions(photoUrl);
+                console.log('[Recognition] Image dimensions:', imageDimensions);
+
+                // 2. Call detection API
+                console.log('[Recognition] Calling detectMainBody API...');
+                const box = await visionService.detectMainBody(photoUrl);
+                console.log('[Recognition] Detection result:', box);
+
+                // 3. Scale box coordinates to screen
+                const imageDisplayHeight = SCREEN_HEIGHT;
+                const imageDisplayWidth = SCREEN_WIDTH;
+
+                // Calculate scale factors
+                const scaleX = imageDisplayWidth / imageDimensions.width;
+                const scaleY = imageDisplayHeight / imageDimensions.height;
+
+                // Update bounding box with scaled coordinates
+                setBoundingBox({
+                    top: box.y * scaleY,
+                    left: box.x * scaleX,
+                    width: box.width * scaleX,
+                    height: box.height * scaleY,
+                });
+
+            } catch (error) {
+                console.error('[Recognition] Detection failed:', error);
+                // Keep default fallback box
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        loadDetection();
+    }, [photoUrl]);
 
     const handleBack = useCallback(() => {
         router.back();
@@ -272,13 +339,31 @@ export default function RecognitionSelectionScreen() {
     return (
         <View style={styles.container}>
             {/* Photo background with dim overlay */}
-            <Image source={{ uri: photoUrl }} style={styles.backgroundImage} />
+            <Image
+                source={{ uri: photoUrl }}
+                style={styles.backgroundImage}
+                resizeMode="cover"
+                onError={(e) => {
+                    console.error('[Recognition] Image load error:', e.nativeEvent.error);
+                    setImageError(e.nativeEvent.error);
+                }}
+                onLoad={() => {
+                    console.log('[Recognition] Image loaded successfully');
+                    setImageError(null);
+                }}
+            />
+            {imageError && (
+                <View style={styles.errorOverlay}>
+                    <Text style={styles.errorText}>图片加载失败</Text>
+                    <Text style={styles.errorDetail}>{imageError}</Text>
+                </View>
+            )}
             <View style={styles.dimOverlay} />
 
             {/* Bounding box */}
             <BoundingBox
                 confidence={confidence}
-                position={recognitionResult.boundingBox}
+                position={boundingBox}
             />
 
             {/* Back button */}
@@ -321,6 +406,24 @@ const styles = StyleSheet.create({
     dimOverlay: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(0,0,0,0.4)',
+    },
+    errorOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 20,
+    },
+    errorText: {
+        color: '#FF6B6B',
+        fontSize: 18,
+        fontWeight: '600',
+        marginBottom: 8,
+    },
+    errorDetail: {
+        color: '#999',
+        fontSize: 12,
+        textAlign: 'center',
     },
 
     // Back button

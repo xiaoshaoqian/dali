@@ -68,17 +68,19 @@ class OSSClient:
         return url
 
     def get_public_url(self, object_key: str) -> str:
-        """Get the public URL for an object (if bucket is public).
+        """Get the accessible URL for an object.
+
+        For private buckets, returns a presigned URL with 1 hour expiry.
+        For public buckets, returns the direct URL.
 
         Args:
             object_key: The object key (path) in OSS
 
         Returns:
-            Public URL to access the file
+            URL to access the file
         """
-        # For private buckets, you should use presigned URLs instead
-        # This returns the base URL format
-        return f"https://{settings.ALIBABA_OSS_BUCKET}.{settings.ALIBABA_OSS_ENDPOINT}/{object_key}"
+        # Use presigned URL to ensure accessibility for private buckets
+        return self.generate_presigned_download_url(object_key, expires=3600)
 
     def delete_object(self, object_key: str) -> bool:
         """Delete an object from OSS.

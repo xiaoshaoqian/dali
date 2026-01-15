@@ -110,6 +110,8 @@ export default function CameraScreen() {
           // Ignore cleanup errors
         }
 
+        console.log('[Camera] Upload successful, photoUrl:', result.photoUrl);
+
         // Navigate to recognition page for garment detection
         router.replace({
           pathname: '/recognition' as never,
