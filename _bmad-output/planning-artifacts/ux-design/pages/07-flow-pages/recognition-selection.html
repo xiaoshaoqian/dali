@@ -111,7 +111,6 @@
             background: #333;
             position: relative;
             background-image: url('https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=1000&auto=format&fit=crop');
-            /* Placeholder: Beige Trench Coat */
             background-size: cover;
             background-position: center;
         }
@@ -124,7 +123,6 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.4);
-            transition: opacity 0.5s;
         }
 
         /* Bounding Box for Recognition */
@@ -184,10 +182,11 @@
             align-items: center;
             gap: 4px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            white-space: nowrap;
         }
 
-        /* Recognized Item Card (Toast style) */
-        .recognition-card {
+        /* Merged Recognition Card */
+        .merged-card {
             position: absolute;
             bottom: 40px;
             left: 20px;
@@ -195,47 +194,132 @@
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 24px;
-            padding: 20px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
             animation: slideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        .recognition-header {
+        /* Garment Info Section */
+        .garment-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .garment-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
         }
 
-        .recognition-info h3 {
-            font-size: 18px;
-            color: #1C1C1E;
-            margin-bottom: 4px;
-        }
-
-        .recognition-info p {
-            font-size: 14px;
+        .garment-info .label {
+            font-size: 12px;
             color: #8E8E93;
+            font-weight: 500;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .garment-info h3 {
+            font-size: 20px;
+            color: #1C1C1E;
+            font-weight: 700;
         }
 
         .edit-btn {
             color: #6C63FF;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 600;
             background: none;
             border: none;
             cursor: pointer;
         }
 
+        .tags-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tag {
+            background: #F2F2F7;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            color: #3A3A3C;
+            font-weight: 500;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: #E5E5EA;
+        }
+
+        /* Occasion Section */
+        .occasion-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .occasion-label {
+            font-size: 12px;
+            color: #8E8E93;
+            font-weight: 500;
+        }
+
+        .occasion-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            /* Hide scrollbar visually */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .occasion-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .occasion-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #F2F2F7;
+            padding: 10px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #3A3A3C;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .occasion-chip.selected {
+            background: rgba(108, 99, 255, 0.1);
+            border-color: #6C63FF;
+            color: #6C63FF;
+            font-weight: 600;
+        }
+
+        .chip-emoji {
+            font-size: 16px;
+        }
+
+        /* Confirm Button */
         .confirm-btn {
             width: 100%;
-            height: 50px;
+            height: 52px;
             background: #1C1C1E;
             color: #fff;
             border: none;
-            border-radius: 14px;
+            border-radius: 26px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
@@ -243,26 +327,15 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
+            transition: opacity 0.2s;
         }
 
-        /* Multiple Selection Points (Alternative) */
-        .select-point {
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            background: rgba(255, 255, 255, 0.3);
-            border: 2px solid #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        .confirm-btn.disabled {
+            background: #C7C7CC;
+            cursor: not-allowed;
         }
 
-        .select-point.active {
-            background: #6C63FF;
-            border-color: #fff;
-            transform: scale(1.2);
-        }
-
+        /* Animations */
         @keyframes pulse-border {
             0% {
                 border-color: rgba(255, 255, 255, 0.6);
@@ -316,7 +389,6 @@
             <div class="dynamic-island"></div>
             <div class="status-bar">
                 <span>9:41</span>
-                <!-- SVG Battery/Wifi icons simplified -->
                 <div style="display: flex; gap: 5px;">
                     <span style="width:16px; height:12px; background:#fff; border-radius:2px; opacity:0.8;"></span>
                     <span style="width:22px; height:12px; background:#fff; border-radius:4px; opacity:0.8;"></span>
@@ -324,31 +396,60 @@
             </div>
 
             <div class="photo-container">
+                <div class="photo-overlay"></div>
                 <!-- Recognition Overlay -->
                 <!-- Main Garment -->
                 <div class="bounding-box">
                     <div class="confidence-tag">
-                        <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                        </svg>
-                        已识别 98%
+                        ✨ 已识别 98%
                     </div>
                 </div>
-
-                <!-- Secondary Item (Unselected) -->
-                <div class="select-point" style="top: 75%; left: 40%;"></div> <!-- Shoes -->
-                <div class="select-point" style="top: 25%; left: 55%;"></div> <!-- Bag -->
             </div>
 
-            <!-- Smart Recognition Card -->
-            <div class="recognition-card">
-                <div class="recognition-header">
-                    <div class="recognition-info">
-                        <h3>米色经典风衣</h3>
-                        <p>上装 · 简约风 · 春秋</p>
+            <!-- Merged Recognition + Occasion Card -->
+            <div class="merged-card">
+                <!-- Garment Section -->
+                <div class="garment-section">
+                    <div class="garment-header">
+                        <div class="garment-info">
+                            <span class="label">已识别</span>
+                            <h3>米色经典风衣</h3>
+                        </div>
+                        <button class="edit-btn">修改</button>
                     </div>
-                    <button class="edit-btn">修改</button>
+                    <div class="tags-row">
+                        <span class="tag">外套</span>
+                        <span class="tag">简约</span>
+                    </div>
                 </div>
+
+                <!-- Divider -->
+                <div class="divider"></div>
+
+                <!-- Occasion Section -->
+                <div class="occasion-section">
+                    <span class="occasion-label">选择场景</span>
+                    <div class="occasion-scroll">
+                        <div class="occasion-chip selected">
+                            <span class="chip-emoji">💼</span>
+                            职场通勤
+                        </div>
+                        <div class="occasion-chip">
+                            <span class="chip-emoji">💕</span>
+                            约会逛街
+                        </div>
+                        <div class="occasion-chip">
+                            <span class="chip-emoji">☕</span>
+                            日常休闲
+                        </div>
+                        <div class="occasion-chip">
+                            <span class="chip-emoji">🎉</span>
+                            聚会活动
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Button -->
                 <button class="confirm-btn">
                     开始搭配
                     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -360,6 +461,16 @@
             <div class="home-indicator"></div>
         </div>
     </div>
+
+    <script>
+        // Chip selection logic
+        document.querySelectorAll('.occasion-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.occasion-chip').forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected');
+            });
+        });
+    </script>
 </body>
 
 </html>

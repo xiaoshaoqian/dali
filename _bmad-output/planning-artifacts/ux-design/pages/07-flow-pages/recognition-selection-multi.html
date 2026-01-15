@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>搭理 - 主体识别确认</title>
+    <title>搭理 - 多主体识别</title>
     <style>
         * {
             margin: 0;
@@ -125,17 +125,10 @@
             z-index: 10;
         }
 
-        /* Selected State for Box */
         .bounding-box.selected {
             border-color: #6C63FF;
             box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
-            /* Dim everything else */
             z-index: 100;
-        }
-
-        /* Non-selected interaction */
-        .bounding-box:not(.selected):hover {
-            border-color: rgba(255, 255, 255, 0.9);
         }
 
         /* Confidence Tag */
@@ -156,6 +149,7 @@
             transform: translateY(10px);
             transition: all 0.3s;
             box-shadow: 0 4px 10px rgba(108, 99, 255, 0.3);
+            white-space: nowrap;
         }
 
         .bounding-box.selected .confidence-tag {
@@ -163,24 +157,30 @@
             transform: translateY(0);
         }
 
-        /* Footer / Shopping List Area */
+        /* Footer / Selection Area */
         .selection-footer {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            background: linear-gradient(to top, #000 0%, rgba(0, 0, 0, 0.95) 85%, transparent 100%);
-            padding: 50px 0 30px;
+            background: linear-gradient(to top, #000 10%, rgba(0, 0, 0, 0.95) 90%, transparent 100%);
+            padding: 40px 0 30px;
             z-index: 200;
             display: flex;
             flex-direction: column;
             gap: 20px;
+            max-height: 60%;
+            overflow-y: auto;
+        }
+
+        .selection-footer::-webkit-scrollbar {
+            display: none;
         }
 
         .footer-header {
             padding: 0 24px;
             color: #fff;
-            margin-bottom: -10px;
+            margin-bottom: -6px;
         }
 
         .footer-title {
@@ -189,16 +189,13 @@
             margin-bottom: 4px;
         }
 
-        .footer-subtitle {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
+        /* Items Carousel */
         .items-carousel {
             display: flex;
             gap: 12px;
             overflow-x: auto;
             padding: 0 24px;
+            padding-bottom: 4px;
             scroll-behavior: smooth;
         }
 
@@ -211,7 +208,6 @@
             height: 140px;
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 16px;
             padding: 8px;
@@ -221,16 +217,12 @@
             justify-content: space-between;
             transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
             cursor: pointer;
-            position: relative;
         }
 
-        /* Selected Card Styling */
         .item-card.selected {
             background: #fff;
             border-color: #fff;
             transform: scale(1.05);
-            /* Pop out */
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
             z-index: 10;
         }
 
@@ -240,13 +232,8 @@
             border-radius: 10px;
             background: #444;
             margin-bottom: 8px;
-            object-fit: cover;
             background-size: cover;
             background-position: center;
-        }
-
-        .item-card.selected .card-image {
-            /* Maybe subtle effect? */
         }
 
         .card-name {
@@ -258,12 +245,10 @@
         }
 
         .item-card.selected .card-name {
-            color: #000;
-            /* Dark text on white bg */
+            color: #1C1C1E;
             font-weight: 600;
         }
 
-        /* Radio Indicator */
         .radio-indicator {
             width: 16px;
             height: 16px;
@@ -272,7 +257,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 4px;
         }
 
         .item-card.selected .radio-indicator {
@@ -296,7 +280,52 @@
             transform: scale(1);
         }
 
-        /* Start Styling Action */
+        /* Occasion Section */
+        .occasion-section {
+            padding: 0 24px;
+            margin-top: 4px;
+        }
+
+        .occasion-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+            margin-top: 12px;
+        }
+
+        .occasion-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .occasion-chip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+
+        .occasion-chip.selected {
+            background: rgba(108, 99, 255, 0.2);
+            border-color: #6C63FF;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .chip-emoji {
+            font-size: 16px;
+        }
+
+        /* Confirm Button */
         .action-container {
             padding: 0 24px;
             margin-top: 10px;
@@ -306,7 +335,6 @@
             width: 100%;
             height: 56px;
             background: #6C63FF;
-            /* Purple Primary */
             color: #fff;
             border: none;
             border-radius: 28px;
@@ -317,12 +345,15 @@
             justify-content: center;
             gap: 8px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.2s;
             box-shadow: 0 8px 20px rgba(108, 99, 255, 0.3);
         }
 
-        .start-btn:active {
-            transform: scale(0.98);
+        .start-btn.disabled {
+            background: #333;
+            color: rgba(255, 255, 255, 0.5);
+            box-shadow: none;
+            cursor: not-allowed;
         }
 
         .home-indicator {
@@ -353,6 +384,7 @@
             <div class="dynamic-island"></div>
             <div class="status-bar">
                 <span>9:41</span>
+                <!-- ...icons... -->
                 <div style="display: flex; gap: 5px;">
                     <span style="width:16px; height:12px; background:#fff; border-radius:2px; opacity:0.8;"></span>
                     <span style="width:22px; height:12px; background:#fff; border-radius:4px; opacity:0.8;"></span>
@@ -364,22 +396,45 @@
             </div>
 
             <div class="selection-footer">
+                <!-- Item Selection Section -->
                 <div class="footer-header">
                     <div class="footer-title">选择主体</div>
-                    <div class="footer-subtitle">请选择一件物品作为搭配核心</div>
                 </div>
 
                 <div class="items-carousel" id="carousel">
                     <!-- Cards injected by JS -->
                 </div>
 
+                <!-- Occasion Selection Section -->
+                <div class="occasion-section">
+                    <div class="footer-title" style="margin-bottom: 4px;">选择场景</div>
+                    <div class="occasion-scroll">
+                        <div class="occasion-chip" onclick="selectOccasion(this, 'work')">
+                            <span class="chip-emoji">💼</span>
+                            通勤
+                        </div>
+                        <div class="occasion-chip" onclick="selectOccasion(this, 'date')">
+                            <span class="chip-emoji">💕</span>
+                            约会
+                        </div>
+                        <div class="occasion-chip" onclick="selectOccasion(this, 'casual')">
+                            <span class="chip-emoji">☕</span>
+                            休闲
+                        </div>
+                        <div class="occasion-chip" onclick="selectOccasion(this, 'party')">
+                            <span class="chip-emoji">🎉</span>
+                            聚会
+                        </div>
+                        <div class="occasion-chip" onclick="selectOccasion(this, 'travel')">
+                            <span class="chip-emoji">✈️</span>
+                            度假
+                        </div>
+                    </div>
+                </div>
+
                 <div class="action-container">
-                    <button class="start-btn" onclick="startStyling()">
-                        开始搭配
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
-                            viewBox="0 0 24 24">
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
+                    <button class="start-btn disabled" id="confirmBtn" onclick="startStyling()">
+                        请选择场景
                     </button>
                 </div>
             </div>
@@ -393,36 +448,33 @@
             {
                 id: 'coat',
                 name: "米色风衣",
-                category: "上装",
-                confidence: "98%",
-                box: { width: "220px", height: "340px", top: "45%", left: "50%" },
+                box: { width: "220px", height: "340px", top: "40%", left: "50%" },
                 image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=150&auto=format&fit=crop"
             },
             {
                 id: 'bag',
                 name: "棕色手提包",
-                category: "配饰",
-                confidence: "95%",
-                box: { width: "110px", height: "140px", top: "55%", left: "30%" },
+                box: { width: "110px", height: "140px", top: "50%", left: "30%" },
                 image: ""
             },
             {
                 id: 'shoes',
                 name: "黑色高跟鞋",
-                category: "鞋履",
-                confidence: "92%",
-                box: { width: "140px", height: "80px", top: "80%", left: "55%" },
+                box: { width: "140px", height: "80px", top: "75%", left: "55%" },
                 image: ""
             }
         ];
 
-        let selectedItemId = 'coat'; // Default Selection
+        let selectedItemId = 'coat'; // Default Item Selected
+        let selectedOccasion = null;
 
         const container = document.getElementById('photoContainer');
         const carousel = document.getElementById('carousel');
+        const confirmBtn = document.getElementById('confirmBtn');
 
         function init() {
             render();
+            updateButtonState();
         }
 
         function render() {
@@ -430,8 +482,16 @@
             renderCarousel();
         }
 
+        function updateButtonState() {
+            const canStart = selectedItemId && selectedOccasion;
+            confirmBtn.className = `start-btn ${canStart ? '' : 'disabled'}`;
+            confirmBtn.innerHTML = canStart ?
+                `开始搭配 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" /></svg>` :
+                '请选择场景';
+        }
+
         function selectItem(id) {
-            if (selectedItemId === id) return; // Already selected
+            if (selectedItemId === id) return;
             selectedItemId = id;
             render();
 
@@ -440,6 +500,13 @@
             if (card) {
                 card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
+        }
+
+        function selectOccasion(element, occasionId) {
+            document.querySelectorAll('.occasion-chip').forEach(c => c.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedOccasion = occasionId;
+            updateButtonState();
         }
 
         function renderBoundingBoxes() {
@@ -455,7 +522,6 @@
                 box.style.left = item.box.left;
                 box.style.transform = "translate(-50%, -50%)";
 
-                // Confidence Tag (Only visible when selected)
                 const tag = document.createElement('div');
                 tag.className = 'confidence-tag';
                 tag.innerHTML = `
@@ -500,15 +566,10 @@
         }
 
         function startStyling() {
-            if (!selectedItemId) {
-                alert("请选择一个搭配主体");
-                return;
-            }
-            // Navigate to flow
+            if (!selectedItemId || !selectedOccasion) return;
             window.location.href = 'ai-loading-v2.html';
         }
 
-        // Init
         init();
 
     </script>

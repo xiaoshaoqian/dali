@@ -1,11 +1,11 @@
 /**
- * Recognition Selection Screen - Single Item High Confidence
- * Displays recognized garment with bounding box for confirmation
- * Part of Story 3.1: Garment Recognition & Selection
+ * Recognition Selection Screen - Combined with Occasion Selection
+ * Displays recognized garment with bounding box + occasion selection in one page
+ * UX Improvement: Merged recognition confirmation and occasion selection
  *
- * @see _bmad-output/planning-artifacts/ux-design/pages/07-flow-pages/recognition-selection.html
+ * @see Story 3.1: Garment Recognition & Selection
  */
-import React, { useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
     View,
     Text,
@@ -13,6 +13,7 @@ import {
     TouchableOpacity,
     Dimensions,
     Image,
+    ScrollView,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -23,11 +24,23 @@ import Animated, {
     withTiming,
     withSequence,
     FadeInUp,
+    FadeInDown,
 } from 'react-native-reanimated';
+import * as Haptics from 'expo-haptics';
 
 import { colors } from '@/constants';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Occasion options
+const OCCASIONS = [
+    { id: 'work', label: '职场通勤', emoji: '💼' },
+    { id: 'date', label: '约会逛街', emoji: '💕' },
+    { id: 'casual', label: '日常休闲', emoji: '☕' },
+    { id: 'party', label: '聚会活动', emoji: '🎉' },
+    { id: 'travel', label: '出游度假', emoji: '✈️' },
+    { id: 'formal', label: '正式场合', emoji: '👔' },
+];
 
 // Bounding box with pulsing animation
 function BoundingBox({
@@ -81,52 +94,112 @@ function BoundingBox({
     );
 }
 
-// Recognition card at bottom
-function RecognitionCard({
+// Occasion chip component
+function OccasionChip({
+    occasion,
+    isSelected,
+    onPress,
+}: {
+    occasion: { id: string; label: string; emoji: string };
+    isSelected: boolean;
+    onPress: () => void;
+}) {
+    return (
+        <TouchableOpacity
+            style={[styles.occasionChip, isSelected && styles.occasionChipSelected]}
+            onPress={onPress}
+            activeOpacity={0.7}
+        >
+            <Text style={styles.occasionEmoji}>{occasion.emoji}</Text>
+            <Text style={[styles.occasionLabel, isSelected && styles.occasionLabelSelected]}>
+                {occasion.label}
+            </Text>
+        </TouchableOpacity>
+    );
+}
+
+// Combined recognition + occasion card
+function RecognitionOccasionCard({
     itemName,
     category,
-    style: styleName,
-    season,
-    onEdit,
+    styleName,
+    selectedOccasion,
+    onOccasionSelect,
     onConfirm,
+    onEdit,
 }: {
     itemName: string;
     category: string;
-    style: string;
-    season: string;
-    onEdit: () => void;
+    styleName: string;
+    selectedOccasion: string | null;
+    onOccasionSelect: (id: string) => void;
     onConfirm: () => void;
+    onEdit: () => void;
 }) {
+    const canConfirm = selectedOccasion !== null;
+
     return (
         <Animated.View
             entering={FadeInUp.delay(200).duration(500)}
-            style={styles.recognitionCard}
+            style={styles.combinedCard}
         >
-            <View style={styles.cardHeader}>
-                <Text style={styles.itemName}>{itemName}</Text>
-                <TouchableOpacity onPress={onEdit} activeOpacity={0.7}>
-                    <Text style={styles.editButton}>修改</Text>
-                </TouchableOpacity>
+            {/* Section 1: Recognized garment */}
+            <View style={styles.garmentSection}>
+                <View style={styles.cardHeader}>
+                    <View>
+                        <Text style={styles.sectionLabel}>已识别</Text>
+                        <Text style={styles.itemName}>{itemName}</Text>
+                    </View>
+                    <TouchableOpacity onPress={onEdit} activeOpacity={0.7}>
+                        <Text style={styles.editButton}>修改</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.tagRow}>
+                    <View style={styles.tag}>
+                        <Text style={styles.tagText}>{category}</Text>
+                    </View>
+                    <View style={styles.tag}>
+                        <Text style={styles.tagText}>{styleName}</Text>
+                    </View>
+                </View>
             </View>
 
-            <View style={styles.tagRow}>
-                <View style={styles.tag}>
-                    <Text style={styles.tagText}>{category}</Text>
-                </View>
-                <View style={styles.tag}>
-                    <Text style={styles.tagText}>{styleName}</Text>
-                </View>
-                <View style={styles.tag}>
-                    <Text style={styles.tagText}>{season}</Text>
-                </View>
+            {/* Divider */}
+            <View style={styles.divider} />
+
+            {/* Section 2: Occasion selection */}
+            <View style={styles.occasionSection}>
+                <Text style={styles.sectionLabel}>选择场景</Text>
+                <Text style={styles.occasionHint}>选择穿搭场景，AI 会为你推荐最适合的搭配</Text>
+
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.occasionScroll}
+                >
+                    {OCCASIONS.map((occasion) => (
+                        <OccasionChip
+                            key={occasion.id}
+                            occasion={occasion}
+                            isSelected={selectedOccasion === occasion.id}
+                            onPress={() => onOccasionSelect(occasion.id)}
+                        />
+                    ))}
+                </ScrollView>
             </View>
 
+            {/* Confirm button */}
             <TouchableOpacity
-                style={styles.confirmButton}
+                style={[styles.confirmButton, !canConfirm && styles.confirmButtonDisabled]}
                 onPress={onConfirm}
                 activeOpacity={0.8}
+                disabled={!canConfirm}
             >
-                <Text style={styles.confirmButtonText}>开始搭配</Text>
+                <Text style={styles.confirmButtonText}>
+                    {canConfirm ? '开始搭配' : '请选择场景'}
+                </Text>
+                {canConfirm && <Text style={styles.confirmArrow}>→</Text>}
             </TouchableOpacity>
         </Animated.View>
     );
@@ -137,11 +210,10 @@ export default function RecognitionSelectionScreen() {
         photoUrl: string;
         garmentType: string;
         confidence: string;
-        colors: string;
-        styleTags: string;
     }>();
 
     const insets = useSafeAreaInsets();
+    const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
 
     // Parse recognition data
     const photoUrl = params.photoUrl || 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800';
@@ -152,12 +224,11 @@ export default function RecognitionSelectionScreen() {
         itemName: '米色经典风衣',
         category: '外套',
         style: '简约',
-        season: '春秋',
         boundingBox: {
-            top: SCREEN_HEIGHT * 0.2,
+            top: SCREEN_HEIGHT * 0.15,
             left: SCREEN_WIDTH * 0.15,
             width: SCREEN_WIDTH * 0.7,
-            height: SCREEN_HEIGHT * 0.45,
+            height: SCREEN_HEIGHT * 0.35,
         },
     };
 
@@ -166,26 +237,37 @@ export default function RecognitionSelectionScreen() {
     }, []);
 
     const handleEdit = useCallback(() => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         // Navigate to multi-selection for manual correction
         router.push({
             pathname: '/recognition-multi',
-            params: {
-                photoUrl,
-            },
+            params: { photoUrl },
         });
     }, [photoUrl]);
 
+    const handleOccasionSelect = useCallback((id: string) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setSelectedOccasion(id);
+    }, []);
+
     const handleConfirm = useCallback(() => {
-        // Save to invisible wardrobe and navigate to occasion selector
+        if (!selectedOccasion) return;
+
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+        const occasionLabel = OCCASIONS.find((o) => o.id === selectedOccasion)?.label || '日常';
+
+        // Navigate directly to AI loading with all data
         router.push({
-            pathname: '/occasion',
+            pathname: '/ai-loading',
             params: {
                 photoUrl,
+                occasion: occasionLabel,
                 garmentType: recognitionResult.category,
                 garmentName: recognitionResult.itemName,
             },
         });
-    }, [photoUrl, recognitionResult]);
+    }, [selectedOccasion, photoUrl, recognitionResult]);
 
     return (
         <View style={styles.container}>
@@ -208,15 +290,16 @@ export default function RecognitionSelectionScreen() {
                 <Text style={styles.backIcon}>‹</Text>
             </TouchableOpacity>
 
-            {/* Recognition card */}
-            <View style={[styles.cardContainer, { paddingBottom: insets.bottom + 20 }]}>
-                <RecognitionCard
+            {/* Combined recognition + occasion card */}
+            <View style={[styles.cardContainer, { paddingBottom: insets.bottom + 16 }]}>
+                <RecognitionOccasionCard
                     itemName={recognitionResult.itemName}
                     category={recognitionResult.category}
-                    style={recognitionResult.style}
-                    season={recognitionResult.season}
-                    onEdit={handleEdit}
+                    styleName={recognitionResult.style}
+                    selectedOccasion={selectedOccasion}
+                    onOccasionSelect={handleOccasionSelect}
                     onConfirm={handleConfirm}
+                    onEdit={handleEdit}
                 />
             </View>
         </View>
@@ -326,25 +409,36 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
     },
 
-    // Recognition card
-    recognitionCard: {
+    // Combined card
+    combinedCard: {
         backgroundColor: '#FFFFFF',
         borderRadius: 24,
         padding: 20,
-        gap: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: -4 },
         shadowOpacity: 0.15,
         shadowRadius: 20,
         elevation: 10,
     },
+
+    // Garment section
+    garmentSection: {
+        marginBottom: 16,
+    },
     cardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-start',
+        marginBottom: 12,
+    },
+    sectionLabel: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: '#8E8E93',
+        marginBottom: 4,
     },
     itemName: {
         fontSize: 20,
@@ -374,17 +468,76 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
 
+    // Divider
+    divider: {
+        height: 1,
+        backgroundColor: '#F2F2F7',
+        marginVertical: 16,
+    },
+
+    // Occasion section
+    occasionSection: {
+        marginBottom: 16,
+    },
+    occasionHint: {
+        fontSize: 13,
+        color: '#8E8E93',
+        marginBottom: 12,
+    },
+    occasionScroll: {
+        gap: 8,
+        paddingRight: 8,
+    },
+
+    // Occasion chip
+    occasionChip: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F2F2F7',
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderRadius: 20,
+        gap: 6,
+        borderWidth: 2,
+        borderColor: 'transparent',
+    },
+    occasionChipSelected: {
+        backgroundColor: colors.primary + '15',
+        borderColor: colors.primary,
+    },
+    occasionEmoji: {
+        fontSize: 16,
+    },
+    occasionLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#3A3A3C',
+    },
+    occasionLabelSelected: {
+        color: colors.primary,
+        fontWeight: '600',
+    },
+
     // Confirm button
     confirmButton: {
         backgroundColor: '#1C1C1E',
-        height: 50,
-        borderRadius: 25,
+        height: 52,
+        borderRadius: 26,
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
+        gap: 8,
+    },
+    confirmButtonDisabled: {
+        backgroundColor: '#C7C7CC',
     },
     confirmButtonText: {
         color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '600',
+    },
+    confirmArrow: {
+        color: '#FFFFFF',
+        fontSize: 18,
     },
 });
