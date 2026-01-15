@@ -5,7 +5,7 @@ from pydantic import BaseModel, HttpUrl
 
 from app.integrations.alibaba_vision import vision_client
 
-router = APIRouter()
+router = APIRouter(prefix="/vision")
 
 
 class SegmentClothRequest(BaseModel):
