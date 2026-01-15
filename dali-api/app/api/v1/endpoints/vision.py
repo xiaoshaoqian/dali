@@ -1,9 +1,13 @@
+import logging
+import traceback
 from typing import Any
 
 from fastapi import APIRouter, status
 from pydantic import BaseModel, HttpUrl
 
 from app.integrations.alibaba_vision import vision_client
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/vision")
 
@@ -47,12 +51,18 @@ class DetectMainBodyResponse(BaseModel):
 )
 async def segment_cloth(request: SegmentClothRequest) -> Any:
     """Segment cloth from image."""
-    mask_url = await vision_client.segment_cloth(request.image_url)
-    
-    return SegmentClothResponse(
-        origin_image_url=request.image_url,
-        mask_url=mask_url,
-    )
+    logger.info(f"[Vision] segment_cloth called with image_url: {request.image_url[:100]}...")
+    try:
+        mask_url = await vision_client.segment_cloth(request.image_url)
+        logger.info(f"[Vision] segment_cloth success, mask_url: {mask_url[:100]}...")
+        return SegmentClothResponse(
+            origin_image_url=request.image_url,
+            mask_url=mask_url,
+        )
+    except Exception as e:
+        logger.error(f"[Vision] segment_cloth FAILED: {str(e)}")
+        logger.error(f"[Vision] Full traceback: {traceback.format_exc()}")
+        raise
 
 
 @router.post(
@@ -64,8 +74,14 @@ async def segment_cloth(request: SegmentClothRequest) -> Any:
 )
 async def detect_main_body(request: DetectMainBodyRequest) -> Any:
     """Detect main body from image."""
-    box_data = await vision_client.detect_main_body(request.image_url)
-    
-    return DetectMainBodyResponse(
-        box=box_data # type: ignore
-    )
+    logger.info(f"[Vision] detect_main_body called with image_url: {request.image_url[:100]}...")
+    try:
+        box_data = await vision_client.detect_main_body(request.image_url)
+        logger.info(f"[Vision] detect_main_body success: {box_data}")
+        return DetectMainBodyResponse(
+            box=box_data # type: ignore
+        )
+    except Exception as e:
+        logger.error(f"[Vision] detect_main_body FAILED: {str(e)}")
+        logger.error(f"[Vision] Full traceback: {traceback.format_exc()}")
+        raise
