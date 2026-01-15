@@ -16,6 +16,9 @@ export type { SignedUrlResponse, UploadResult, UploadProgress } from './photoUpl
 export { garmentService } from './garmentService';
 export type { ColorInfo, GarmentAnalysisResult, GarmentAnalysisError } from './garmentService';
 
+export { visionService } from './visionService';
+export type { DetectionBox, DetectMainBodyResponse, SegmentClothResponse } from './visionService';
+
 export { outfitService } from './outfitService';
 export type {
   OutfitItem,

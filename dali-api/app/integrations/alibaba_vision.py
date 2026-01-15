@@ -11,6 +11,8 @@ from typing import Any
 
 from alibabacloud_imageseg20191230.client import Client as ImageSegClient
 from alibabacloud_imageseg20191230 import models as imageseg_models
+from alibabacloud_objectdet20191230.client import Client as ObjectDetClient
+from alibabacloud_objectdet20191230 import models as objectdet_models
 from alibabacloud_tea_openapi import models as open_api_models
 from alibabacloud_tea_util import models as util_models
 
@@ -97,6 +99,15 @@ class VisionAPIClient:
         config.endpoint = "imageseg.cn-shanghai.aliyuncs.com"
         self.imageseg_client = ImageSegClient(config)
 
+        # Config for Object Detection (DetectMainBody)
+        # Note: Endpoint might be different or shared (usually objectdet.cn-shanghai.aliyuncs.com)
+        det_config = open_api_models.Config(
+            access_key_id=settings.ALIBABA_ACCESS_KEY_ID,
+            access_key_secret=settings.ALIBABA_ACCESS_KEY_SECRET,
+        )
+        det_config.endpoint = "objectdet.cn-shanghai.aliyuncs.com"
+        self.objectdet_client = ObjectDetClient(det_config)
+
     async def segment_cloth(self, image_url: str) -> str:
         """Segment cloth from image using Alibaba Cloud SegmentCloth API.
 
@@ -133,6 +144,42 @@ class VisionAPIClient:
 
         except Exception as e:
              raise VisionAPIError(f"Segmentation failed: {str(e)}") from e
+
+    async def detect_main_body(self, image_url: str) -> dict[str, Any]:
+        """Detect main body (person) in the image using Alibaba Cloud DetectMainBody API.
+
+        Args:
+            image_url: URL of the input image.
+
+        Returns:
+            Dictionary containing detection data (box coordinates).
+            Format: { "y": int, "x": int, "height": int, "width": int }
+        """
+        if not settings.ALIBABA_ACCESS_KEY_ID:
+             raise VisionAPIError("Alibaba Cloud credentials not configured", code="CONFIG_ERROR")
+
+        request = objectdet_models.DetectMainBodyRequest(
+            image_url=image_url
+        )
+
+        try:
+            # Assuming main region is what we want
+            response = self.objectdet_client.detect_main_body(request)
+            
+            if response.body and response.body.data and response.body.data.location:
+                # API returns Location: { Y, X, Height, Width }
+                loc = response.body.data.location
+                return {
+                    "y": loc.y, # type: ignore
+                    "x": loc.x, # type: ignore
+                    "height": loc.height, # type: ignore
+                    "width": loc.width, # type: ignore
+                }
+            
+            raise VisionAPIError("No main body detected")
+
+        except Exception as e:
+             raise VisionAPIError(f"Detection failed: {str(e)}") from e
 
     async def analyze_garment(self, image_url: str) -> GarmentAnalysisResult:
         """Analyze a garment image and extract attributes.

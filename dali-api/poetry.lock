@@ -296,6 +296,27 @@ alibabacloud-tea-util = ">=0.3.13,<1.0.0"
 alibabacloud-tea-xml = ">=0.0.3,<1.0.0"
 
 [[package]]
+name = "alibabacloud-objectdet20191230"
+version = "4.0.0"
+description = "Alibaba Cloud objectdet (20191230) SDK Library for Python"
+optional = false
+python-versions = ">=3.6"
+groups = ["main"]
+files = [
+    {file = "alibabacloud_objectdet20191230-4.0.0-py3-none-any.whl", hash = "sha256:9e6ff23b19a7a586971b4a27cf6087355321a3bf091d29133f6569deaf09942e"},
+    {file = "alibabacloud_objectdet20191230-4.0.0.tar.gz", hash = "sha256:d686f3a85da6ee7020bfe4d0e5a8805a1ba49ff166dde7df2cfd461775da3224"},
+]
+
+[package.dependencies]
+alibabacloud-credentials = ">=1.0.2,<2.0.0"
+alibabacloud-endpoint-util = ">=0.0.4,<1.0.0"
+alibabacloud-openapi-util = ">=0.2.2,<1.0.0"
+alibabacloud-tea-fileform = ">=0.0.3,<1.0.0"
+alibabacloud-tea-openapi = ">=0.3.16,<1.0.0"
+alibabacloud-tea-util = ">=0.3.13,<1.0.0"
+alibabacloud-tea-xml = ">=0.0.3,<1.0.0"
+
+[[package]]
 name = "alibabacloud-openapi-util"
 version = "0.2.2"
 description = "Aliyun Tea OpenApi Library for Python"
@@ -3648,4 +3669,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "900edeaf7622273439c08963731f73975f1e921827a4523427487ad6ac137b6c"
+content-hash = "bca288b6d0b2e5f6fc2b2cebbe863f86a10a5fecd63c75783ff23c9f12118802"

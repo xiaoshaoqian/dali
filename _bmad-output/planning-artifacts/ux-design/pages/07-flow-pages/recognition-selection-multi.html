@@ -110,7 +110,7 @@
             height: 100%;
             background: #333;
             position: relative;
-            background-image: url('https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=1000&auto=format&fit=crop');
+            /* background-image set via JS */
             background-size: cover;
             background-position: center;
         }
@@ -139,234 +139,234 @@
             background: #6C63FF;
             color: #fff;
             padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 600;
+            border - radius: 8px;
+            font - size: 13px;
+            font - weight: 600;
             display: flex;
-            align-items: center;
+            align - items: center;
             gap: 4px;
             opacity: 0;
             transform: translateY(10px);
             transition: all 0.3s;
-            box-shadow: 0 4px 10px rgba(108, 99, 255, 0.3);
-            white-space: nowrap;
+            box - shadow: 0 4px 10px rgba(108, 99, 255, 0.3);
+            white - space: nowrap;
         }
 
-        .bounding-box.selected .confidence-tag {
+        .bounding - box.selected.confidence - tag {
             opacity: 1;
             transform: translateY(0);
         }
 
         /* Footer / Selection Area */
-        .selection-footer {
+        .selection - footer {
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 100%;
-            background: linear-gradient(to top, #000 10%, rgba(0, 0, 0, 0.95) 90%, transparent 100%);
+            width: 100 %;
+            background: linear - gradient(to top, #000 10 %, rgba(0, 0, 0, 0.95) 90 %, transparent 100 %);
             padding: 40px 0 30px;
-            z-index: 200;
+            z - index: 200;
             display: flex;
-            flex-direction: column;
+            flex - direction: column;
             gap: 20px;
-            max-height: 60%;
-            overflow-y: auto;
+            max - height: 60 %;
+            overflow - y: auto;
         }
 
-        .selection-footer::-webkit-scrollbar {
+        .selection - footer:: -webkit - scrollbar {
             display: none;
         }
 
-        .footer-header {
+        .footer - header {
             padding: 0 24px;
             color: #fff;
-            margin-bottom: -6px;
+            margin - bottom: -6px;
         }
 
-        .footer-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 4px;
+        .footer - title {
+            font - size: 18px;
+            font - weight: 600;
+            margin - bottom: 4px;
         }
 
         /* Items Carousel */
-        .items-carousel {
+        .items - carousel {
             display: flex;
             gap: 12px;
-            overflow-x: auto;
+            overflow - x: auto;
             padding: 0 24px;
-            padding-bottom: 4px;
-            scroll-behavior: smooth;
+            padding - bottom: 4px;
+            scroll - behavior: smooth;
         }
 
-        .items-carousel::-webkit-scrollbar {
+        .items - carousel:: -webkit - scrollbar {
             display: none;
         }
 
-        .item-card {
-            min-width: 100px;
+        .item - card {
+            min - width: 100px;
             height: 140px;
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
+            backdrop - filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 16px;
+            border - radius: 16px;
             padding: 8px;
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            flex - direction: column;
+            align - items: center;
+            justify - content: space - between;
+            transition: all 0.2s cubic - bezier(0.2, 0.8, 0.2, 1);
             cursor: pointer;
         }
 
-        .item-card.selected {
+        .item - card.selected {
             background: #fff;
-            border-color: #fff;
+            border - color: #fff;
             transform: scale(1.05);
-            z-index: 10;
+            z - index: 10;
         }
 
-        .card-image {
-            width: 100%;
+        .card - image {
+            width: 100 %;
             height: 80px;
-            border-radius: 10px;
+            border - radius: 10px;
             background: #444;
-            margin-bottom: 8px;
-            background-size: cover;
-            background-position: center;
+            margin - bottom: 8px;
+            background - size: cover;
+            background - position: center;
         }
 
-        .card-name {
-            font-size: 12px;
+        .card - name {
+            font - size: 12px;
             color: rgba(255, 255, 255, 0.8);
-            text-align: center;
-            margin-bottom: 4px;
-            font-weight: 500;
+            text - align: center;
+            margin - bottom: 4px;
+            font - weight: 500;
         }
 
-        .item-card.selected .card-name {
+        .item - card.selected.card - name {
             color: #1C1C1E;
-            font-weight: 600;
+            font - weight: 600;
         }
 
-        .radio-indicator {
+        .radio - indicator {
             width: 16px;
             height: 16px;
-            border-radius: 50%;
+            border - radius: 50 %;
             border: 2px solid rgba(255, 255, 255, 0.4);
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align - items: center;
+            justify - content: center;
         }
 
-        .item-card.selected .radio-indicator {
-            border-color: #6C63FF;
+        .item - card.selected.radio - indicator {
+            border - color: #6C63FF;
             background: #6C63FF;
         }
 
-        .radio-indicator::after {
+        .radio - indicator::after {
             content: '';
             width: 6px;
             height: 6px;
             background: #fff;
-            border-radius: 50%;
+            border - radius: 50 %;
             opacity: 0;
             transform: scale(0);
             transition: all 0.2s;
         }
 
-        .item-card.selected .radio-indicator::after {
+        .item - card.selected.radio - indicator::after {
             opacity: 1;
             transform: scale(1);
         }
 
         /* Occasion Section */
-        .occasion-section {
+        .occasion - section {
             padding: 0 24px;
-            margin-top: 4px;
+            margin - top: 4px;
         }
 
-        .occasion-scroll {
+        .occasion - scroll {
             display: flex;
             gap: 10px;
-            overflow-x: auto;
-            padding-bottom: 4px;
-            margin-top: 12px;
+            overflow - x: auto;
+            padding - bottom: 4px;
+            margin - top: 12px;
         }
 
-        .occasion-scroll::-webkit-scrollbar {
+        .occasion - scroll:: -webkit - scrollbar {
             display: none;
         }
 
-        .occasion-chip {
+        .occasion - chip {
             display: flex;
-            align-items: center;
+            align - items: center;
             gap: 6px;
             background: rgba(255, 255, 255, 0.1);
             padding: 10px 14px;
-            border-radius: 20px;
-            font-size: 14px;
+            border - radius: 20px;
+            font - size: 14px;
             color: rgba(255, 255, 255, 0.8);
-            font-weight: 500;
-            white-space: nowrap;
+            font - weight: 500;
+            white - space: nowrap;
             cursor: pointer;
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.2s;
         }
 
-        .occasion-chip.selected {
+        .occasion - chip.selected {
             background: rgba(108, 99, 255, 0.2);
-            border-color: #6C63FF;
+            border - color: #6C63FF;
             color: #fff;
-            font-weight: 600;
+            font - weight: 600;
         }
 
-        .chip-emoji {
-            font-size: 16px;
+        .chip - emoji {
+            font - size: 16px;
         }
 
         /* Confirm Button */
-        .action-container {
+        .action - container {
             padding: 0 24px;
-            margin-top: 10px;
+            margin - top: 10px;
         }
 
-        .start-btn {
-            width: 100%;
+        .start - btn {
+            width: 100 %;
             height: 56px;
             background: #6C63FF;
             color: #fff;
             border: none;
-            border-radius: 28px;
-            font-size: 17px;
-            font-weight: 600;
+            border - radius: 28px;
+            font - size: 17px;
+            font - weight: 600;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            align - items: center;
+            justify - content: center;
             gap: 8px;
             cursor: pointer;
             transition: all 0.2s;
-            box-shadow: 0 8px 20px rgba(108, 99, 255, 0.3);
+            box - shadow: 0 8px 20px rgba(108, 99, 255, 0.3);
         }
 
-        .start-btn.disabled {
+        .start - btn.disabled {
             background: #333;
             color: rgba(255, 255, 255, 0.5);
-            box-shadow: none;
-            cursor: not-allowed;
+            box - shadow: none;
+            cursor: not - allowed;
         }
 
-        .home-indicator {
+        .home - indicator {
             position: absolute;
             bottom: 8px;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 50 %;
+            transform: translateX(-50 %);
             width: 134px;
             height: 5px;
             background: #fff;
-            border-radius: 3px;
+            border - radius: 3px;
             opacity: 0.5;
-            z-index: 300;
+            z - index: 300;
         }
 
         /* Loading Spinner */
@@ -374,8 +374,8 @@
             width: 20px;
             height: 20px;
             border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top-color: #fff;
-            border-radius: 50%;
+            border - top - color: #fff;
+            border - radius: 50 %;
             animation: spin 0.8s linear infinite;
         }
 
@@ -385,18 +385,18 @@
             }
         }
 
-        .loading-overlay {
+        .loading - overlay {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100 %;
+            height: 100 %;
             background: rgba(0, 0, 0, 0.5);
             display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            z-index: 20;
+            align - items: center;
+            justify - content: center;
+            border - radius: 10px;
+            z - index: 20;
         }
     </style>
 </head>
@@ -474,31 +474,121 @@
     </div>
 
     <script>
+        // --- Helpers ---
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        function loadImageDimensions(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+                img.onerror = reject;
+                img.src = url;
+            });
+        }
+
+        // --- Configuration ---
+        const DEMO_IMAGE = "https://viapi-test.oss-cn-shanghai.aliyuncs.com/viapi-3.0domepic/imageseg/SegmentBody/SegmentBody.1.png";
+        const userImage = getQueryParam('image') || DEMO_IMAGE;
+
+        // Set Background
+        const photoContainer = document.getElementById('photoContainer');
+        photoContainer.style.backgroundImage = `url('${userImage}')`;
+
+        // --- Data ---
+        // We start with one "Generic" item representing the main body
         const items = [
             {
-                id: 'coat',
-                name: "米色风衣",
-                box: { width: "220px", height: "340px", top: "40%", left: "50%" },
-                image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?q=80&w=150&auto=format&fit=crop"
-            },
-            {
-                id: 'bag',
-                name: "棕色手提包",
-                box: { width: "110px", height: "140px", top: "50%", left: "30%" },
-                image: ""
-            },
-            {
-                id: 'shoes',
-                name: "黑色高跟鞋",
-                box: { width: "140px", height: "80px", top: "75%", left: "55%" },
-                image: ""
+                id: 'coat', // ID kept as 'coat' for compatibility, or change to 'main'
+                name: "全身穿搭",
+                // Default fallback box (approx center)
+                box: { width: "80%", height: "80%", top: "50%", left: "50%" },
+                image: userImage,
+                isLoading: false,
+                segmentedImage: null
             }
         ];
 
-        let selectedItemId = 'coat'; // Default Item Selected
+        let selectedItemId = 'coat';
         let selectedOccasion = null;
 
-        const container = document.getElementById('photoContainer');
+        // --- API Calls ---
+
+        async function fetchDetection(item) {
+            if (!item.image) return;
+
+            console.log("Fetching detection for:", item.name);
+            try {
+                // Call Backend API
+                const response = await fetch('http://localhost:8000/api/v1/vision/detect/main-body', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image_url: item.image })
+                });
+
+                if (!response.ok) throw new Error("Detection API failed");
+                const data = await response.json();
+
+                // Convert pixels to percentages
+                const dimensions = await loadImageDimensions(item.image);
+                const { x, y, width, height } = data.box;
+
+                // Calculate percentages relative to image
+                // Note: The background-size is 'cover'. 
+                // Detection boxes are accurate for the image content. 
+                // Because CSS 'top/left' on absolute div is relative to container, 
+                // and background-position is center, this might be tricky if aspect ratios differ.
+                // FOR NOW: We assume the user uploads a portrait photo similar to screen aspect ratio 
+                // or we update the UI to use 'contain' for accurate boxes?
+                // Visual Design 2B uses 'cover'. 
+                // To keep it simple for this prototype matching the approved plan, we map % directly.
+
+                item.box = {
+                    left: (x + width / 2) / dimensions.width * 100 + "%", // Center X
+                    top: (y + height / 2) / dimensions.height * 100 + "%", // Center Y
+                    width: (width / dimensions.width * 100) + "%",
+                    height: (height / dimensions.height * 100) + "%"
+                };
+
+                console.log("Updated Box:", item.box);
+                renderBoundingBoxes(); // Re-render logic
+
+            } catch (error) {
+                console.error("Detection Error:", error);
+            }
+        }
+
+        async function fetchSegmentation(item) {
+            if (!item.image || item.segmentedImage) return;
+
+            item.isLoading = true;
+            renderCarousel();
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/vision/segment/cloth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image_url: item.image })
+                });
+
+                if (!response.ok) throw new Error('Segmentation failed');
+                const data = await response.json();
+
+                if (data.mask_url) {
+                    item.segmentedImage = data.mask_url;
+                }
+            } catch (error) {
+                console.warn("Segmentation Error:", error);
+            } finally {
+                item.isLoading = false;
+                renderCarousel();
+            }
+        }
+
+        // --- UI Functions ---
+
         const carousel = document.getElementById('carousel');
         const confirmBtn = document.getElementById('confirmBtn');
 
@@ -506,10 +596,14 @@
             render();
             updateButtonState();
 
-            // Trigger segmentation for default item
+            // Auto-Start Processes
             const defaultItem = items.find(i => i.id === selectedItemId);
             if (defaultItem) {
-                fetchSegmentation(defaultItem);
+                // 1. Get Real Box
+                fetchDetection(defaultItem);
+
+                // 2. Get Cutout (small delay for UX)
+                setTimeout(() => fetchSegmentation(defaultItem), 500);
             }
         }
 
@@ -530,12 +624,12 @@
             if (selectedItemId === id) return;
             selectedItemId = id;
             render();
-
-            // Scroll selected card into view
             const card = document.getElementById(`card-${id}`);
-            if (card) {
-                card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            }
+            if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
+            // Trigger segmentation if needed
+            const item = items.find(i => i.id === id);
+            if (item) fetchSegmentation(item);
         }
 
         function selectOccasion(element, occasionId) {
@@ -546,33 +640,27 @@
         }
 
         function renderBoundingBoxes() {
-            container.innerHTML = '';
+            photoContainer.innerHTML = '';
             items.forEach(item => {
                 const isSelected = item.id === selectedItemId;
-
                 const box = document.createElement('div');
                 box.className = `bounding-box ${isSelected ? 'selected' : ''}`;
+                // Apply calculated styles
                 box.style.width = item.box.width;
                 box.style.height = item.box.height;
                 box.style.top = item.box.top;
                 box.style.left = item.box.left;
-                box.style.transform = "translate(-50%, -50%)";
+                box.style.transform = "translate(-50%, -50%)"; // Centered positioning
 
-                const tag = document.createElement('div');
-                tag.className = 'confidence-tag';
-                tag.innerHTML = `
-                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                    </svg> 已选主体
-                `;
-                box.appendChild(tag);
+                if (isSelected) {
+                    const tag = document.createElement('div');
+                    tag.className = 'confidence-tag';
+                    tag.innerHTML = `<svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> 已选主体`;
+                    box.appendChild(tag);
+                }
 
-                box.onclick = (e) => {
-                    e.stopPropagation();
-                    selectItem(item.id);
-                };
-
-                container.appendChild(box);
+                box.onclick = (e) => { e.stopPropagation(); selectItem(item.id); };
+                photoContainer.appendChild(box);
             });
         }
 
@@ -580,14 +668,11 @@
             carousel.innerHTML = '';
             items.forEach(item => {
                 const isSelected = item.id === selectedItemId;
-
                 const card = document.createElement('div');
                 card.className = `item-card ${isSelected ? 'selected' : ''}`;
                 card.id = `card-${item.id}`;
 
-                // Add loading overlay if needed
-                const loadingHtml = item.isLoading ?
-                    `<div class="loading-overlay"><div class="spinner"></div></div>` : '';
+                const loadingHtml = item.isLoading ? `<div class="loading-overlay"><div class="spinner"></div></div>` : '';
 
                 card.innerHTML = `
                     <div class="card-image" style="background-image: url('${item.segmentedImage || item.image || ''}')">
@@ -598,69 +683,9 @@
                     <div class="radio-indicator"></div>
                 `;
 
-                card.onclick = (e) => {
-                    selectItem(item.id);
-                };
-
+                card.onclick = () => selectItem(item.id);
                 carousel.appendChild(card);
             });
-        }
-
-        async function fetchSegmentation(item) {
-            if (!item.image || item.segmentedImage || item.isLoading) return;
-
-            // Set loading state
-            item.isLoading = true;
-            renderCarousel(); // Re-render to show spinner
-
-            try {
-                // Call Backend API
-                // Note: The backend must be running on localhost:8000
-                const response = await fetch('http://localhost:8000/api/v1/vision/segment/cloth', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ image_url: item.image })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Segmentation failed');
-                }
-
-                const data = await response.json();
-
-                // Update item with segmented result
-                if (data.mask_url) {
-                    item.segmentedImage = data.mask_url;
-                    console.log(`Segmentation success for ${item.name}:`, data.mask_url);
-                }
-            } catch (error) {
-                console.warn(`Segmentation API error for ${item.name}:`, error);
-                // Optional: Show error toast or visual indicator
-            } finally {
-                item.isLoading = false;
-                renderCarousel(); // Re-render to show result or clear loading
-            }
-        }
-
-        function selectItem(id) {
-            if (selectedItemId === id) return;
-            selectedItemId = id;
-
-            // Trigger segmentation for the selected item
-            const item = items.find(i => i.id === id);
-            if (item) {
-                fetchSegmentation(item);
-            }
-
-            render();
-
-            // Scroll selected card into view
-            const card = document.getElementById(`card-${id}`);
-            if (card) {
-                card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            }
         }
 
         function startStyling() {
@@ -669,7 +694,6 @@
         }
 
         init();
-
     </script>
 </body>
 

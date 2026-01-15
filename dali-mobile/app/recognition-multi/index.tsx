@@ -5,7 +5,7 @@
  *
  * @see _bmad-output/planning-artifacts/ux-design/pages/07-flow-pages/recognition-selection-multi.html
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
     View,
     Text,
@@ -14,6 +14,7 @@ import {
     Dimensions,
     Image,
     ScrollView,
+    ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,6 +27,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 
 import { colors } from '@/constants';
+import { visionService } from '@/services';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const CAROUSEL_CARD_WIDTH = 100;
@@ -91,10 +93,12 @@ function CarouselCard({
     item,
     isSelected,
     onPress,
+    isLoading,
 }: {
     item: DetectedItem;
     isSelected: boolean;
     onPress: () => void;
+    isLoading?: boolean;
 }) {
     const animatedStyle = useAnimatedStyle(() => ({
         transform: [{ scale: withSpring(isSelected ? 1.05 : 1) }],
@@ -104,11 +108,17 @@ function CarouselCard({
     return (
         <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
             <Animated.View style={[styles.carouselCard, animatedStyle]}>
-                <Image
-                    source={{ uri: item.thumbnail }}
-                    style={styles.cardThumbnail}
-                    resizeMode="cover"
-                />
+                {isLoading ? (
+                    <View style={styles.cardThumbnailLoading}>
+                        <ActivityIndicator color={colors.primary} />
+                    </View>
+                ) : (
+                    <Image
+                        source={{ uri: item.thumbnail }}
+                        style={styles.cardThumbnail}
+                        resizeMode="cover"
+                    />
+                )}
                 <Text
                     style={[styles.cardName, isSelected && styles.cardNameSelected]}
                     numberOfLines={1}
@@ -153,32 +163,71 @@ export default function RecognitionMultiScreen() {
     }>();
 
     const insets = useSafeAreaInsets();
-    const [selectedId, setSelectedId] = useState<string>('item-1');
+    const [selectedId, setSelectedId] = useState<string>('item-main');
     const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
+    const [isLoadingDetection, setIsLoadingDetection] = useState(true);
+    const [isLoadingSegment, setIsLoadingSegment] = useState(false);
 
-    // Mock detected items
-    const detectedItems: DetectedItem[] = [
-        {
-            id: 'item-1',
-            name: '米色风衣',
-            thumbnail: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=200',
-            boundingBox: { top: 120, left: 60, width: 140, height: 200 },
-        },
-        {
-            id: 'item-2',
-            name: '白色衬衫',
-            thumbnail: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=200',
-            boundingBox: { top: 180, left: 200, width: 120, height: 160 },
-        },
-        {
-            id: 'item-3',
-            name: '黑色长裤',
-            thumbnail: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=200',
-            boundingBox: { top: 340, left: 100, width: 180, height: 200 },
-        },
-    ];
+    // Real detected items (populated by API)
+    const [detectedItems, setDetectedItems] = useState<DetectedItem[]>([]);
 
     const photoUrl = params.photoUrl || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800';
+
+    // Fetch detection on mount
+    useEffect(() => {
+        async function loadDetection() {
+            setIsLoadingDetection(true);
+            try {
+                // 1. Detect Main Body
+                const box = await visionService.detectMainBody(photoUrl);
+
+                // 2. Create initial item with detected box
+                // Note: API returns pixel coordinates. We might need to scale based on image display.
+                // For now, mapping directly assuming image fills the top portion of screen.
+                const initialItem: DetectedItem = {
+                    id: 'item-main',
+                    name: '全身穿搭',
+                    thumbnail: photoUrl, // Will update with segment result
+                    boundingBox: {
+                        top: box.y,
+                        left: box.x,
+                        width: box.width,
+                        height: box.height,
+                    },
+                };
+
+                setDetectedItems([initialItem]);
+                setSelectedId('item-main');
+
+                // 3. Fetch Segmentation for thumbnail (async)
+                setIsLoadingSegment(true);
+                try {
+                    const segmentedUrl = await visionService.segmentCloth(photoUrl);
+                    setDetectedItems(prev => prev.map(item =>
+                        item.id === 'item-main' ? { ...item, thumbnail: segmentedUrl } : item
+                    ));
+                } catch (segError) {
+                    console.warn('Segmentation failed, using original image:', segError);
+                } finally {
+                    setIsLoadingSegment(false);
+                }
+
+            } catch (error) {
+                console.error('Detection failed:', error);
+                // Fallback to mock data if API fails
+                setDetectedItems([{
+                    id: 'item-main',
+                    name: '全身穿搭',
+                    thumbnail: photoUrl,
+                    boundingBox: { top: 120, left: 60, width: 200, height: 300 },
+                }]);
+            } finally {
+                setIsLoadingDetection(false);
+            }
+        }
+
+        loadDetection();
+    }, [photoUrl]);
 
     const handleBack = useCallback(() => {
         router.back();
@@ -427,6 +476,15 @@ const styles = StyleSheet.create({
         height: 80,
         borderRadius: 10,
         marginBottom: 6,
+    },
+    cardThumbnailLoading: {
+        width: '100%',
+        height: 80,
+        borderRadius: 10,
+        marginBottom: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(255,255,255,0.1)',
     },
     cardName: {
         fontSize: 12,
