@@ -505,6 +505,12 @@
         function init() {
             render();
             updateButtonState();
+
+            // Trigger segmentation for default item
+            const defaultItem = items.find(i => i.id === selectedItemId);
+            if (defaultItem) {
+                fetchSegmentation(defaultItem);
+            }
         }
 
         function render() {

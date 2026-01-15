@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     SMS_TEMPLATE_CODE: str = ""
 
     # CORS
-    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:19006"
+    CORS_ORIGINS: str = "*"
 
     @property
     def cors_origins_list(self) -> list[str]:
