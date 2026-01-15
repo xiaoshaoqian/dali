@@ -4,9 +4,12 @@ This module provides both real OSS and mock storage implementations.
 Use real OSS when credentials are configured, otherwise falls back to mock.
 """
 
+import logging
 from datetime import UTC, datetime, timedelta
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class StorageService:
@@ -86,9 +89,19 @@ class StorageService:
             Public URL to access the file
         """
         if self._use_real_oss:
-            return self._oss_client.get_public_url(object_key)
+            url = self._oss_client.get_public_url(object_key)
+            # Log URL info (first 150 chars to avoid exposing full signature)
+            logger.info(f"[StorageService] Generated signed URL for {object_key}")
+            logger.info(f"[StorageService] URL preview: {url[:150]}..." if len(url) > 150 else f"[StorageService] URL: {url}")
+            if "Signature=" in url or "signature" in url.lower():
+                logger.info("[StorageService] ✅ URL contains signature")
+            else:
+                logger.warning("[StorageService] ⚠️ URL does NOT contain signature!")
+            return url
         else:
-            return f"{self.base_url}/{object_key}"
+            url = f"{self.base_url}/{object_key}"
+            logger.info(f"[StorageService] Mock URL (no real OSS): {url}")
+            return url
 
     def delete_file(self, object_key: str) -> bool:
         """
