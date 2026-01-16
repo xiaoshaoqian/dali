@@ -30,7 +30,8 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 
 import { colors } from '@/constants';
-import { visionService } from '@/services';
+import { visionService, garmentService } from '@/services';
+import type { GarmentAnalysisResult } from '@/services';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -235,6 +236,15 @@ export default function RecognitionSelectionScreen() {
         width: SCREEN_WIDTH * 0.7,
         height: SCREEN_HEIGHT * 0.35,
     });
+    const [recognitionResult, setRecognitionResult] = useState<{
+        itemName: string;
+        category: string;
+        style: string;
+    }>({
+        itemName: '全身穿搭',
+        category: '外套',
+        style: '简约',
+    });
 
     // Parse recognition data - decode URL if needed
     const rawPhotoUrl = params.photoUrl;
@@ -249,14 +259,7 @@ export default function RecognitionSelectionScreen() {
     }, [rawPhotoUrl, photoUrl]);
     const confidence = parseFloat(params.confidence || '0.98');
 
-    // Recognition result (can be enhanced with garmentService.analyzeGarment later)
-    const recognitionResult = {
-        itemName: '全身穿搭',
-        category: '外套',
-        style: '简约',
-    };
-
-    // Fetch detection on mount
+    // Fetch detection and garment analysis on mount
     useEffect(() => {
         async function loadDetection() {
             setIsLoading(true);
@@ -272,25 +275,55 @@ export default function RecognitionSelectionScreen() {
                 const box = await visionService.detectMainBody(photoUrl);
                 console.log('[Recognition] Detection result:', box);
 
-                // 3. Scale box coordinates to screen
-                const imageDisplayHeight = SCREEN_HEIGHT;
-                const imageDisplayWidth = SCREEN_WIDTH;
+                // 3. Scale box coordinates accounting for cover resizeMode
+                // With "cover", the image is scaled to fill the screen and cropped
+                const imageAspect = imageDimensions.width / imageDimensions.height;
+                const screenAspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+
+                let displayedWidth: number;
+                let displayedHeight: number;
+                let offsetX = 0;
+                let offsetY = 0;
+
+                if (imageAspect > screenAspect) {
+                    // Image is wider than screen - height determines scale, sides are cropped
+                    displayedHeight = SCREEN_HEIGHT;
+                    displayedWidth = SCREEN_HEIGHT * imageAspect;
+                    offsetX = (SCREEN_WIDTH - displayedWidth) / 2; // Centered crop
+                } else {
+                    // Image is taller than screen - width determines scale, top/bottom are cropped
+                    displayedWidth = SCREEN_WIDTH;
+                    displayedHeight = SCREEN_WIDTH / imageAspect;
+                    offsetY = (SCREEN_HEIGHT - displayedHeight) / 2; // Centered crop
+                }
 
                 // Calculate scale factors
-                const scaleX = imageDisplayWidth / imageDimensions.width;
-                const scaleY = imageDisplayHeight / imageDimensions.height;
+                const scaleX = displayedWidth / imageDimensions.width;
+                const scaleY = displayedHeight / imageDimensions.height;
 
-                // Update bounding box with scaled coordinates
+                // Update bounding box with scaled coordinates and offset
                 setBoundingBox({
-                    top: box.y * scaleY,
-                    left: box.x * scaleX,
+                    top: box.y * scaleY + offsetY,
+                    left: box.x * scaleX + offsetX,
                     width: box.width * scaleX,
                     height: box.height * scaleY,
                 });
 
+                // 4. Call garment analysis API
+                console.log('[Recognition] Calling analyzeGarment API...');
+                const analysisResult = await garmentService.analyzeGarment(photoUrl);
+                console.log('[Recognition] Analysis result:', analysisResult);
+
+                // Update recognition result with API data
+                setRecognitionResult({
+                    itemName: analysisResult.garmentType,
+                    category: analysisResult.garmentType,
+                    style: analysisResult.styleTags[0] || '简约',
+                });
+
             } catch (error) {
-                console.error('[Recognition] Detection failed:', error);
-                // Keep default fallback box
+                console.error('[Recognition] Detection/analysis failed:', error);
+                // Keep default fallback values
             } finally {
                 setIsLoading(false);
             }

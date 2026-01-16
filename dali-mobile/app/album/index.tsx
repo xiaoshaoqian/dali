@@ -114,22 +114,13 @@ export default function AlbumEditorScreen() {
         }
       );
 
-      // Generate unique filename and save to cache
-      const fileName = `photo_${Date.now()}.jpg`;
-      const cacheUri = `${FileSystem.cacheDirectory}${fileName}`;
-      await FileSystem.copyAsync({
-        from: manipResult.uri,
-        to: cacheUri,
-      });
-
-      // Upload to cloud storage
+      // Upload to cloud storage directly from manipulator result
       setEditorState('uploading');
-      const uploadResult = await photoUploadService.uploadPhoto(cacheUri);
+      const uploadResult = await photoUploadService.uploadPhoto(manipResult.uri);
 
       if (uploadResult.success && uploadResult.photoUrl) {
-        // Clean up local cache files
+        // Clean up processed image file
         try {
-          await FileSystem.deleteAsync(cacheUri, { idempotent: true });
           await FileSystem.deleteAsync(manipResult.uri, { idempotent: true });
         } catch {
           // Ignore cleanup errors
