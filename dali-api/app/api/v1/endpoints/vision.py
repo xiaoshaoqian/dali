@@ -53,11 +53,11 @@ async def segment_cloth(request: SegmentClothRequest) -> Any:
     """Segment cloth from image."""
     logger.info(f"[Vision] segment_cloth called with image_url: {request.image_url[:100]}...")
     try:
-        mask_url = await vision_client.segment_cloth(request.image_url)
-        logger.info(f"[Vision] segment_cloth success, mask_url: {mask_url[:100]}...")
+        segmentation_result = await vision_client.segment_cloth(request.image_url)
+        logger.info(f"[Vision] segment_cloth success, detected categories: {segmentation_result.detected_categories}")
         return SegmentClothResponse(
             origin_image_url=request.image_url,
-            mask_url=mask_url,
+            mask_url=segmentation_result.mask_url,
         )
     except Exception as e:
         logger.error(f"[Vision] segment_cloth FAILED: {str(e)}")
