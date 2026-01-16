@@ -115,35 +115,47 @@ class VisionAPIClient:
             image_url: URL of the input image.
 
         Returns:
-            URL of the segmented image (mask/cutout).
+            URL of the segmented image (transparent PNG by default).
         """
         if not settings.ALIBABA_ACCESS_KEY_ID:
             # Fallback for dev without credentials
              raise VisionAPIError("Alibaba Cloud credentials not configured", code="CONFIG_ERROR")
 
+        # Build request with correct parameters
+        # Reference: https://help.aliyun.com/zh/viapi/developer-reference/api-clothing-segmentation
         request = imageseg_models.SegmentClothRequest(
-             image_url=image_url,
-             return_form="crop" # Return cutout image
+            image_url=image_url,
+            # Options for return_form:
+            # - "whiteBK": white background
+            # - "mask": single channel mask
+            # - Not set: transparent PNG (default, recommended for clothing)
         )
-        
-        try:
-             # Using asyncio to run synchronous SDK method in thread pool if needed,
-             # but strictly SDK is sync. In FastAPI async route, this blocks loop.
-             # For low traffic, direct call is acceptable, or use run_in_executor.
-             # Here we call directly for simplicity, assuming fast response or low burden.
-             response = self.imageseg_client.segment_cloth(request)
-             
-             if response.body and response.body.data and response.body.data.elements:
-                  # SegmentCloth returns a list of elements usually, but for single cloth?
-                  # Actually checking documentation, Data contains logic.
-                  # Let's verify response structure from docs.
-                  # It returns `Elements` URLs.
-                  return response.body.data.elements[0].image_url
-             
-             raise VisionAPIError("No segmentation result returned")
 
+        try:
+            # Call the API (synchronous SDK method in async context)
+            response = self.imageseg_client.segment_cloth(request)
+
+            # Parse response according to official documentation structure
+            # Response: Data.Elements[0].ImageURL
+            if response.body and response.body.data and response.body.data.elements:
+                element = response.body.data.elements[0]
+                # SDK returns ImageURL (capital letters as per docs)
+                if hasattr(element, 'image_url'):
+                    return element.image_url
+                # Try capitalized version if lowercase not available
+                if hasattr(element, 'ImageURL'):
+                    return element.ImageURL
+
+            raise VisionAPIError("No segmentation result returned")
+
+        except VisionAPIError:
+            raise
         except Exception as e:
-             raise VisionAPIError(f"Segmentation failed: {str(e)}") from e
+            # Log detailed error for debugging
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"[Vision] SegmentCloth API error: {str(e)}", exc_info=True)
+            raise VisionAPIError(f"Segmentation failed: {str(e)}") from e
 
     async def detect_main_body(self, image_url: str) -> dict[str, Any]:
         """Detect main body (person) in the image using Alibaba Cloud DetectMainBody API.

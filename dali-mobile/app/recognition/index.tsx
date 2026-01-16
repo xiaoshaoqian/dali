@@ -309,7 +309,17 @@ export default function RecognitionSelectionScreen() {
                     height: box.height * scaleY,
                 });
 
-                // 4. Call garment analysis API
+            } catch (error) {
+                console.error('[Recognition] Detection failed:', error);
+                // Keep default fallback box
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        // Separate call for garment analysis (non-blocking)
+        async function loadGarmentAnalysis() {
+            try {
                 console.log('[Recognition] Calling analyzeGarment API...');
                 const analysisResult = await garmentService.analyzeGarment(photoUrl);
                 console.log('[Recognition] Analysis result:', analysisResult);
@@ -320,16 +330,14 @@ export default function RecognitionSelectionScreen() {
                     category: analysisResult.garmentType,
                     style: analysisResult.styleTags[0] || '简约',
                 });
-
             } catch (error) {
-                console.error('[Recognition] Detection/analysis failed:', error);
-                // Keep default fallback values
-            } finally {
-                setIsLoading(false);
+                console.warn('[Recognition] Garment analysis failed (using fallback):', error);
+                // Keep default fallback values - user can still proceed
             }
         }
 
         loadDetection();
+        loadGarmentAnalysis();
     }, [photoUrl]);
 
     const handleBack = useCallback(() => {
