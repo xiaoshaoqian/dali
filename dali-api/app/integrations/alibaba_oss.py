@@ -4,6 +4,7 @@ Used for image storage with SSE encryption.
 """
 
 from datetime import datetime, timedelta
+from urllib.parse import quote, urlencode, urlparse, parse_qs, urlunparse
 
 import oss2
 
@@ -34,6 +35,35 @@ class OSSClient:
             settings.ALIBABA_OSS_BUCKET,
         )
 
+    def _encode_presigned_url(self, url: str) -> str:
+        """Ensure presigned URL parameters are properly URL-encoded.
+
+        OSS sign_url may return URLs with unencoded special characters in signature.
+        This method properly encodes the signature parameter while preserving the URL structure.
+
+        Args:
+            url: The presigned URL from oss2.sign_url()
+
+        Returns:
+            URL with properly encoded parameters
+        """
+        parsed = urlparse(url)
+        query_params = parse_qs(parsed.query)
+
+        # Re-encode all query parameters
+        encoded_query = urlencode(query_params, doseq=True, safe='/')
+
+        # Reconstruct URL
+        encoded_url = urlunparse((
+            parsed.scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.params,
+            encoded_query,
+            parsed.fragment
+        ))
+        return encoded_url
+
     def generate_presigned_upload_url(
         self,
         object_key: str,
@@ -48,7 +78,7 @@ class OSSClient:
             content_type: MIME type of the file
 
         Returns:
-            Presigned upload URL
+            Presigned upload URL with properly encoded signature
         """
         # Generate presigned URL for PUT operation
         url = self._bucket.sign_url(
@@ -57,7 +87,8 @@ class OSSClient:
             expires,
             headers={"Content-Type": content_type},
         )
-        return url
+        # Ensure signature is properly URL-encoded
+        return self._encode_presigned_url(url)
 
     def generate_presigned_download_url(
         self,
@@ -71,10 +102,11 @@ class OSSClient:
             expires: URL expiration time in seconds (default: 3600 = 1 hour)
 
         Returns:
-            Presigned download URL
+            Presigned download URL with properly encoded signature
         """
         url = self._bucket.sign_url("GET", object_key, expires)
-        return url
+        # Ensure signature is properly URL-encoded
+        return self._encode_presigned_url(url)
 
     def get_public_url(self, object_key: str) -> str:
         """Get the accessible URL for an object.
