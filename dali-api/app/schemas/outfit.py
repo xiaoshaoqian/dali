@@ -76,3 +76,16 @@ class OutfitResponse(BaseModel):
     occasion: str
     isLiked: bool
     createdAt: str
+
+
+class OutfitDetailResponse(BaseModel):
+    """Detailed response schema for outfit with generated content."""
+
+    id: str = Field(..., description="Unique outfit ID")
+    occasion: str = Field(..., description="Occasion for this outfit")
+    sourceImageUrl: str | None = Field(None, description="Original garment image URL")
+    generatedImageUrl: str | None = Field(None, description="AI-generated outfit image URL")
+    theoryText: str | None = Field(None, description="AI-generated theory/explanation")
+    selectedItem: str | None = Field(None, description="Selected garment category")
+    isFavorited: bool = Field(False, description="Whether user favorited this outfit")
+    createdAt: str = Field(..., description="Creation timestamp")

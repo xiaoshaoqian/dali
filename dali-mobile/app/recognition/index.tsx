@@ -1,11 +1,11 @@
 /**
- * Recognition Selection Screen - Combined with Occasion Selection
- * Displays recognized garment with bounding box + occasion selection in one page
- * UX Improvement: Merged recognition confirmation and occasion selection
+ * Recognition Selection Screen V2 - Anchor Point Selection
+ * Displays recognized garments with center anchor points + occasion selection
+ * Replaces bounding box with modern anchor point UI with breathing animations
  *
- * @see Story 3.1: Garment Recognition & Selection
+ * @see Story 9-5: Frontend Anchor Point UI
  */
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
     View,
     Text,
@@ -14,7 +14,7 @@ import {
     Dimensions,
     Image,
     ScrollView,
-    ActivityIndicator,
+    FlatList,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,16 +24,27 @@ import Animated, {
     withRepeat,
     withTiming,
     withSequence,
+    withSpring,
     FadeInUp,
-    FadeInDown,
+    FadeIn,
+    interpolate,
+    Easing,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 
 import { colors } from '@/constants';
 import { visionService, garmentService } from '@/services';
-import type { GarmentAnalysisResult } from '@/services';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+// Anchor point type from visual analysis
+interface AnchorPoint {
+    id: string;
+    x: number;  // Normalized 0-1
+    y: number;  // Normalized 0-1
+    category: string;
+    description?: string;
+}
 
 // Occasion options
 const OCCASIONS = [
@@ -56,55 +67,127 @@ function loadImageDimensions(url: string): Promise<{ width: number; height: numb
     });
 }
 
-// Bounding box with pulsing animation
-function BoundingBox({
-    confidence,
-    position,
+// Single anchor point with breathing animation
+function AnchorPointDot({
+    point,
+    isSelected,
+    onPress,
+    imageLayout,
 }: {
-    confidence: number;
-    position: { top: number; left: number; width: number; height: number };
+    point: AnchorPoint;
+    isSelected: boolean;
+    onPress: () => void;
+    imageLayout: { width: number; height: number; offsetX: number; offsetY: number };
 }) {
-    const pulseOpacity = useSharedValue(0.6);
+    const scale = useSharedValue(1);
+    const glowOpacity = useSharedValue(0.3);
 
+    // Breathing animation for selected state
     useEffect(() => {
-        pulseOpacity.value = withRepeat(
-            withSequence(
-                withTiming(1, { duration: 1000 }),
-                withTiming(0.6, { duration: 1000 })
-            ),
-            -1,
-            false
-        );
-    }, []);
+        if (isSelected) {
+            scale.value = withRepeat(
+                withSequence(
+                    withTiming(1.2, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+                    withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
+                ),
+                -1,
+                false
+            );
+            glowOpacity.value = withRepeat(
+                withSequence(
+                    withTiming(0.8, { duration: 800 }),
+                    withTiming(0.3, { duration: 800 })
+                ),
+                -1,
+                false
+            );
+        } else {
+            scale.value = withSpring(1);
+            glowOpacity.value = withTiming(0.3);
+        }
+    }, [isSelected]);
 
-    const animatedBorderStyle = useAnimatedStyle(() => ({
-        borderColor: `rgba(108, 99, 255, ${pulseOpacity.value})`,
+    const animatedDotStyle = useAnimatedStyle(() => ({
+        transform: [{ scale: scale.value }],
     }));
 
-    return (
-        <Animated.View
-            style={[
-                styles.boundingBox,
-                {
-                    top: position.top,
-                    left: position.left,
-                    width: position.width,
-                    height: position.height,
-                },
-                animatedBorderStyle,
-            ]}
-        >
-            {/* Corner accents */}
-            <View style={[styles.cornerAccent, styles.cornerTopLeft]} />
-            <View style={[styles.cornerAccent, styles.cornerTopRight]} />
-            <View style={[styles.cornerAccent, styles.cornerBottomLeft]} />
-            <View style={[styles.cornerAccent, styles.cornerBottomRight]} />
+    const animatedGlowStyle = useAnimatedStyle(() => ({
+        opacity: glowOpacity.value,
+    }));
 
-            {/* Confidence tag */}
-            <View style={styles.confidenceTag}>
-                <Text style={styles.confidenceText}>已识别 {Math.round(confidence * 100)}%</Text>
+    // Calculate screen position from normalized coordinates
+    const screenX = point.x * imageLayout.width + imageLayout.offsetX;
+    const screenY = point.y * imageLayout.height + imageLayout.offsetY;
+
+    return (
+        <TouchableOpacity
+            style={[
+                styles.anchorTouchArea,
+                { left: screenX - 24, top: screenY - 24 },
+            ]}
+            onPress={onPress}
+            activeOpacity={0.8}
+        >
+            {/* Outer glow ring (selected only) */}
+            {isSelected && (
+                <Animated.View style={[styles.anchorGlow, animatedGlowStyle]} />
+            )}
+
+            {/* Main dot */}
+            <Animated.View
+                style={[
+                    styles.anchorDot,
+                    isSelected && styles.anchorDotSelected,
+                    animatedDotStyle,
+                ]}
+            >
+                {/* Inner highlight */}
+                <View style={styles.anchorInner} />
+            </Animated.View>
+
+            {/* Category label */}
+            <View style={[styles.anchorLabel, isSelected && styles.anchorLabelSelected]}>
+                <Text style={[styles.anchorLabelText, isSelected && styles.anchorLabelTextSelected]}>
+                    {point.category}
+                </Text>
             </View>
-        </Animated.View>
+        </TouchableOpacity>
+    );
+}
+
+// Item card for bottom scroll list
+function ItemCard({
+    point,
+    isSelected,
+    onPress,
+}: {
+    point: AnchorPoint;
+    isSelected: boolean;
+    onPress: () => void;
+}) {
+    return (
+        <TouchableOpacity
+            style={[styles.itemCard, isSelected && styles.itemCardSelected]}
+            onPress={onPress}
+            activeOpacity={0.7}
+        >
+            <View style={styles.itemCardIcon}>
+                <Text style={styles.itemCardEmoji}>
+                    {point.category === '外套' ? '🧥' :
+                     point.category === '上衣' ? '👕' :
+                     point.category === '裤子' ? '👖' :
+                     point.category === '裙子' ? '👗' :
+                     point.category === '鞋子' ? '👟' :
+                     point.category === '包包' ? '👜' : '👔'}
+                </Text>
+            </View>
+            <Text style={[styles.itemCardText, isSelected && styles.itemCardTextSelected]}>
+                {point.category}
+            </Text>
+            {isSelected && <View style={styles.itemCardCheck}>
+                <Text style={styles.itemCardCheckText}>✓</Text>
+            </View>}
+        </TouchableOpacity>
     );
 }
 
@@ -132,153 +215,50 @@ function OccasionChip({
     );
 }
 
-// Combined recognition + occasion card
-function RecognitionOccasionCard({
-    itemName,
-    category,
-    styleName,
-    selectedOccasion,
-    onOccasionSelect,
-    onConfirm,
-    onEdit,
-}: {
-    itemName: string;
-    category: string;
-    styleName: string;
-    selectedOccasion: string | null;
-    onOccasionSelect: (id: string) => void;
-    onConfirm: () => void;
-    onEdit: () => void;
-}) {
-    const canConfirm = selectedOccasion !== null;
-
-    return (
-        <Animated.View
-            entering={FadeInUp.delay(200).duration(500)}
-            style={styles.combinedCard}
-        >
-            {/* Section 1: Recognized garment */}
-            <View style={styles.garmentSection}>
-                <View style={styles.cardHeader}>
-                    <View>
-                        <Text style={styles.sectionLabel}>已识别</Text>
-                        <Text style={styles.itemName}>{itemName}</Text>
-                    </View>
-                    <TouchableOpacity onPress={onEdit} activeOpacity={0.7}>
-                        <Text style={styles.editButton}>修改</Text>
-                    </TouchableOpacity>
-                </View>
-
-                <View style={styles.tagRow}>
-                    <View style={styles.tag}>
-                        <Text style={styles.tagText}>{category}</Text>
-                    </View>
-                    <View style={styles.tag}>
-                        <Text style={styles.tagText}>{styleName}</Text>
-                    </View>
-                </View>
-            </View>
-
-            {/* Divider */}
-            <View style={styles.divider} />
-
-            {/* Section 2: Occasion selection */}
-            <View style={styles.occasionSection}>
-                <Text style={styles.sectionLabel}>选择场景</Text>
-                <Text style={styles.occasionHint}>选择穿搭场景，AI 会为你推荐最适合的搭配</Text>
-
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.occasionScroll}
-                >
-                    {OCCASIONS.map((occasion) => (
-                        <OccasionChip
-                            key={occasion.id}
-                            occasion={occasion}
-                            isSelected={selectedOccasion === occasion.id}
-                            onPress={() => onOccasionSelect(occasion.id)}
-                        />
-                    ))}
-                </ScrollView>
-            </View>
-
-            {/* Confirm button */}
-            <TouchableOpacity
-                style={[styles.confirmButton, !canConfirm && styles.confirmButtonDisabled]}
-                onPress={onConfirm}
-                activeOpacity={0.8}
-                disabled={!canConfirm}
-            >
-                <Text style={styles.confirmButtonText}>
-                    {canConfirm ? '开始搭配' : '请选择场景'}
-                </Text>
-                {canConfirm && <Text style={styles.confirmArrow}>→</Text>}
-            </TouchableOpacity>
-        </Animated.View>
-    );
-}
-
 export default function RecognitionSelectionScreen() {
     const params = useLocalSearchParams<{
         photoUrl: string;
-        garmentType: string;
-        confidence: string;
+        garmentType?: string;
+        confidence?: string;
     }>();
 
     const insets = useSafeAreaInsets();
+    const itemListRef = useRef<FlatList>(null);
+
+    // State
     const [selectedOccasion, setSelectedOccasion] = useState<string | null>(null);
+    const [selectedAnchorId, setSelectedAnchorId] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [imageError, setImageError] = useState<string | null>(null);
-    const [boundingBox, setBoundingBox] = useState({
-        top: SCREEN_HEIGHT * 0.15,
-        left: SCREEN_WIDTH * 0.15,
-        width: SCREEN_WIDTH * 0.7,
-        height: SCREEN_HEIGHT * 0.35,
-    });
-    const [recognitionResult, setRecognitionResult] = useState<{
-        itemName: string;
-        category: string;
-        style: string;
-    }>({
-        itemName: '全身穿搭',
-        category: '外套',
-        style: '简约',
+    const [anchorPoints, setAnchorPoints] = useState<AnchorPoint[]>([]);
+    const [imageLayout, setImageLayout] = useState({
+        width: SCREEN_WIDTH,
+        height: SCREEN_HEIGHT * 0.65,
+        offsetX: 0,
+        offsetY: 0,
     });
 
-    // Parse recognition data - decode URL if needed
+    // Parse photo URL
     const rawPhotoUrl = params.photoUrl;
     const photoUrl = rawPhotoUrl
         ? decodeURIComponent(rawPhotoUrl)
         : 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800';
 
-    // Debug logging
+    // Fetch anchor points on mount
     useEffect(() => {
-        console.log('[Recognition] Raw photoUrl param:', rawPhotoUrl);
-        console.log('[Recognition] Decoded photoUrl:', photoUrl);
-    }, [rawPhotoUrl, photoUrl]);
-    const confidence = parseFloat(params.confidence || '0.98');
-
-    // Fetch detection and garment analysis on mount
-    useEffect(() => {
-        async function loadDetection() {
+        async function loadAnalysis() {
             setIsLoading(true);
-            console.log('[Recognition] Starting detection for:', photoUrl);
+            console.log('[Recognition] Starting visual analysis for:', photoUrl);
+
             try {
-                // 1. Get image dimensions for scaling
-                console.log('[Recognition] Getting image dimensions...');
+                // Get image dimensions for layout calculation
                 const imageDimensions = await loadImageDimensions(photoUrl);
                 console.log('[Recognition] Image dimensions:', imageDimensions);
 
-                // 2. Call detection API
-                console.log('[Recognition] Calling detectMainBody API...');
-                const box = await visionService.detectMainBody(photoUrl);
-                console.log('[Recognition] Detection result:', box);
-
-                // 3. Scale box coordinates accounting for cover resizeMode
-                // With "cover", the image is scaled to fill the screen and cropped
+                // Calculate display layout (cover mode)
                 const imageAspect = imageDimensions.width / imageDimensions.height;
-                const screenAspect = SCREEN_WIDTH / SCREEN_HEIGHT;
+                const containerHeight = SCREEN_HEIGHT * 0.65;
+                const screenAspect = SCREEN_WIDTH / containerHeight;
 
                 let displayedWidth: number;
                 let displayedHeight: number;
@@ -286,72 +266,72 @@ export default function RecognitionSelectionScreen() {
                 let offsetY = 0;
 
                 if (imageAspect > screenAspect) {
-                    // Image is wider than screen - height determines scale, sides are cropped
-                    displayedHeight = SCREEN_HEIGHT;
-                    displayedWidth = SCREEN_HEIGHT * imageAspect;
-                    offsetX = (SCREEN_WIDTH - displayedWidth) / 2; // Centered crop
+                    displayedHeight = containerHeight;
+                    displayedWidth = containerHeight * imageAspect;
+                    offsetX = (SCREEN_WIDTH - displayedWidth) / 2;
                 } else {
-                    // Image is taller than screen - width determines scale, top/bottom are cropped
                     displayedWidth = SCREEN_WIDTH;
                     displayedHeight = SCREEN_WIDTH / imageAspect;
-                    offsetY = (SCREEN_HEIGHT - displayedHeight) / 2; // Centered crop
+                    offsetY = (containerHeight - displayedHeight) / 2;
                 }
 
-                // Calculate scale factors
-                const scaleX = displayedWidth / imageDimensions.width;
-                const scaleY = displayedHeight / imageDimensions.height;
-
-                // Update bounding box with scaled coordinates and offset
-                setBoundingBox({
-                    top: box.y * scaleY + offsetY,
-                    left: box.x * scaleX + offsetX,
-                    width: box.width * scaleX,
-                    height: box.height * scaleY,
+                setImageLayout({
+                    width: displayedWidth,
+                    height: displayedHeight,
+                    offsetX,
+                    offsetY,
                 });
 
+                // Call visual analysis API (or use mock)
+                // In production, this would call the Qwen-VL-Max endpoint
+                const mockAnchors: AnchorPoint[] = [
+                    { id: '1', x: 0.5, y: 0.25, category: '外套', description: 'beige trench coat' },
+                    { id: '2', x: 0.5, y: 0.55, category: '上衣', description: 'white blouse' },
+                    { id: '3', x: 0.5, y: 0.75, category: '裤子', description: 'black pants' },
+                ];
+
+                setAnchorPoints(mockAnchors);
+
+                // Auto-select first anchor
+                if (mockAnchors.length > 0) {
+                    setSelectedAnchorId(mockAnchors[0].id);
+                }
+
             } catch (error) {
-                console.error('[Recognition] Detection failed:', error);
-                // Keep default fallback box
+                console.error('[Recognition] Analysis failed:', error);
+                // Fallback: single anchor at center
+                setAnchorPoints([
+                    { id: '1', x: 0.5, y: 0.4, category: '服装' },
+                ]);
+                setSelectedAnchorId('1');
             } finally {
                 setIsLoading(false);
             }
         }
 
-        // Separate call for garment analysis (non-blocking)
-        async function loadGarmentAnalysis() {
-            try {
-                console.log('[Recognition] Calling analyzeGarment API...');
-                const analysisResult = await garmentService.analyzeGarment(photoUrl);
-                console.log('[Recognition] Analysis result:', analysisResult);
-
-                // Update recognition result with API data
-                setRecognitionResult({
-                    itemName: analysisResult.garmentType,
-                    category: analysisResult.garmentType,
-                    style: analysisResult.styleTags[0] || '简约',
-                });
-            } catch (error) {
-                console.warn('[Recognition] Garment analysis failed (using fallback):', error);
-                // Keep default fallback values - user can still proceed
-            }
-        }
-
-        loadDetection();
-        loadGarmentAnalysis();
+        loadAnalysis();
     }, [photoUrl]);
 
+    // Handlers
     const handleBack = useCallback(() => {
         router.back();
     }, []);
 
-    const handleEdit = useCallback(() => {
+    const handleAnchorSelect = useCallback((anchorId: string) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        // Navigate to multi-selection for manual correction
-        router.push({
-            pathname: '/recognition-multi',
-            params: { photoUrl },
-        });
-    }, [photoUrl]);
+        setSelectedAnchorId(anchorId);
+
+        // Scroll to corresponding item card
+        const index = anchorPoints.findIndex(p => p.id === anchorId);
+        if (index >= 0 && itemListRef.current) {
+            itemListRef.current.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
+        }
+    }, [anchorPoints]);
+
+    const handleItemCardPress = useCallback((anchorId: string) => {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        setSelectedAnchorId(anchorId);
+    }, []);
 
     const handleOccasionSelect = useCallback((id: string) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -359,53 +339,61 @@ export default function RecognitionSelectionScreen() {
     }, []);
 
     const handleConfirm = useCallback(() => {
-        if (!selectedOccasion) return;
+        if (!selectedOccasion || !selectedAnchorId) return;
 
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
         const occasionLabel = OCCASIONS.find((o) => o.id === selectedOccasion)?.label || '日常';
+        const selectedItem = anchorPoints.find(p => p.id === selectedAnchorId);
 
-        // Navigate directly to AI loading with all data
+        // Navigate to AI loading with streaming
         router.push({
             pathname: '/ai-loading',
             params: {
                 photoUrl,
                 occasion: occasionLabel,
-                garmentType: recognitionResult.category,
-                garmentName: recognitionResult.itemName,
+                selectedItem: selectedItem?.category || '',
+                useStreaming: 'true',
             },
         });
-    }, [selectedOccasion, photoUrl, recognitionResult]);
+    }, [selectedOccasion, selectedAnchorId, photoUrl, anchorPoints]);
+
+    const canConfirm = selectedOccasion !== null && selectedAnchorId !== null;
 
     return (
         <View style={styles.container}>
-            {/* Photo background with dim overlay */}
-            <Image
-                source={{ uri: photoUrl }}
-                style={styles.backgroundImage}
-                resizeMode="cover"
-                onError={(e) => {
-                    console.error('[Recognition] Image load error:', e.nativeEvent.error);
-                    setImageError(e.nativeEvent.error);
-                }}
-                onLoad={() => {
-                    console.log('[Recognition] Image loaded successfully');
-                    setImageError(null);
-                }}
-            />
-            {imageError && (
-                <View style={styles.errorOverlay}>
-                    <Text style={styles.errorText}>图片加载失败</Text>
-                    <Text style={styles.errorDetail}>{imageError}</Text>
-                </View>
-            )}
-            <View style={styles.dimOverlay} />
+            {/* Photo background */}
+            <View style={styles.imageContainer}>
+                <Image
+                    source={{ uri: photoUrl }}
+                    style={styles.backgroundImage}
+                    resizeMode="cover"
+                    onError={(e) => {
+                        console.error('[Recognition] Image load error:', e.nativeEvent.error);
+                        setImageError(e.nativeEvent.error);
+                    }}
+                    onLoad={() => setImageError(null)}
+                />
+                <View style={styles.dimOverlay} />
 
-            {/* Bounding box */}
-            <BoundingBox
-                confidence={confidence}
-                position={boundingBox}
-            />
+                {/* Anchor points overlay */}
+                {!isLoading && anchorPoints.map((point) => (
+                    <AnchorPointDot
+                        key={point.id}
+                        point={point}
+                        isSelected={selectedAnchorId === point.id}
+                        onPress={() => handleAnchorSelect(point.id)}
+                        imageLayout={imageLayout}
+                    />
+                ))}
+
+                {/* Loading indicator */}
+                {isLoading && (
+                    <Animated.View entering={FadeIn} style={styles.loadingOverlay}>
+                        <Text style={styles.loadingText}>正在识别服装...</Text>
+                    </Animated.View>
+                )}
+            </View>
 
             {/* Back button */}
             <TouchableOpacity
@@ -416,18 +404,65 @@ export default function RecognitionSelectionScreen() {
                 <Text style={styles.backIcon}>‹</Text>
             </TouchableOpacity>
 
-            {/* Combined recognition + occasion card */}
-            <View style={[styles.cardContainer, { paddingBottom: insets.bottom + 16 }]}>
-                <RecognitionOccasionCard
-                    itemName={recognitionResult.itemName}
-                    category={recognitionResult.category}
-                    styleName={recognitionResult.style}
-                    selectedOccasion={selectedOccasion}
-                    onOccasionSelect={handleOccasionSelect}
-                    onConfirm={handleConfirm}
-                    onEdit={handleEdit}
-                />
-            </View>
+            {/* Bottom sheet */}
+            <Animated.View
+                entering={FadeInUp.delay(200).duration(500)}
+                style={[styles.bottomSheet, { paddingBottom: insets.bottom + 16 }]}
+            >
+                {/* Item cards row */}
+                <View style={styles.itemsSection}>
+                    <Text style={styles.sectionLabel}>识别到的单品</Text>
+                    <FlatList
+                        ref={itemListRef}
+                        horizontal
+                        data={anchorPoints}
+                        keyExtractor={(item) => item.id}
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.itemsList}
+                        renderItem={({ item }) => (
+                            <ItemCard
+                                point={item}
+                                isSelected={selectedAnchorId === item.id}
+                                onPress={() => handleItemCardPress(item.id)}
+                            />
+                        )}
+                    />
+                </View>
+
+                <View style={styles.divider} />
+
+                {/* Occasion selection */}
+                <View style={styles.occasionSection}>
+                    <Text style={styles.sectionLabel}>选择场景</Text>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.occasionScroll}
+                    >
+                        {OCCASIONS.map((occasion) => (
+                            <OccasionChip
+                                key={occasion.id}
+                                occasion={occasion}
+                                isSelected={selectedOccasion === occasion.id}
+                                onPress={() => handleOccasionSelect(occasion.id)}
+                            />
+                        ))}
+                    </ScrollView>
+                </View>
+
+                {/* Confirm button */}
+                <TouchableOpacity
+                    style={[styles.confirmButton, !canConfirm && styles.confirmButtonDisabled]}
+                    onPress={handleConfirm}
+                    activeOpacity={0.8}
+                    disabled={!canConfirm}
+                >
+                    <Text style={styles.confirmButtonText}>
+                        {canConfirm ? '开始 AI 搭配' : '请选择单品和场景'}
+                    </Text>
+                    {canConfirm && <Text style={styles.confirmArrow}>→</Text>}
+                </TouchableOpacity>
+            </Animated.View>
         </View>
     );
 }
@@ -438,7 +473,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#000',
     },
 
-    // Background image
+    // Image container
+    imageContainer: {
+        height: SCREEN_HEIGHT * 0.65,
+        width: '100%',
+        position: 'relative',
+    },
     backgroundImage: {
         ...StyleSheet.absoluteFillObject,
         width: '100%',
@@ -446,25 +486,77 @@ const styles = StyleSheet.create({
     },
     dimOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.4)',
+        backgroundColor: 'rgba(0,0,0,0.3)',
     },
-    errorOverlay: {
+    loadingOverlay: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.8)',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 20,
     },
-    errorText: {
-        color: '#FF6B6B',
-        fontSize: 18,
+    loadingText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '500',
+    },
+
+    // Anchor point styles
+    anchorTouchArea: {
+        position: 'absolute',
+        width: 48,
+        height: 48,
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 50,
+    },
+    anchorDot: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+    },
+    anchorDotSelected: {
+        backgroundColor: colors.primary,
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+    },
+    anchorInner: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: 'rgba(255,255,255,0.8)',
+    },
+    anchorGlow: {
+        position: 'absolute',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: colors.primary,
+    },
+    anchorLabel: {
+        position: 'absolute',
+        top: 50,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 8,
+    },
+    anchorLabelSelected: {
+        backgroundColor: colors.primary,
+    },
+    anchorLabelText: {
+        color: '#FFFFFF',
+        fontSize: 11,
+        fontWeight: '500',
+    },
+    anchorLabelTextSelected: {
         fontWeight: '600',
-        marginBottom: 8,
-    },
-    errorDetail: {
-        color: '#999',
-        fontSize: 12,
-        textAlign: 'center',
     },
 
     // Back button
@@ -486,154 +578,95 @@ const styles = StyleSheet.create({
         marginTop: -2,
     },
 
-    // Bounding box
-    boundingBox: {
-        position: 'absolute',
-        borderWidth: 3,
-        borderRadius: 12,
-        borderColor: colors.primary,
-    },
-
-    // Corner accents
-    cornerAccent: {
-        position: 'absolute',
-        width: 20,
-        height: 20,
-        borderColor: colors.primary,
-        borderWidth: 4,
-    },
-    cornerTopLeft: {
-        top: -2,
-        left: -2,
-        borderRightWidth: 0,
-        borderBottomWidth: 0,
-        borderTopLeftRadius: 8,
-    },
-    cornerTopRight: {
-        top: -2,
-        right: -2,
-        borderLeftWidth: 0,
-        borderBottomWidth: 0,
-        borderTopRightRadius: 8,
-    },
-    cornerBottomLeft: {
-        bottom: -2,
-        left: -2,
-        borderRightWidth: 0,
-        borderTopWidth: 0,
-        borderBottomLeftRadius: 8,
-    },
-    cornerBottomRight: {
-        bottom: -2,
-        right: -2,
-        borderLeftWidth: 0,
-        borderTopWidth: 0,
-        borderBottomRightRadius: 8,
-    },
-
-    // Confidence tag
-    confidenceTag: {
-        position: 'absolute',
-        top: -30,
-        left: 0,
-        backgroundColor: colors.primary,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 12,
-    },
-    confidenceText: {
-        color: '#FFFFFF',
-        fontSize: 12,
-        fontWeight: '600',
-    },
-
-    // Card container
-    cardContainer: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        paddingHorizontal: 16,
-    },
-
-    // Combined card
-    combinedCard: {
+    // Bottom sheet
+    bottomSheet: {
+        flex: 1,
         backgroundColor: '#FFFFFF',
-        borderRadius: 24,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        marginTop: -24,
         padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 20,
-        elevation: 10,
+        zIndex: 60,
     },
 
-    // Garment section
-    garmentSection: {
-        marginBottom: 16,
-    },
-    cardHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
+    // Items section
+    itemsSection: {
         marginBottom: 12,
     },
     sectionLabel: {
-        fontSize: 12,
-        fontWeight: '500',
+        fontSize: 13,
+        fontWeight: '600',
         color: '#8E8E93',
-        marginBottom: 4,
+        marginBottom: 12,
     },
-    itemName: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#1C1C1E',
+    itemsList: {
+        gap: 12,
     },
-    editButton: {
-        fontSize: 15,
+    itemCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F2F2F7',
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderRadius: 16,
+        gap: 8,
+        borderWidth: 2,
+        borderColor: 'transparent',
+    },
+    itemCardSelected: {
+        backgroundColor: colors.primary + '15',
+        borderColor: colors.primary,
+    },
+    itemCardIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#FFFFFF',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    itemCardEmoji: {
+        fontSize: 16,
+    },
+    itemCardText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#3A3A3C',
+    },
+    itemCardTextSelected: {
         color: colors.primary,
         fontWeight: '600',
     },
-
-    // Tags
-    tagRow: {
-        flexDirection: 'row',
-        gap: 8,
+    itemCardCheck: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: colors.primary,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: 4,
     },
-    tag: {
-        backgroundColor: '#F2F2F7',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 12,
-    },
-    tagText: {
-        fontSize: 13,
-        color: '#3A3A3C',
-        fontWeight: '500',
+    itemCardCheckText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '700',
     },
 
     // Divider
     divider: {
         height: 1,
         backgroundColor: '#F2F2F7',
-        marginVertical: 16,
+        marginVertical: 12,
     },
 
     // Occasion section
     occasionSection: {
         marginBottom: 16,
     },
-    occasionHint: {
-        fontSize: 13,
-        color: '#8E8E93',
-        marginBottom: 12,
-    },
     occasionScroll: {
         gap: 8,
         paddingRight: 8,
     },
-
-    // Occasion chip
     occasionChip: {
         flexDirection: 'row',
         alignItems: 'center',

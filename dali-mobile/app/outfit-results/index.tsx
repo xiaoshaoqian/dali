@@ -1,12 +1,11 @@
 /**
- * Outfit Result Screen - L5 Immersive Layout
- * Displays AI-generated outfit recommendation with hero image + overlapping content sheet
- * Updated to match outfit-result-gen-v2.html prototype
- * Part of Story 3.4: Outfit Results Display with Theory Visualization
+ * Outfit Result Screen V2 - Immersive Layout with Generated Image
+ * Displays AI-generated outfit recommendation with generated visualization
+ * Updated to support SSE streaming results with generated images
  *
- * @see _bmad-output/planning-artifacts/ux-design/pages/02-outfit-results/outfit-result-gen-v2.html
+ * @see Story 9-8: Outfit Results with Generated Image
  */
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -30,7 +29,7 @@ import type { OutfitRecommendation } from '@/services';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const HERO_HEIGHT = SCREEN_HEIGHT * 0.52;
 
-// Image tags floating on hero
+// Style tags floating on hero
 function ImageTags({ tags }: { tags: string[] }) {
   return (
     <View style={styles.imageTags}>
@@ -74,40 +73,42 @@ function FloatingHeader({
   );
 }
 
-// Sheet handle indicator
-function SheetHandle() {
-  return <View style={styles.sheetHandle} />;
+// Generated image badge
+function GeneratedBadge() {
+  return (
+    <Animated.View entering={FadeIn.delay(500).duration(400)} style={styles.generatedBadge}>
+      <Text style={styles.generatedBadgeText}>AI 生成</Text>
+    </Animated.View>
+  );
 }
 
-// Info header with title and match score
+// Info header with title and occasion
 function InfoHeader({
   title,
-  subtitle,
-  matchScore,
+  occasion,
 }: {
   title: string;
-  subtitle: string;
-  matchScore: number;
+  occasion: string;
 }) {
   return (
     <View style={styles.infoHeader}>
       <View style={styles.infoLeft}>
         <Text style={styles.outfitTitle}>{title}</Text>
-        <Text style={styles.outfitSubtitle}>{subtitle}</Text>
+        <Text style={styles.outfitSubtitle}>由 AI 视觉引擎生成</Text>
       </View>
-      <View style={styles.matchScoreBadge}>
-        <Text style={styles.matchScoreText}>{matchScore}%</Text>
+      <View style={styles.occasionBadge}>
+        <Text style={styles.occasionBadgeText}>{occasion}</Text>
       </View>
     </View>
   );
 }
 
-// Logic Echo Box - AI strategy explanation
-function LogicEchoBox({ content }: { content?: string }) {
-  // Parse content for highlighted keywords
+// AI Theory Box - shows streamed theory content
+function TheoryBox({ content }: { content: string }) {
+  // Parse content for highlighted keywords (**text**)
   const renderContent = () => {
-    if (!content) return <Text style={styles.logicContent}>AI 正在分析搭配逻辑...</Text>;
-    // Simple regex to find text wrapped in ** for highlighting
+    if (!content) return <Text style={styles.theoryContent}>AI 正在分析搭配逻辑...</Text>;
+
     const parts = content.split(/(\*\*[^*]+\*\*)/g);
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
@@ -122,62 +123,43 @@ function LogicEchoBox({ content }: { content?: string }) {
   };
 
   return (
-    <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.logicBox}>
-      <View style={styles.logicTitleRow}>
-        <Text style={styles.logicIcon}>ℹ️</Text>
-        <Text style={styles.logicTitle}>AI 搭配策略</Text>
+    <Animated.View entering={FadeInUp.delay(200).duration(500)} style={styles.theoryBox}>
+      <View style={styles.theoryTitleRow}>
+        <Text style={styles.theoryIcon}>💡</Text>
+        <Text style={styles.theoryTitle}>AI 搭配策略</Text>
       </View>
-      <Text style={styles.logicContent}>{renderContent()}</Text>
+      <Text style={styles.theoryContent}>{renderContent()}</Text>
     </Animated.View>
   );
 }
 
-// Items row - horizontal scrolling item thumbnails
-function ItemsRow({ items }: { items: string[] }) {
-  return (
-    <Animated.View entering={FadeInUp.delay(300).duration(500)}>
-      <Text style={styles.sectionLabel}>包含单品</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.itemsRow}
-      >
-        {items.map((emoji, index) => (
-          <View key={index} style={styles.itemThumb}>
-            <Text style={styles.itemEmoji}>{emoji}</Text>
-          </View>
-        ))}
-      </ScrollView>
-    </Animated.View>
-  );
-}
-
-// Bottom action bar with retry and try-on buttons
+// Bottom action bar with regenerate and save buttons
 function BottomActionBar({
-  onRetry,
-  onTryOn,
+  onRegenerate,
+  onSave,
 }: {
-  onRetry: () => void;
-  onTryOn: () => void;
+  onRegenerate: () => void;
+  onSave: () => void;
 }) {
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.bottomBar, { bottom: Math.max(insets.bottom, 20) + 10 }]}>
       <TouchableOpacity
-        style={[styles.actionBtn, styles.btnRetry]}
-        onPress={onRetry}
+        style={[styles.actionBtn, styles.btnRegenerate]}
+        onPress={onRegenerate}
         activeOpacity={0.8}
       >
-        <Text style={styles.retryIcon}>↻</Text>
+        <Text style={styles.regenerateIcon}>↻</Text>
+        <Text style={styles.regenerateText}>重新生成</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        style={[styles.actionBtn, styles.btnTry]}
-        onPress={onTryOn}
+        style={[styles.actionBtn, styles.btnSave]}
+        onPress={onSave}
         activeOpacity={0.8}
       >
-        <Text style={styles.tryIcon}>👁</Text>
-        <Text style={styles.tryText}>一键上身</Text>
+        <Text style={styles.saveIcon}>♡</Text>
+        <Text style={styles.saveText}>收藏搭配</Text>
       </TouchableOpacity>
     </View>
   );
@@ -185,45 +167,58 @@ function BottomActionBar({
 
 export default function OutfitResultScreen() {
   const params = useLocalSearchParams<{
-    recommendations: string;
-    occasion: string;
-    photoUrl: string;
+    // New SSE-based params
+    outfitId?: string;
+    theoryText?: string;
+    generatedImageUrl?: string;
+    occasion?: string;
+    photoUrl?: string;
+    // Legacy params for backwards compatibility
+    recommendations?: string;
   }>();
 
-  // Parse first recommendation from params
-  const recommendation: OutfitRecommendation | null = React.useMemo(() => {
-    try {
-      const recs = params.recommendations ? JSON.parse(params.recommendations) : [];
-      return recs[0] || null;
-    } catch {
-      return null;
-    }
-  }, [params.recommendations]);
+  const insets = useSafeAreaInsets();
 
-  // Build display data from recommendation or fallback to mock
-  const displayData = React.useMemo(() => {
-    if (recommendation) {
-      return {
-        id: recommendation.id,
-        outfitName: recommendation.name || '推荐搭配',
-        theoryExplanation: recommendation.theory?.fullExplanation || recommendation.theory?.explanation || '',
-        matchScore: Math.round((recommendation.confidence || 0.98) * 100),
-        styleTags: recommendation.styleTags?.map(tag => `✨ ${tag}`) || ['✨ 简约'],
-        items: recommendation.items?.map(item => item.name || '👕') || ['🧥', '👖', '👚'],
-        imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop',
-      };
+  // Build display data from params
+  const displayData = useMemo(() => {
+    // Decode URL params
+    const theoryText = params.theoryText ? decodeURIComponent(params.theoryText) : '';
+    const generatedImageUrl = params.generatedImageUrl ? decodeURIComponent(params.generatedImageUrl) : '';
+    const photoUrl = params.photoUrl ? decodeURIComponent(params.photoUrl) : '';
+    const occasion = params.occasion || '日常';
+
+    // If we have legacy recommendations param, parse it
+    if (params.recommendations) {
+      try {
+        const recs = JSON.parse(params.recommendations);
+        const rec = recs[0];
+        if (rec) {
+          return {
+            outfitId: rec.id || params.outfitId || 'generated-1',
+            outfitName: rec.name || '推荐搭配',
+            theoryText: rec.theory?.fullExplanation || theoryText,
+            generatedImageUrl: generatedImageUrl || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800',
+            occasion,
+            styleTags: rec.styleTags?.map((tag: string) => `✨ ${tag}`) || ['✨ 简约'],
+            hasGeneratedImage: !!generatedImageUrl,
+          };
+        }
+      } catch (e) {
+        // Fall through to new params
+      }
     }
-    // Fallback mock data
+
+    // New SSE-based data
     return {
-      id: 'mock-1',
-      outfitName: '职场优雅·风衣Look',
-      theoryExplanation: '识别到**米色风衣**主体，匹配**职场简约**风格库。采用**高对比度·黑白经典**配色法则。内搭选用白色提亮肤色，下装搭配黑色阔腿裤视觉收缩，营造干练形象。',
-      matchScore: 98,
-      styleTags: ['✨ 韩系简约', '💼 职场通勤'],
-      items: ['🧥', '👖', '👚', '👠', '👜'],
-      imageUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1000&auto=format&fit=crop',
+      outfitId: params.outfitId || 'generated-1',
+      outfitName: 'AI 搭配方案',
+      theoryText: theoryText,
+      generatedImageUrl: generatedImageUrl || photoUrl || 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800',
+      occasion,
+      styleTags: ['✨ AI 生成', `💼 ${occasion}`],
+      hasGeneratedImage: !!generatedImageUrl,
     };
-  }, [recommendation]);
+  }, [params]);
 
   // Navigation handlers
   const handleBack = useCallback(() => {
@@ -234,32 +229,36 @@ export default function OutfitResultScreen() {
     // TODO: Implement share functionality
   }, []);
 
-  const handleRetry = useCallback(() => {
+  const handleRegenerate = useCallback(() => {
     // Navigate back to AI loading to regenerate
-    router.back();
-  }, []);
-
-  const handleTryOn = useCallback(() => {
-    // Navigate to virtual try-on page
-    router.push({
-      pathname: '/outfit/[id]',
+    router.replace({
+      pathname: '/ai-loading',
       params: {
-        id: displayData.id,
-        recommendation: JSON.stringify(displayData),
+        photoUrl: params.photoUrl,
+        occasion: params.occasion,
+        useStreaming: 'true',
       },
     });
-  }, [displayData]);
+  }, [params]);
+
+  const handleSave = useCallback(() => {
+    // TODO: Implement save to wardrobe
+    console.log('[OutfitResults] Save outfit:', displayData.outfitId);
+  }, [displayData.outfitId]);
 
   return (
     <View style={styles.container}>
-      {/* Hero Section - 52% screen height */}
+      {/* Hero Section - Generated or original image */}
       <View style={styles.heroSection}>
         <Image
-          source={{ uri: displayData.imageUrl }}
+          source={{ uri: displayData.generatedImageUrl }}
           style={styles.heroImage}
           resizeMode="cover"
         />
         <ImageTags tags={displayData.styleTags} />
+
+        {/* Show "AI Generated" badge if we have a generated image */}
+        {displayData.hasGeneratedImage && <GeneratedBadge />}
       </View>
 
       {/* Floating Header */}
@@ -271,18 +270,18 @@ export default function OutfitResultScreen() {
         contentContainerStyle={styles.contentSheetInner}
         showsVerticalScrollIndicator={false}
       >
-        <SheetHandle />
+        <View style={styles.sheetHandle} />
+
         <InfoHeader
           title={displayData.outfitName}
-          subtitle="由 AI 视觉引擎生成"
-          matchScore={displayData.matchScore}
+          occasion={displayData.occasion}
         />
-        <LogicEchoBox content={displayData.theoryExplanation} />
-        <ItemsRow items={displayData.items} />
+
+        <TheoryBox content={displayData.theoryText} />
       </ScrollView>
 
       {/* Bottom Action Bar */}
-      <BottomActionBar onRetry={handleRetry} onTryOn={handleTryOn} />
+      <BottomActionBar onRegenerate={handleRegenerate} onSave={handleSave} />
     </View>
   );
 }
@@ -325,6 +324,22 @@ const styles = StyleSheet.create({
   imgTagText: {
     color: '#FFFFFF',
     fontSize: 11,
+    fontWeight: '600',
+  },
+
+  // Generated badge
+  generatedBadge: {
+    position: 'absolute',
+    top: 100,
+    right: 20,
+    backgroundColor: 'rgba(108,99,255,0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  generatedBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 12,
     fontWeight: '600',
   },
 
@@ -409,75 +424,49 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#8E8E93',
   },
-  matchScoreBadge: {
-    backgroundColor: '#F0EFFF',
+  occasionBadge: {
+    backgroundColor: colors.primary + '15',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
   },
-  matchScoreText: {
+  occasionBadgeText: {
     color: colors.primary,
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 13,
+    fontWeight: '600',
   },
 
-  // Logic Echo Box
-  logicBox: {
+  // Theory Box
+  theoryBox: {
     backgroundColor: '#FAFAFC',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: '#F2F2F7',
   },
-  logicTitleRow: {
+  theoryTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginBottom: 10,
   },
-  logicIcon: {
-    fontSize: 12,
+  theoryIcon: {
+    fontSize: 14,
   },
-  logicTitle: {
-    fontSize: 12,
+  theoryTitle: {
+    fontSize: 13,
     fontWeight: '600',
     color: '#8E8E93',
     textTransform: 'uppercase',
   },
-  logicContent: {
-    fontSize: 14,
-    lineHeight: 22,
+  theoryContent: {
+    fontSize: 15,
+    lineHeight: 24,
     color: '#3A3A3C',
   },
   hlText: {
     color: colors.primary,
     fontWeight: '600',
-  },
-
-  // Items Row
-  sectionLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1C1C1E',
-    marginBottom: 12,
-  },
-  itemsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    paddingRight: 20,
-  },
-  itemThumb: {
-    width: 72,
-    height: 72,
-    backgroundColor: '#F9F9F9',
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#F2F2F7',
-  },
-  itemEmoji: {
-    fontSize: 24,
   },
 
   // Bottom Action Bar
@@ -490,35 +479,42 @@ const styles = StyleSheet.create({
     zIndex: 200,
   },
   actionBtn: {
-    height: 56,
-    borderRadius: 28,
+    flex: 1,
+    height: 52,
+    borderRadius: 26,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  btnRetry: {
-    flex: 1,
+  btnRegenerate: {
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E5EA',
   },
-  retryIcon: {
-    fontSize: 20,
-    color: '#1C1C1E',
+  regenerateIcon: {
+    fontSize: 18,
+    color: '#3A3A3C',
   },
-  btnTry: {
-    flex: 2,
-    backgroundColor: '#1C1C1E',
+  regenerateText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#3A3A3C',
   },
-  tryIcon: {
+  btnSave: {
+    backgroundColor: colors.primary,
+  },
+  saveIcon: {
     fontSize: 16,
+    color: '#FFFFFF',
   },
-  tryText: {
-    fontSize: 16,
+  saveText: {
+    fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
   },

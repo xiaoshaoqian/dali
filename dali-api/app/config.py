@@ -46,6 +46,15 @@ class Settings(BaseSettings):
     TONGYI_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
 
+    # Qwen-VL-Max (DashScope)
+    DASHSCOPE_API_KEY: str = ""
+
+    # SiliconFlow (Img2Img)
+    SILICONFLOW_API_KEY: str = ""
+    SILICONFLOW_MODEL: str = "black-forest-labs/FLUX.1-schnell"
+    IMG2IMG_STRENGTH: float = 0.4
+    IMG2IMG_TIMEOUT: int = 60
+
     # WeChat
     WECHAT_APP_ID: str = ""
     WECHAT_APP_SECRET: str = ""

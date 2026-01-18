@@ -1,10 +1,9 @@
 /**
- * AI Loading Screen V2 - Immersive Generation Experience
- * Shows blur-to-clear image rendering with streaming text logic
- * Updated to match ai-loading-v2.html prototype
- * Part of Story 3.3: Progressive Visual Generation
+ * AI Loading Screen V3 - Real-time SSE Streaming
+ * Shows streaming text + thinking animation + image generation progress
+ * Connects to backend SSE endpoint for real-time updates
  *
- * @see _bmad-output/planning-artifacts/ux-design/pages/07-flow-pages/ai-loading-v2.html
+ * @see Story 9-7: AI Loading Page Rewrite
  */
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -13,6 +12,8 @@ import {
   StyleSheet,
   Dimensions,
   Image,
+  ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -23,81 +24,34 @@ import Animated, {
   withRepeat,
   withTiming,
   withSequence,
-  interpolate,
-  Easing,
-  runOnJS,
   FadeIn,
+  FadeInUp,
+  SharedValue,
 } from 'react-native-reanimated';
 
 import { colors } from '@/constants';
-import { outfitService, type OutfitRecommendation } from '@/services';
+import {
+  sseService,
+  type SSEConnection,
+  type TextChunkEventData,
+  type ThinkingEventData,
+  type ImageReadyData,
+  type CompleteEventData,
+  type ErrorEventData,
+} from '@/services/sseService';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const HERO_HEIGHT = SCREEN_HEIGHT * 0.52;
+const HERO_HEIGHT = SCREEN_HEIGHT * 0.48;
 
-// Text stream content
-const TEXT_STREAM = [
-  { text: '识别主体：', highlight: false },
-  { text: '米色风衣\n', highlight: true },
-  { text: '匹配风格库：', highlight: false },
-  { text: '职场简约 / 韩系通勤\n\n', highlight: true },
-  { text: '配色策略：', highlight: false },
-  { text: '高对比度·黑白经典法则\n', highlight: true },
-  { text: '视觉优化：', highlight: false },
-  { text: '拉长腿部线条，收缩视觉重心。', highlight: false },
-];
-
-// Hero image with blur-to-clear effect
-function HeroImage({
-  imageUrl,
-  progress,
-}: {
-  imageUrl: string;
-  progress: number;
-}) {
-  // Calculate blur based on progress: 20px -> 0px
-  const blurValue = Math.max(0, 20 - progress * 0.2);
-  const opacity = progress < 30 ? 0.6 : progress < 60 ? 0.7 : progress < 100 ? 0.85 : 1;
-
-  return (
-    <View style={styles.heroSection}>
-      <Image
-        source={{ uri: imageUrl }}
-        style={[
-          styles.heroImage,
-          {
-            opacity,
-            // Note: RN doesn't support blur filter directly, using opacity for visual effect
-            // In production, use @react-native-community/blur or similar
-          },
-        ]}
-        blurRadius={blurValue}
-        resizeMode="cover"
-      />
-
-      {/* Purple pulse overlay */}
-      <PurplePulseOverlay visible={progress < 100} />
-
-      {/* Scan line */}
-      <ScanLine />
-
-      {/* Rendering status */}
-      <View style={styles.renderingStatus}>
-        <Text style={styles.renderingText}>Rendering {Math.floor(progress)}%</Text>
-      </View>
-    </View>
-  );
-}
-
-// Purple pulse overlay animation
-function PurplePulseOverlay({ visible }: { visible: boolean }) {
-  const opacity = useSharedValue(0.3);
+// Typing cursor component
+function TypingCursor() {
+  const opacity = useSharedValue(1);
 
   useEffect(() => {
     opacity.value = withRepeat(
       withSequence(
-        withTiming(0.7, { duration: 1500 }),
-        withTiming(0.3, { duration: 1500 })
+        withTiming(0, { duration: 500 }),
+        withTiming(1, { duration: 500 })
       ),
       -1,
       false
@@ -105,100 +59,207 @@ function PurplePulseOverlay({ visible }: { visible: boolean }) {
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: visible ? opacity.value : 0,
+    opacity: opacity.value,
   }));
 
-  return (
-    <Animated.View style={[styles.purpleOverlay, animatedStyle]}>
-      <LinearGradient
-        colors={['rgba(108,99,255,0.4)', 'rgba(108,99,255,0.1)']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={StyleSheet.absoluteFill}
-      />
-    </Animated.View>
-  );
+  return <Animated.View style={[styles.cursor, animatedStyle]} />;
 }
 
-// Scan line animation
-function ScanLine() {
-  const translateY = useSharedValue(0);
+// Thinking dots animation
+function ThinkingDots() {
+  const translateY1 = useSharedValue(0);
+  const translateY2 = useSharedValue(0);
+  const translateY3 = useSharedValue(0);
 
   useEffect(() => {
-    translateY.value = withRepeat(
-      withTiming(HERO_HEIGHT, {
-        duration: 2500,
-        easing: Easing.bezier(0.4, 0, 0.2, 1),
-      }),
-      -1,
-      false
-    );
+    const animate = (value: SharedValue<number>, delay: number) => {
+      setTimeout(() => {
+        value.value = withRepeat(
+          withSequence(
+            withTiming(-4, { duration: 300 }),
+            withTiming(0, { duration: 300 })
+          ),
+          -1,
+          false
+        );
+      }, delay);
+    };
+
+    animate(translateY1, 0);
+    animate(translateY2, 150);
+    animate(translateY3, 300);
   }, []);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
-    opacity: interpolate(
-      translateY.value,
-      [0, HERO_HEIGHT * 0.1, HERO_HEIGHT * 0.9, HERO_HEIGHT],
-      [0, 1, 1, 0]
-    ),
+  const dot1Style = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY1.value }],
+  }));
+  const dot2Style = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY2.value }],
+  }));
+  const dot3Style = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY3.value }],
   }));
 
-  return <Animated.View style={[styles.scanLine, animatedStyle]} />;
-}
-
-// Floating header
-function FloatingHeader() {
-  const insets = useSafeAreaInsets();
-
   return (
-    <LinearGradient
-      colors={['rgba(28,28,46,0.7)', 'rgba(44,44,84,0.4)', 'transparent']}
-      locations={[0, 0.6, 1]}
-      style={[styles.header, { paddingTop: insets.top + 8 }]}
-    >
-      <View style={styles.loadingBadge}>
-        <Text style={styles.spinnerIcon}>⟳</Text>
-        <Text style={styles.loadingText}>AI 思考中...</Text>
-      </View>
-    </LinearGradient>
+    <View style={styles.thinkingDots}>
+      <Animated.View style={[styles.dot, dot1Style]} />
+      <Animated.View style={[styles.dot, dot2Style]} />
+      <Animated.View style={[styles.dot, dot3Style]} />
+    </View>
   );
 }
 
-// Streaming text display
-function StreamingText({ currentIndex }: { currentIndex: number }) {
+// Hero image section with progressive reveal
+function HeroSection({
+  imageUrl,
+  generatedImageUrl,
+  isImageReady,
+}: {
+  imageUrl: string;
+  generatedImageUrl: string | null;
+  isImageReady: boolean;
+}) {
+  const insets = useSafeAreaInsets();
+  const imageOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    if (isImageReady && generatedImageUrl) {
+      imageOpacity.value = withTiming(1, { duration: 500 });
+    }
+  }, [isImageReady, generatedImageUrl]);
+
+  const generatedImageStyle = useAnimatedStyle(() => ({
+    opacity: imageOpacity.value,
+  }));
+
   return (
-    <View style={styles.streamContainer}>
-      {TEXT_STREAM.slice(0, currentIndex + 1).map((item, idx) => (
-        <Animated.Text
-          key={idx}
-          entering={FadeIn.duration(400)}
-          style={[styles.streamText, item.highlight && styles.hlText]}
-        >
-          {item.text}
-        </Animated.Text>
-      ))}
-      {currentIndex < TEXT_STREAM.length - 1 && (
-        <View style={styles.cursor} />
+    <View style={styles.heroSection}>
+      {/* Original photo as background */}
+      <Image
+        source={{ uri: imageUrl }}
+        style={styles.heroImage}
+        resizeMode="cover"
+        blurRadius={10}
+      />
+
+      {/* Generated image overlay (fades in when ready) */}
+      {generatedImageUrl && (
+        <Animated.Image
+          source={{ uri: generatedImageUrl }}
+          style={[styles.generatedImage, generatedImageStyle]}
+          resizeMode="cover"
+        />
+      )}
+
+      {/* Gradient overlay */}
+      <LinearGradient
+        colors={['rgba(0,0,0,0.3)', 'transparent', 'rgba(0,0,0,0.4)']}
+        locations={[0, 0.4, 1]}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* Status badge */}
+      <View style={[styles.statusBadge, { top: insets.top + 16 }]}>
+        <View style={styles.statusDot} />
+        <Text style={styles.statusText}>AI 生成中</Text>
+      </View>
+
+      {/* Generated image indicator */}
+      {isImageReady && (
+        <Animated.View entering={FadeIn.duration(300)} style={styles.imageReadyBadge}>
+          <Text style={styles.imageReadyText}>搭配效果图已生成</Text>
+        </Animated.View>
       )}
     </View>
   );
 }
 
-// Progress bar
-function ProgressBar({
-  progress,
-  statusText,
+// Streaming text display with markdown-like formatting
+function StreamingTextDisplay({
+  text,
+  isThinking,
+  thinkingMessage,
+  showCursor,
 }: {
-  progress: number;
-  statusText: string;
+  text: string;
+  isThinking: boolean;
+  thinkingMessage: string;
+  showCursor: boolean;
 }) {
+  const scrollRef = useRef<ScrollView>(null);
+
+  // Auto-scroll to bottom as text streams
+  useEffect(() => {
+    if (text) {
+      setTimeout(() => {
+        scrollRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [text]);
+
+  // Parse text for highlighted keywords (**text**)
+  const renderText = () => {
+    if (!text) return null;
+
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          <Text key={index} style={styles.highlightedText}>
+            {part.slice(2, -2)}
+          </Text>
+        );
+      }
+      return <Text key={index}>{part}</Text>;
+    });
+  };
+
   return (
-    <View style={styles.progressArea}>
-      <Text style={styles.statusText}>{statusText}</Text>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${progress}%` }]} />
+    <ScrollView
+      ref={scrollRef}
+      style={styles.streamContainer}
+      contentContainerStyle={styles.streamContent}
+      showsVerticalScrollIndicator={false}
+    >
+      <Text style={styles.streamText}>
+        {renderText()}
+        {showCursor && !isThinking && <TypingCursor />}
+      </Text>
+
+      {/* Thinking indicator */}
+      {isThinking && (
+        <Animated.View entering={FadeInUp.duration(300)} style={styles.thinkingRow}>
+          <Text style={styles.thinkingEmoji}>💭</Text>
+          <Text style={styles.thinkingText}>{thinkingMessage}</Text>
+          <ThinkingDots />
+        </Animated.View>
+      )}
+    </ScrollView>
+  );
+}
+
+// Progress indicator
+function ProgressIndicator({
+  stage,
+}: {
+  stage: 'analyzing' | 'streaming' | 'generating_image' | 'complete';
+}) {
+  const stageLabels = {
+    analyzing: '分析服装特征...',
+    streaming: '生成搭配建议...',
+    generating_image: '生成搭配效果图...',
+    complete: '生成完成',
+  };
+
+  return (
+    <View style={styles.progressContainer}>
+      <View style={styles.progressSteps}>
+        <View style={[styles.progressStep, styles.progressStepActive]} />
+        <View style={[styles.progressStep, stage !== 'analyzing' && styles.progressStepActive]} />
+        <View style={[styles.progressStep, (stage === 'generating_image' || stage === 'complete') && styles.progressStepActive]} />
+        <View style={[styles.progressStep, stage === 'complete' && styles.progressStepActive]} />
       </View>
+      <Text style={styles.progressLabel}>{stageLabels[stage]}</Text>
     </View>
   );
 }
@@ -207,130 +268,197 @@ export default function AILoadingScreen() {
   const params = useLocalSearchParams<{
     photoUrl: string;
     occasion: string;
+    selectedItem?: string;
+    useStreaming?: string;
   }>();
 
   const insets = useSafeAreaInsets();
-  const [progress, setProgress] = useState(0);
-  const [streamIndex, setStreamIndex] = useState(-1);
-  const [statusText, setStatusText] = useState('初始化...');
-  const [recommendations, setRecommendations] = useState<OutfitRecommendation[]>([]);
-  const progressRef = useRef(0);
-  const isComplete = useRef(false);
+  const streamedTextRef = useRef('');
 
-  const photoUrl = params.photoUrl ||
-    'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=10&w=200';
+  // State
+  const [streamedText, setStreamedText] = useState('');
+  const [isThinking, setIsThinking] = useState(false);
+  const [thinkingMessage, setThinkingMessage] = useState('AI正在思考...');
+  const [isImageGenerating, setIsImageGenerating] = useState(false);
+  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [isImageReady, setIsImageReady] = useState(false);
+  const [stage, setStage] = useState<'analyzing' | 'streaming' | 'generating_image' | 'complete'>('analyzing');
+  const [error, setError] = useState<string | null>(null);
 
-  // Navigate to results when complete
-  const navigateToResults = useCallback(() => {
+  const photoUrl = params.photoUrl
+    ? decodeURIComponent(params.photoUrl)
+    : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800';
+
+  // Connect to SSE stream
+  useEffect(() => {
+    console.log('[AILoading] Connecting to SSE stream...');
+
+    sseService.startGeneration(
+      {
+        imageUrl: photoUrl,
+        occasion: params.occasion || '日常',
+        selectedItem: params.selectedItem,
+      },
+      {
+        onThinking: (data: ThinkingEventData) => {
+          setIsThinking(true);
+          setThinkingMessage(data.message);
+        },
+
+        onAnalysisComplete: () => {
+          setStage('streaming');
+          setIsThinking(false);
+        },
+
+        onTextChunk: (data: TextChunkEventData) => {
+          setIsThinking(false);
+          setStage('streaming');
+          streamedTextRef.current += data.content;
+          setStreamedText(streamedTextRef.current);
+        },
+
+        onImageGenerating: (data) => {
+          setIsImageGenerating(true);
+          setStage('generating_image');
+          setThinkingMessage(data.message || '正在生成搭配效果图...');
+        },
+
+        onImageReady: (data: ImageReadyData) => {
+          setIsImageGenerating(false);
+          setGeneratedImageUrl(data.url);
+          setIsImageReady(true);
+        },
+
+        onImageFailed: () => {
+          setIsImageGenerating(false);
+          // Continue without image - not a fatal error
+        },
+
+        onComplete: (data: CompleteEventData) => {
+          setStage('complete');
+          if (data.generated_image_url) {
+            setGeneratedImageUrl(data.generated_image_url);
+            setIsImageReady(true);
+          }
+
+          // Navigate to results after short delay
+          setTimeout(() => {
+            router.replace({
+              pathname: '/outfit-results',
+              params: {
+                outfitId: data.outfit_id,
+                theoryText: streamedTextRef.current,
+                generatedImageUrl: data.generated_image_url || '',
+                occasion: params.occasion,
+                photoUrl,
+              },
+            });
+          }, 800);
+        },
+
+        onError: (data: ErrorEventData) => {
+          console.error('[AILoading] SSE error:', data);
+          setError(data.message);
+        },
+
+        onDone: () => {
+          console.log('[AILoading] Stream done');
+        },
+      }
+    );
+
+    // Cleanup on unmount
+    return () => {
+      console.log('[AILoading] Cleaning up SSE connection');
+      sseService.stopGeneration();
+    };
+  }, [photoUrl, params.occasion, params.selectedItem]);
+
+  // Handle back press
+  const handleBack = useCallback(() => {
+    sseService.stopGeneration();
+    router.back();
+  }, []);
+
+  // Handle retry
+  const handleRetry = useCallback(() => {
+    setError(null);
+    setStreamedText('');
+    streamedTextRef.current = '';
+    setStage('analyzing');
+    // Re-trigger connection
     router.replace({
-      pathname: '/outfit-results',
+      pathname: '/ai-loading',
       params: {
-        recommendations: JSON.stringify(recommendations),
-        occasion: params.occasion || '职场通勤',
         photoUrl: params.photoUrl,
+        occasion: params.occasion,
+        selectedItem: params.selectedItem,
+        useStreaming: 'true',
       },
     });
-  }, [recommendations, params]);
+  }, [params]);
 
-  // Simulate API call - using mock data directly since proper API integration requires garmentData
-  useEffect(() => {
-    // For now, use mock recommendations since full API integration requires garmentData from recognition step
-    // In production, this would call outfitService.generateOutfits with proper request object
-    const mockRecommendations: OutfitRecommendation[] = [
-      {
-        id: 'mock-1',
-        name: '职场优雅·风衣Look',
-        items: [
-          { itemType: '外套', name: '米色风衣', color: '米色', colorHex: '#F5F5DC', styleTip: '经典款' },
-          { itemType: '上衣', name: '白色衬衫', color: '白色', colorHex: '#FFFFFF', styleTip: '内搭首选' },
-          { itemType: '裤子', name: '黑色阔腿裤', color: '黑色', colorHex: '#1C1C1E', styleTip: '显瘦利器' },
-        ],
-        theory: {
-          colorPrinciple: '高对比度·黑白经典',
-          styleAnalysis: '职场简约风格',
-          bodyTypeAdvice: '阔腿裤拉长腿部线条',
-          occasionFit: '职场通勤',
-          fullExplanation: '识别到**米色风衣**主体，匹配**职场简约**风格库。采用高对比度·黑白经典配色法则。',
-        },
-        styleTags: ['简约', '通勤'],
-        confidence: 0.98,
-        occasion: params.occasion || '职场通勤',
-      },
-    ];
-    setRecommendations(mockRecommendations);
-  }, [params.occasion]);
-
-  // Progress animation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (progressRef.current >= 100) {
-        clearInterval(interval);
-        return;
-      }
-      progressRef.current += Math.random() * 2;
-      if (progressRef.current > 100) progressRef.current = 100;
-      setProgress(progressRef.current);
-
-      // Update status text
-      if (progressRef.current > 30 && progressRef.current < 60) {
-        setStatusText('分析配色原理中...');
-      } else if (progressRef.current >= 60 && progressRef.current < 90) {
-        setStatusText('生成搭配方案...');
-      } else if (progressRef.current >= 90 && progressRef.current < 100) {
-        setStatusText('即将完成...');
-      } else if (progressRef.current >= 100) {
-        setStatusText('生成完毕');
-        if (!isComplete.current) {
-          isComplete.current = true;
-          // 800ms delay before navigation (per spec)
-          setTimeout(() => {
-            navigateToResults();
-          }, 800);
-        }
-      }
-    }, 50);
-
-    return () => clearInterval(interval);
-  }, [navigateToResults]);
-
-  // Text streaming
-  useEffect(() => {
-    if (streamIndex >= TEXT_STREAM.length - 1) return;
-
-    const timeout = setTimeout(() => {
-      setStreamIndex((prev) => prev + 1);
-    }, 600);
-
-    return () => clearTimeout(timeout);
-  }, [streamIndex]);
+  // Error state
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorEmoji}>😔</Text>
+        <Text style={styles.errorTitle}>生成失败</Text>
+        <Text style={styles.errorMessage}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+          <Text style={styles.retryButtonText}>重试</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.backLink} onPress={handleBack}>
+          <Text style={styles.backLinkText}>返回</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {/* Hero with blur effect */}
-      <HeroImage imageUrl={photoUrl} progress={progress} />
+      {/* Hero section with images */}
+      <HeroSection
+        imageUrl={photoUrl}
+        generatedImageUrl={generatedImageUrl}
+        isImageReady={isImageReady}
+      />
 
-      {/* Floating header */}
-      <FloatingHeader />
+      {/* Back button */}
+      <TouchableOpacity
+        style={[styles.backButton, { top: insets.top + 16 }]}
+        onPress={handleBack}
+        activeOpacity={0.7}
+      >
+        <Text style={styles.backIcon}>×</Text>
+      </TouchableOpacity>
 
       {/* Content sheet */}
-      <View style={styles.contentSheet}>
+      <Animated.View
+        entering={FadeInUp.delay(200).duration(400)}
+        style={[styles.contentSheet, { paddingBottom: insets.bottom + 20 }]}
+      >
         <View style={styles.sheetHandle} />
 
-        {/* Skeleton titles */}
-        <View style={styles.skeletonArea}>
-          <View style={[styles.skeletonTitle, { width: '60%' }]} />
-          <View style={[styles.skeletonTitle, { width: '30%' }]} />
+        {/* Title */}
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>AI 搭配建议</Text>
+          <Text style={styles.occasion}>{params.occasion || '日常'}</Text>
         </View>
 
-        {/* Logic box with streaming text */}
-        <View style={styles.logicBox}>
-          <View style={styles.logicTitleRow}>
-            <Text style={styles.logicTitle}>Thinking Stream</Text>
-          </View>
-          <StreamingText currentIndex={streamIndex} />
-          <ProgressBar progress={progress} statusText={statusText} />
+        {/* Streaming text area */}
+        <View style={styles.streamBox}>
+          <StreamingTextDisplay
+            text={streamedText}
+            isThinking={isThinking}
+            thinkingMessage={thinkingMessage}
+            showCursor={stage === 'streaming'}
+          />
         </View>
-      </View>
+
+        {/* Progress indicator */}
+        <ProgressIndicator stage={stage} />
+      </Animated.View>
     </View>
   );
 }
@@ -341,101 +469,90 @@ const styles = StyleSheet.create({
     backgroundColor: '#F2F2F7',
   },
 
-  // Hero Section
+  // Hero section
   heroSection: {
     height: HERO_HEIGHT,
     width: '100%',
     backgroundColor: '#2C2C2E',
-    overflow: 'hidden',
+    position: 'relative',
   },
   heroImage: {
     width: '100%',
     height: '100%',
-    transform: [{ scale: 1.1 }],
   },
-
-  // Purple overlay
-  purpleOverlay: {
+  generatedImage: {
     ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%',
   },
 
-  // Scan line
-  scanLine: {
+  // Status badge
+  statusBadge: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: '#FFFFFF',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
+    left: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    gap: 6,
   },
-
-  // Rendering status
-  renderingStatus: {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: [{ translateX: -50 }, { translateY: -10 }],
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#4ADE80',
   },
-  renderingText: {
+  statusText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 1,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
+    fontSize: 13,
+    fontWeight: '500',
   },
 
-  // Header
-  header: {
+  // Image ready badge
+  imageReadyBadge: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 120,
+    bottom: 40,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(108,99,255,0.9)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  imageReadyText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  // Back button
+  backButton: {
+    position: 'absolute',
+    right: 20,
+    width: 36,
+    height: 36,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 100,
   },
-  loadingBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginTop: 40,
-  },
-  spinnerIcon: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.9)',
-  },
-  loadingText: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 15,
-    fontWeight: '600',
+  backIcon: {
+    fontSize: 24,
+    color: '#FFFFFF',
+    fontWeight: '300',
   },
 
   // Content sheet
   contentSheet: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    marginTop: -32,
-    padding: 24,
-    paddingHorizontal: 20,
-    gap: 20,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -24,
+    padding: 20,
     zIndex: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 40,
   },
   sheetHandle: {
     width: 36,
@@ -443,83 +560,158 @@ const styles = StyleSheet.create({
     backgroundColor: '#E5E5EA',
     borderRadius: 2,
     alignSelf: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
   },
 
-  // Skeleton
-  skeletonArea: {
-    gap: 8,
+  // Title row
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  skeletonTitle: {
-    height: 24,
-    backgroundColor: '#F2F2F7',
-    borderRadius: 6,
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1C1C1E',
+  },
+  occasion: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '600',
+    backgroundColor: colors.primary + '15',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
 
-  // Logic box
-  logicBox: {
+  // Stream box
+  streamBox: {
     flex: 1,
     backgroundColor: '#FAFAFC',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: '#F2F2F7',
+    marginBottom: 16,
   },
-  logicTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
-    paddingBottom: 8,
-  },
-  logicTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#8E8E93',
-    textTransform: 'uppercase',
-  },
-
-  // Streaming text
   streamContainer: {
     flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  },
+  streamContent: {
+    paddingBottom: 20,
   },
   streamText: {
-    fontSize: 14,
-    lineHeight: 24,
+    fontSize: 15,
+    lineHeight: 26,
     color: '#3A3A3C',
   },
-  hlText: {
+  highlightedText: {
     color: colors.primary,
     fontWeight: '600',
   },
+
+  // Cursor
   cursor: {
     width: 2,
-    height: 14,
+    height: 16,
     backgroundColor: colors.primary,
     marginLeft: 2,
   },
 
-  // Progress
-  progressArea: {
-    marginTop: 'auto',
+  // Thinking indicator
+  thinkingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#F2F2F7',
+    gap: 8,
   },
-  statusText: {
+  thinkingEmoji: {
+    fontSize: 16,
+  },
+  thinkingText: {
+    fontSize: 14,
+    color: '#8E8E93',
+    flex: 1,
+  },
+  thinkingDots: {
+    flexDirection: 'row',
+    gap: 4,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.primary,
+  },
+
+  // Progress
+  progressContainer: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  progressSteps: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  progressStep: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#E5E5EA',
+  },
+  progressStepActive: {
+    backgroundColor: colors.primary,
+  },
+  progressLabel: {
     fontSize: 12,
     color: '#8E8E93',
-    textAlign: 'center',
+  },
+
+  // Error state
+  errorContainer: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 40,
+  },
+  errorEmoji: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1C1C1E',
     marginBottom: 8,
   },
-  progressTrack: {
-    height: 4,
-    backgroundColor: '#F2F2F7',
-    borderRadius: 2,
-    overflow: 'hidden',
+  errorMessage: {
+    fontSize: 15,
+    color: '#8E8E93',
+    textAlign: 'center',
+    marginBottom: 24,
   },
-  progressFill: {
-    height: '100%',
+  retryButton: {
     backgroundColor: colors.primary,
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 24,
+    marginBottom: 16,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  backLink: {
+    padding: 8,
+  },
+  backLinkText: {
+    color: '#8E8E93',
+    fontSize: 14,
   },
 });
