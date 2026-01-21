@@ -28,6 +28,22 @@ export type {
   GenerateOutfitResponse,
 } from './outfitService';
 
+// SSE streaming service for AI generation
+export { sseService, SSEConnection, connectToStream } from './sseService';
+export type {
+  SSEEventType,
+  SSEEventCallbacks,
+  GenerateStreamParams,
+  ConnectionState,
+  ThinkingEventData,
+  AnalysisCompleteData,
+  TextChunkEventData,
+  ImageGeneratingData,
+  ImageReadyData,
+  CompleteEventData,
+  ErrorEventData,
+} from './sseService';
+
 export {
   syncService,
   scheduleNetworkRecoverySync,

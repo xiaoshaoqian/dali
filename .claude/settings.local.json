@@ -55,7 +55,11 @@
       "Bash(npm run lint:*)",
       "Skill(bmad:bmm:workflows:quick-dev)",
       "Skill(bmad:bmm:workflows:quick-dev:*)",
-      "Bash(git rev-parse:*)"
+      "Bash(git rev-parse:*)",
+      "Skill(bmad:bmm:workflows:workflow-init)",
+      "Skill(bmad:bmm:workflows:workflow-init:*)",
+      "Skill(bmad:bmm:workflows:create-tech-spec)",
+      "Skill(bmad:bmm:workflows:create-tech-spec:*)"
     ]
   }
 }

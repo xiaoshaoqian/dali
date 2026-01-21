@@ -4,7 +4,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy import Boolean, DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -32,6 +32,31 @@ class Outfit(Base):
     )
     occasion: Mapped[str | None] = mapped_column(
         String(100),
+        nullable=True,
+    )
+    # Source image URL (user's garment photo)
+    source_image_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+    # AI-generated outfit visualization image URL
+    generated_image_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+    # OSS object key for generated image (for cleanup)
+    generated_image_key: Mapped[str | None] = mapped_column(
+        String(200),
+        nullable=True,
+    )
+    # Streamed theory/explanation text from AI
+    theory_text: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+    )
+    # Selected anchor point category (外套, 裤子, etc.)
+    selected_item: Mapped[str | None] = mapped_column(
+        String(50),
         nullable=True,
     )
     is_favorited: Mapped[bool] = mapped_column(
