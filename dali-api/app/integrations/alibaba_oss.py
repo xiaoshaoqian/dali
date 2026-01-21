@@ -50,8 +50,17 @@ class OSSClient:
         parsed = urlparse(url)
         query_params = parse_qs(parsed.query)
 
-        # Re-encode all query parameters
-        encoded_query = urlencode(query_params, doseq=True, safe='/')
+        # Manually encode each parameter value, especially the Signature
+        # parse_qs decodes values, so Signature with '+' will have literal '+'
+        # We need to re-encode '+' as '%2B' for the URL to be valid
+        encoded_parts = []
+        for key, values in query_params.items():
+            for value in values:
+                # Use quote with safe='' to encode everything including '+'
+                encoded_value = quote(value, safe='')
+                encoded_parts.append(f"{key}={encoded_value}")
+        
+        encoded_query = '&'.join(encoded_parts)
 
         # Reconstruct URL
         encoded_url = urlunparse((

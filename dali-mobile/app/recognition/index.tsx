@@ -248,9 +248,7 @@ export default function RecognitionSelectionScreen() {
 
     // Parse recognition data - decode URL if needed
     const rawPhotoUrl = params.photoUrl;
-    const photoUrl = rawPhotoUrl
-        ? decodeURIComponent(rawPhotoUrl)
-        : 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800';
+    const photoUrl = rawPhotoUrl || 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800';
 
     // Debug logging
     useEffect(() => {
