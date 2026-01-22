@@ -49,7 +49,36 @@ async function segmentCloth(imageUrl: string): Promise<string> {
     return response.data.mask_url;
 }
 
+// ----- Visual Analysis Types (Qwen-VL-Max) -----
+
+export interface ClothingItem {
+    id: string;
+    category: string;
+    description: string;
+    center_x: number;
+    center_y: number;
+}
+
+export interface VisualAnalysisResponse {
+    items: ClothingItem[];
+}
+
+// ----- Visual Analysis API -----
+
+/**
+ * Analyze clothing items in an image using Qwen-VL-Max
+ * @param imageUrl - URL of the image in cloud storage
+ * @returns List of detected clothing items with positions
+ */
+async function analyzeClothingItems(imageUrl: string): Promise<ClothingItem[]> {
+    const response = await apiClient.post<VisualAnalysisResponse>('/garments/visual-analysis', {
+        image_url: imageUrl,
+    });
+    return response.data.items;
+}
+
 export const visionService = {
     detectMainBody,
     segmentCloth,
+    analyzeClothingItems,
 };

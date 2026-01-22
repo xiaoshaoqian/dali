@@ -30,6 +30,7 @@ alibabacloud-dysmsapi20170525 = "^4.3.1"
 oss2 = "^2.19.1"
 alibabacloud-imageseg20191230 = "^4.0.1"
 alibabacloud-objectdet20191230 = "^4.0.0"
+dashscope = "^1.24.6"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0.2"

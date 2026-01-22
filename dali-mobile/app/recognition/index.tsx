@@ -174,11 +174,11 @@ function ItemCard({
             <View style={styles.itemCardIcon}>
                 <Text style={styles.itemCardEmoji}>
                     {point.category === '外套' ? '🧥' :
-                     point.category === '上衣' ? '👕' :
-                     point.category === '裤子' ? '👖' :
-                     point.category === '裙子' ? '👗' :
-                     point.category === '鞋子' ? '👟' :
-                     point.category === '包包' ? '👜' : '👔'}
+                        point.category === '上衣' ? '👕' :
+                            point.category === '裤子' ? '👖' :
+                                point.category === '裙子' ? '👗' :
+                                    point.category === '鞋子' ? '👟' :
+                                        point.category === '包包' ? '👜' : '👔'}
                 </Text>
             </View>
             <Text style={[styles.itemCardText, isSelected && styles.itemCardTextSelected]}>
@@ -280,19 +280,30 @@ export default function RecognitionSelectionScreen() {
                     offsetY,
                 });
 
-                // Call visual analysis API (or use mock)
-                // In production, this would call the Qwen-VL-Max endpoint
-                const mockAnchors: AnchorPoint[] = [
-                    { id: '1', x: 0.5, y: 0.25, category: '外套', description: 'beige trench coat' },
-                    { id: '2', x: 0.5, y: 0.55, category: '上衣', description: 'white blouse' },
-                    { id: '3', x: 0.5, y: 0.75, category: '裤子', description: 'black pants' },
-                ];
+                // Call visual analysis API using Qwen-VL-Max
+                console.log('[Recognition] Calling visual analysis API...');
+                const clothingItems = await visionService.analyzeClothingItems(photoUrl);
+                console.log('[Recognition] Visual analysis result:', clothingItems);
 
-                setAnchorPoints(mockAnchors);
+                // Convert API response to anchor points
+                const anchors: AnchorPoint[] = clothingItems.map((item) => ({
+                    id: item.id,
+                    x: item.center_x,
+                    y: item.center_y,
+                    category: item.category,
+                    description: item.description,
+                }));
 
-                // Auto-select first anchor
-                if (mockAnchors.length > 0) {
-                    setSelectedAnchorId(mockAnchors[0].id);
+                if (anchors.length > 0) {
+                    setAnchorPoints(anchors);
+                    setSelectedAnchorId(anchors[0].id);
+                } else {
+                    // Fallback if no items detected
+                    console.warn('[Recognition] No clothing items detected, using fallback');
+                    setAnchorPoints([
+                        { id: '1', x: 0.5, y: 0.4, category: '服装' },
+                    ]);
+                    setSelectedAnchorId('1');
                 }
 
             } catch (error) {

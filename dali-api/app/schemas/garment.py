@@ -33,3 +33,29 @@ class GarmentAnalysisError(BaseModel):
 
     error: str = Field(..., description="Error message in Chinese")
     code: str = Field(..., description="Error code")
+
+
+# --- Visual Analysis Schemas (Qwen-VL-Max) ---
+
+class VisualAnalysisRequest(BaseModel):
+    """Request schema for visual clothing analysis."""
+
+    image_url: str = Field(..., description="URL of the image in cloud storage")
+
+
+class ClothingItemSchema(BaseModel):
+    """Detected clothing item with position."""
+
+    id: str = Field(..., description="Unique identifier for the item")
+    category: str = Field(..., description="Category in Chinese (外套, 上衣, 裤子, etc.)")
+    description: str = Field("", description="Brief description in English")
+    center_x: float = Field(..., description="Normalized X position (0-1)", ge=0, le=1)
+    center_y: float = Field(..., description="Normalized Y position (0-1)", ge=0, le=1)
+
+
+class VisualAnalysisResponse(BaseModel):
+    """Response schema for visual clothing analysis."""
+
+    items: list[ClothingItemSchema] = Field(
+        default_factory=list, description="List of detected clothing items"
+    )
