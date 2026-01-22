@@ -62,10 +62,18 @@ class QwenVisionClient:
 
     def __init__(self) -> None:
         """Initialize Qwen Vision client."""
+        # DashScope supports two authentication methods:
+        # 1. Dedicated API Key (sk-xxxxx)
+        # 2. AccessKeyID:AccessKeySecret format
         if settings.DASHSCOPE_API_KEY:
             dashscope.api_key = settings.DASHSCOPE_API_KEY
+            logger.info("[QwenVision] Using dedicated DASHSCOPE_API_KEY")
+        elif settings.ALIBABA_ACCESS_KEY_ID and settings.ALIBABA_ACCESS_KEY_SECRET:
+            # Use existing Alibaba Cloud credentials in format: "AccessKeyID:AccessKeySecret"
+            dashscope.api_key = f"{settings.ALIBABA_ACCESS_KEY_ID}:{settings.ALIBABA_ACCESS_KEY_SECRET}"
+            logger.info("[QwenVision] Using ALIBABA_ACCESS_KEY credentials for DashScope")
         else:
-            logger.warning("[QwenVision] DASHSCOPE_API_KEY not configured, API calls will fail")
+            logger.warning("[QwenVision] No API credentials configured, API calls will fail")
 
     async def analyze_clothing_items(self, image_url: str) -> VisualAnalysisResult:
         """Analyze clothing items in an image.
@@ -76,8 +84,10 @@ class QwenVisionClient:
         Returns:
             VisualAnalysisResult with detected clothing items and positions.
         """
-        if not settings.DASHSCOPE_API_KEY:
-            raise QwenVisionError("DASHSCOPE_API_KEY not configured", code="CONFIG_ERROR")
+        if not settings.DASHSCOPE_API_KEY and not (
+            settings.ALIBABA_ACCESS_KEY_ID and settings.ALIBABA_ACCESS_KEY_SECRET
+        ):
+            raise QwenVisionError("No API credentials configured (need DASHSCOPE_API_KEY or ALIBABA_ACCESS_KEY)", code="CONFIG_ERROR")
 
         logger.info(f"[QwenVision] Analyzing image: {image_url[:80]}...")
 
