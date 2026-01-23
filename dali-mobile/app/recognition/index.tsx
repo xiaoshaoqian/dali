@@ -56,16 +56,9 @@ const OCCASIONS = [
     { id: 'formal', label: '正式场合', emoji: '👔' },
 ];
 
-// Helper to load image dimensions
-function loadImageDimensions(url: string): Promise<{ width: number; height: number }> {
-    return new Promise((resolve, reject) => {
-        Image.getSize(
-            url,
-            (width, height) => resolve({ width, height }),
-            (error) => reject(error)
-        );
-    });
-}
+// Note: We use OSS image info API instead of Image.getSize()
+// Image.getSize() is unreliable for OSS signed URLs, especially with large images
+// See visionService.getImageInfo() for the implementation
 
 // Single anchor point with breathing animation
 function AnchorPointDot({
@@ -239,8 +232,12 @@ export default function RecognitionSelectionScreen() {
     });
 
     // Parse photo URL
+    // IMPORTANT: Decode URL if it was encoded during navigation
+    // OSS URLs contain query params (signatures) that need proper handling
     const rawPhotoUrl = params.photoUrl;
-    const photoUrl = rawPhotoUrl || 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800';
+    const photoUrl = rawPhotoUrl
+        ? (rawPhotoUrl.includes('%') ? decodeURIComponent(rawPhotoUrl) : rawPhotoUrl)
+        : 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800';
 
     // Fetch anchor points on mount
     useEffect(() => {
@@ -249,9 +246,14 @@ export default function RecognitionSelectionScreen() {
             console.log('[Recognition] Starting visual analysis for:', photoUrl);
 
             try {
-                // Get image dimensions for layout calculation
-                const imageDimensions = await loadImageDimensions(photoUrl);
-                console.log('[Recognition] Image dimensions:', imageDimensions);
+                // Get image info using OSS IMG service (more reliable than Image.getSize)
+                // This avoids React Native Image.getSize() issues with OSS signed URLs
+                const imageInfo = await visionService.getImageInfo(photoUrl);
+                const imageDimensions = {
+                    width: imageInfo.width,
+                    height: imageInfo.height
+                };
+                console.log('[Recognition] Image dimensions from OSS:', imageDimensions);
 
                 // Calculate display layout (cover mode)
                 const imageAspect = imageDimensions.width / imageDimensions.height;

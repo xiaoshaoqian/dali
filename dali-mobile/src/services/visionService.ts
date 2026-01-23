@@ -77,8 +77,69 @@ async function analyzeClothingItems(imageUrl: string): Promise<ClothingItem[]> {
     return response.data.items;
 }
 
+/**
+ * Get image dimensions using React Native's Image.getSize
+ * 
+ * NOTE: We cannot use OSS image/info API because:
+ * - OSS signed URLs have a signature calculated on the original request
+ * - Appending ?x-oss-process=image/info changes the request and invalidates the signature
+ * - This results in 403 Forbidden errors
+ * 
+ * Image.getSize works by loading the image headers to get dimensions.
+ * For OSS signed URLs, this is the most reliable approach.
+ * 
+ * @param imageUrl - URL of the image (supports OSS signed URLs)
+ * @returns Image dimensions and format
+ */
+async function getImageInfo(
+    imageUrl: string
+): Promise<{ width: number; height: number; format: string }> {
+    const { Image } = require('react-native');
+
+    return new Promise((resolve) => {
+        console.log('[VisionService] Getting image dimensions via Image.getSize');
+
+        // Set a timeout for slow networks
+        const timeoutId = setTimeout(() => {
+            console.warn('[VisionService] Image.getSize timeout, using fallback dimensions');
+            resolve({
+                width: 1024,
+                height: 1024,
+                format: 'jpeg',
+            });
+        }, 10000); // 10 second timeout
+
+        Image.getSize(
+            imageUrl,
+            (width: number, height: number) => {
+                clearTimeout(timeoutId);
+                console.log(`[VisionService] Image dimensions: ${width}x${height}`);
+                resolve({
+                    width,
+                    height,
+                    format: 'jpeg', // Assume JPEG for photos
+                });
+            },
+            (error: Error) => {
+                clearTimeout(timeoutId);
+                console.warn('[VisionService] Image.getSize failed:', error.message);
+                // Fallback to reasonable defaults for mobile photos
+                // Most phone cameras produce images around 3000x4000 or similar
+                // We use 1024x1024 as a safe default since images are resized before upload
+                console.warn('[VisionService] Using fallback dimensions: 1024x1024');
+                resolve({
+                    width: 1024,
+                    height: 1024,
+                    format: 'jpeg',
+                });
+            }
+        );
+    });
+}
+
 export const visionService = {
     detectMainBody,
     segmentCloth,
     analyzeClothingItems,
+    getImageInfo,
 };

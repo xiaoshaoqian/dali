@@ -84,12 +84,23 @@ class QwenVisionClient:
         Returns:
             VisualAnalysisResult with detected clothing items and positions.
         """
+        from urllib.parse import unquote
+
         if not settings.DASHSCOPE_API_KEY and not (
             settings.ALIBABA_ACCESS_KEY_ID and settings.ALIBABA_ACCESS_KEY_SECRET
         ):
             raise QwenVisionError("No API credentials configured (need DASHSCOPE_API_KEY or ALIBABA_ACCESS_KEY)", code="CONFIG_ERROR")
 
-        logger.info(f"[QwenVision] Analyzing image: {image_url[:80]}...")
+        # Ensure URL is properly decoded for DashScope API
+        # The URL may have been encoded during frontend-to-backend transmission
+        # DashScope expects the raw URL format
+        if '%' in image_url:
+            decoded_url = unquote(image_url)
+            logger.info(f"[QwenVision] URL was encoded, decoded for API call")
+        else:
+            decoded_url = image_url
+
+        logger.info(f"[QwenVision] Analyzing image: {decoded_url[:100]}...")
 
         try:
             # Build multimodal message
@@ -97,7 +108,7 @@ class QwenVisionClient:
                 {
                     "role": "user",
                     "content": [
-                        {"image": image_url},
+                        {"image": decoded_url},
                         {"text": CLOTHING_DETECTION_PROMPT},
                     ],
                 }
