@@ -78,43 +78,74 @@ class QwenVisionClient:
     async def analyze_clothing_items(self, image_url: str) -> VisualAnalysisResult:
         """Analyze clothing items in an image.
 
+        Uses Base64 encoding for maximum stability with DashScope API.
+        This approach is recommended by Alibaba Cloud for images < 7MB.
+
         Args:
-            image_url: URL of the image to analyze.
+            image_url: URL of the image to analyze (OSS signed URL).
 
         Returns:
             VisualAnalysisResult with detected clothing items and positions.
         """
+        import base64
         from urllib.parse import unquote
+
+        import httpx
 
         if not settings.DASHSCOPE_API_KEY and not (
             settings.ALIBABA_ACCESS_KEY_ID and settings.ALIBABA_ACCESS_KEY_SECRET
         ):
             raise QwenVisionError("No API credentials configured (need DASHSCOPE_API_KEY or ALIBABA_ACCESS_KEY)", code="CONFIG_ERROR")
 
-        # Ensure URL is properly decoded for DashScope API
-        # The URL may have been encoded during frontend-to-backend transmission
-        # DashScope expects the raw URL format
+        # Decode URL if it was encoded during transmission
         if '%' in image_url:
             decoded_url = unquote(image_url)
-            logger.info(f"[QwenVision] URL was encoded, decoded for API call")
+            logger.info("[QwenVision] URL was encoded, decoded for download")
         else:
             decoded_url = image_url
 
-        logger.info(f"[QwenVision] Analyzing image: {decoded_url[:100]}...")
+        logger.info(f"[QwenVision] Downloading image from OSS: {decoded_url[:80]}...")
 
         try:
-            # Build multimodal message
+            # Step 1: Download image from OSS
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(decoded_url)
+                response.raise_for_status()
+                image_bytes = response.content
+                content_type = response.headers.get("content-type", "image/jpeg")
+
+            logger.info(f"[QwenVision] Downloaded {len(image_bytes)} bytes, type: {content_type}")
+
+            # Step 2: Convert to Base64
+            image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+
+            # Determine image format from content-type
+            if "png" in content_type:
+                mime_type = "image/png"
+            elif "gif" in content_type:
+                mime_type = "image/gif"
+            elif "webp" in content_type:
+                mime_type = "image/webp"
+            else:
+                mime_type = "image/jpeg"
+
+            # Create data URI for DashScope API
+            data_uri = f"data:{mime_type};base64,{image_base64}"
+            logger.info(f"[QwenVision] Base64 encoded image ({mime_type}), size: {len(image_base64)} chars")
+
+            # Step 3: Build multimodal message with Base64 image
             messages = [
                 {
                     "role": "user",
                     "content": [
-                        {"image": decoded_url},
+                        {"image": data_uri},
                         {"text": CLOTHING_DETECTION_PROMPT},
                     ],
                 }
             ]
 
-            # Call Qwen-VL-Max API
+            # Step 4: Call Qwen-VL-Max API
+            logger.info("[QwenVision] Calling Qwen-VL-Max API...")
             response = MultiModalConversation.call(
                 model="qwen-vl-max",
                 messages=messages,
@@ -136,6 +167,12 @@ class QwenVisionClient:
                 raw_response=raw_content,
             )
 
+        except httpx.HTTPStatusError as e:
+            logger.error(f"[QwenVision] Failed to download image: {e}")
+            raise QwenVisionError(f"Failed to download image: {e.response.status_code}") from e
+        except httpx.RequestError as e:
+            logger.error(f"[QwenVision] Network error downloading image: {e}")
+            raise QwenVisionError(f"Network error: {str(e)}") from e
         except QwenVisionError:
             raise
         except Exception as e:
