@@ -4,11 +4,47 @@ Used for image storage with SSE encryption.
 """
 
 from datetime import datetime, timedelta
-from urllib.parse import quote, urlencode, urlparse, parse_qs, urlunparse
+from urllib.parse import quote, unquote, urlsplit, urlunsplit
 
 import oss2
 
 from app.config import settings
+
+
+def encode_presigned_url(url: str) -> str:
+    """Encode query parameter values in a presigned URL without mangling '+'.
+
+    OSS sign_url may return Signature with '+' and '/' unescaped. If we use
+    parse_qs/parse_qsl, '+' becomes space, breaking the signature. This function:
+    - splits the raw query manually
+    - percent-encodes each value using quote()
+    - preserves existing percent-encoded sequences
+    """
+    parts = urlsplit(url)
+    if not parts.query:
+        return url
+
+    encoded_params: list[str] = []
+    for pair in parts.query.split("&"):
+        if not pair:
+            continue
+        if "=" in pair:
+            key, value = pair.split("=", 1)
+        else:
+            key, value = pair, ""
+        # unquote (NOT unquote_plus) to avoid treating '+' as space
+        decoded_value = unquote(value)
+        encoded_value = quote(decoded_value, safe="")
+        encoded_params.append(f"{key}={encoded_value}")
+
+    encoded_query = "&".join(encoded_params)
+    return urlunsplit((
+        parts.scheme,
+        parts.netloc,
+        parts.path,
+        encoded_query,
+        parts.fragment,
+    ))
 
 
 class OSSClient:
@@ -36,42 +72,8 @@ class OSSClient:
         )
 
     def _encode_presigned_url(self, url: str) -> str:
-        """Ensure presigned URL parameters are properly URL-encoded.
-
-        OSS sign_url may return URLs with unencoded special characters in signature.
-        This method properly encodes the signature parameter while preserving the URL structure.
-
-        Args:
-            url: The presigned URL from oss2.sign_url()
-
-        Returns:
-            URL with properly encoded parameters
-        """
-        parsed = urlparse(url)
-        query_params = parse_qs(parsed.query)
-
-        # Manually encode each parameter value, especially the Signature
-        # parse_qs decodes values, so Signature with '+' will have literal '+'
-        # We need to re-encode '+' as '%2B' for the URL to be valid
-        encoded_parts = []
-        for key, values in query_params.items():
-            for value in values:
-                # Use quote with safe='' to encode everything including '+'
-                encoded_value = quote(value, safe='')
-                encoded_parts.append(f"{key}={encoded_value}")
-        
-        encoded_query = '&'.join(encoded_parts)
-
-        # Reconstruct URL
-        encoded_url = urlunparse((
-            parsed.scheme,
-            parsed.netloc,
-            parsed.path,
-            parsed.params,
-            encoded_query,
-            parsed.fragment
-        ))
-        return encoded_url
+        """Ensure presigned URL parameters are properly URL-encoded."""
+        return encode_presigned_url(url)
 
     def generate_presigned_upload_url(
         self,

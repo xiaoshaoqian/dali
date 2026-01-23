@@ -18,6 +18,7 @@ import oss2
 
 from app.config import settings
 from app.core.exceptions import APIException
+from app.integrations.alibaba_oss import encode_presigned_url
 
 logger = logging.getLogger(__name__)
 
@@ -325,6 +326,7 @@ class SiliconFlowClient:
 
             # Generate presigned URL for access
             url = self.oss_bucket.sign_url("GET", object_key, 3600)
+            url = encode_presigned_url(url)
 
             logger.info(f"[SiliconFlow] Uploaded to OSS: {object_key}")
             return {"url": url, "object_key": object_key}
