@@ -23,7 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { colors } from '@/constants';
 import { ClothingSelector, SegmentedClothingItem } from '@/components/ClothingSelector';
-import { apiClient } from '@/services/api';
+import { apiClient } from '@/services';
 
 export default function ClothingSelectionScreen() {
     const insets = useSafeAreaInsets();
