@@ -51,15 +51,16 @@ async def segment_clothing(
         
         # Build response with individual items
         items = []
-        for item in result.individual_items:
-            items.append(SegmentedClothingItemSchema(
-                id=str(uuid.uuid4()),
-                category=item.category,
-                garment_type=item.garment_type.value,  # Convert enum to string
-                image_url=item.image_url
-            ))
+        if result.individual_items:
+            for item in result.individual_items:
+                items.append(SegmentedClothingItemSchema(
+                    id=str(uuid.uuid4()),
+                    category=item.category,
+                    garment_type=item.garment_type.value,  # Convert enum to string
+                    image_url=item.image_url
+                ))
         
-        logger.info(f"[Segmentation] Successfully segmented {len(items)} items")
+        logger.info(f"[Segmentation] Successfully segmented {len(items)} items from {len(result.detected_categories)} categories")
         
         return SegmentClothingResponse(
             items=items,

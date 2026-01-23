@@ -5,7 +5,7 @@ for garment attribute analysis and segmentation.
 """
 
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
@@ -89,7 +89,7 @@ class SegmentationResult:
 
     mask_url: str
     detected_categories: list[str]  # List of detected garment categories
-    individual_items: list[SegmentedClothingItem]  # Individual segmented items
+    individual_items: list[SegmentedClothingItem] = field(default_factory=list)  # Individual segmented items
 
 
 # Predefined color palette for mock responses (Fallback)

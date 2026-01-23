@@ -51,7 +51,7 @@ export default function ClothingSelectionScreen() {
             setIsSegmenting(true);
             setError(null);
 
-            const response = await apiClient.post('/api/v1/segmentation/segment-clothing', {
+            const response = await apiClient.post('/segmentation/segment-clothing', {
                 image_url: photoUrl,
             });
 
@@ -75,7 +75,7 @@ export default function ClothingSelectionScreen() {
             setIsDescribing(true);
 
             // Call description API for the selected item
-            const response = await apiClient.post('/api/v1/segmentation/describe-clothing', {
+            const response = await apiClient.post('/segmentation/describe-clothing', {
                 image_url: item.imageUrl,
                 category_hint: item.category,
             });
