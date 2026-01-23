@@ -28,15 +28,19 @@ router = APIRouter(prefix="/outfits", tags=["outfits-sse"])
 class GenerateStreamRequest(BaseModel):
     """Request schema for streaming outfit generation."""
 
-    image_url: str = Field(..., description="URL of the garment photo")
-    occasion: str = Field(..., description="Selected occasion (职场通勤, 约会, etc.)")
-    selected_item: str | None = Field(None, description="Specific item to focus on")
+    selected_item_url: str = Field(..., description="URL of the selected segmented clothing item")
+    selected_item_description: str = Field(..., description="Description of the selected item (e.g., '蓝色圆领短袖T恤')")
+    selected_item_category: str = Field(..., description="Category of the selected item (e.g., '上衣', '裤子')")
+    occasion: str = Field(..., description="Occasion for the outfit (职场通勤, 约会, etc.)")
+    original_image_url: str | None = Field(None, description="Optional original uploaded image URL for context")
 
 
 async def event_generator(
-    image_url: str,
+    selected_item_url: str,
+    selected_item_description: str,
+    selected_item_category: str,
     occasion: str,
-    selected_item: str | None,
+    original_image_url: str | None,
     user_id: str,
 ) -> AsyncGenerator[str, None]:
     """Generate SSE events from streaming generator.
@@ -50,9 +54,11 @@ async def event_generator(
 
     try:
         async for event in streaming_generator.generate_stream(
-            image_url=image_url,
+            selected_item_url=selected_item_url,
+            selected_item_description=selected_item_description,
+            selected_item_category=selected_item_category,
             occasion=occasion,
-            selected_item=selected_item,
+            original_image_url=original_image_url,
         ):
             # Format as SSE
             event_str = f"event: {event.event}\ndata: {json.dumps(event.data, ensure_ascii=False)}\n\n"
@@ -113,9 +119,11 @@ async def generate_outfit_stream(
 
     return StreamingResponse(
         event_generator(
-            image_url=request.image_url,
+            selected_item_url=request.selected_item_url,
+            selected_item_description=request.selected_item_description,
+            selected_item_category=request.selected_item_category,
             occasion=request.occasion,
-            selected_item=request.selected_item,
+            original_image_url=request.original_image_url,
             user_id=str(current_user.id),
         ),
         media_type="text/event-stream",

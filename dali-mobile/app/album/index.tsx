@@ -126,9 +126,9 @@ export default function AlbumEditorScreen() {
           // Ignore cleanup errors
         }
 
-        // Navigate to recognition page for garment detection
+        // Navigate to clothing selection page (segmentation + selection)
         router.replace({
-          pathname: '/recognition' as never,
+          pathname: '/clothing-selection' as never,
           params: { photoUrl: uploadResult.photoUrl },
         });
       } else {

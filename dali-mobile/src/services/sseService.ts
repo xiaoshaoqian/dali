@@ -88,11 +88,13 @@ export interface SSEEventCallbacks {
   onDone?: () => void;
 }
 
-// Request params
+// Request params (updated for new segmentation flow)
 export interface GenerateStreamParams {
-  imageUrl: string;
-  occasion: string;
-  selectedItem?: string;
+  selectedItemUrl: string;  // URL of the selected segmented clothing item
+  selectedItemDescription: string;  // Description of the selected item
+  selectedItemCategory: string;  // Category of the selected item
+  occasion: string;  // Selected occasion
+  originalImageUrl?: string;  // Optional original uploaded image URL for context
 }
 
 // Connection state
@@ -145,9 +147,11 @@ export class SSEConnection {
           'Cache-Control': 'no-cache',
         },
         body: JSON.stringify({
-          image_url: this.params.imageUrl,
+          selected_item_url: this.params.selectedItemUrl,
+          selected_item_description: this.params.selectedItemDescription,
+          selected_item_category: this.params.selectedItemCategory,
           occasion: this.params.occasion,
-          selected_item: this.params.selectedItem,
+          original_image_url: this.params.originalImageUrl,
         }),
         signal: this.controller.signal,
       });

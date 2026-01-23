@@ -127,10 +127,10 @@ export default function CameraScreen() {
 
         console.log('[Camera] Upload successful, photoUrl:', result.photoUrl);
 
-        // Navigate to recognition page for garment detection
+        // Navigate to clothing selection page (segmentation + selection)
         // The photoUrl is already URL-encoded by the backend
         router.replace({
-          pathname: '/recognition' as never,
+          pathname: '/clothing-selection' as never,
           params: { photoUrl: result.photoUrl },
         });
       } else {

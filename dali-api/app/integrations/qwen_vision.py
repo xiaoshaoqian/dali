@@ -232,6 +232,167 @@ class QwenVisionClient:
         logger.info(f"[QwenVision] Parsed {len(items)} clothing items")
         return items
 
+    async def describe_single_clothing(
+        self,
+        image_url: str,
+        category_hint: str = ""
+    ) -> dict[str, str]:
+        """Describe a single clothing item in detail.
+        
+        This method is used AFTER user selects a specific clothing item,
+        to generate detailed description including color, style, pattern, etc.
+        
+        Args:
+            image_url: URL of the segmented clothing image (transparent background)
+            category_hint: Category hint (e.g., "tops", "pants") to guide description
+            
+        Returns:
+            Dict with keys: color, style, pattern, description
+        """
+        import base64
+        from urllib.parse import unquote
+        
+        import httpx
+        
+        if not settings.DASHSCOPE_API_KEY and not (
+            settings.ALIBABA_ACCESS_KEY_ID and settings.ALIBABA_ACCESS_KEY_SECRET
+        ):
+            raise QwenVisionError("No API credentials configured", code="CONFIG_ERROR")
+        
+        # Decode URL if encoded
+        if '%' in image_url:
+            decoded_url = unquote(image_url)
+        else:
+            decoded_url = image_url
+        
+        logger.info(f"[QwenVision] Describing clothing item, category hint: {category_hint}")
+        
+        try:
+            # Download image
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(decoded_url)
+                response.raise_for_status()
+                image_bytes = response.content
+                content_type = response.headers.get("content-type", "image/png")
+            
+            # Convert to Base64
+            image_base64 = base64.b64encode(image_bytes).decode("utf-8")
+            
+            # Determine mime type
+            if "png" in content_type:
+                mime_type = "image/png"
+            elif "gif" in content_type:
+                mime_type = "image/gif"
+            elif "webp" in content_type:
+                mime_type = "image/webp"
+            else:
+                mime_type = "image/jpeg"
+            
+            data_uri = f"data:{mime_type};base64,{image_base64}"
+            
+            # Build prompt for detailed description
+            category_text = f"这是一件 {category_hint} 类别的服装单品。" if category_hint else "这是一件服装单品。"
+            
+            prompt = f"""{category_text}
+请详细描述这件衣服的特征。
+
+要求以JSON格式返回（只返回JSON，不要其他文字）：
+```json
+{{
+  "color": "主要颜色（中文，如：蓝色、黑色、米色）",
+  "style": "款式特征（中文，如：圆领短袖、V领、直筒、修身等）",
+  "pattern": "图案（中文，如：纯色、条纹、印花、格纹等）",
+  "description": "完整描述（中文，一句话，如：蓝色圆领短袖T恤）"
+}}
+```
+
+只返回JSON，不要markdown标记。"""
+            
+            # Build message
+            messages = [
+                {
+                    "role": "user",
+                    "content": [
+                        {"image": data_uri},
+                        {"text": prompt},
+                    ],
+                }
+            ]
+            
+            # Call Qwen-VL-Max
+            logger.info("[QwenVision] Calling Qwen-VL-Max for description...")
+            response = MultiModalConversation.call(
+                model="qwen-vl-max",
+                messages=messages,
+            )
+            
+            if response.status_code != 200:
+                logger.error(f"[QwenVision] API error: {response.code} - {response.message}")
+                raise QwenVisionError(f"API call failed: {response.message}", code=response.code)
+            
+            # Extract response
+            raw_content = response.output.choices[0].message.content[0].get("text", "")
+            logger.info(f"[QwenVision] Description response: {raw_content[:200]}...")
+            
+            # Parse JSON response
+            result = self._parse_description_response(raw_content)
+            
+            return result
+            
+        except httpx.HTTPStatusError as e:
+            logger.error(f"[QwenVision] Failed to download image: {e}")
+            raise QwenVisionError(f"Failed to download image: {e.response.status_code}") from e
+        except httpx.RequestError as e:
+            logger.error(f"[QwenVision] Network error: {e}")
+            raise QwenVisionError(f"Network error: {str(e)}") from e
+        except QwenVisionError:
+            raise
+        except Exception as e:
+            logger.error(f"[QwenVision] Unexpected error: {str(e)}", exc_info=True)
+            raise QwenVisionError(f"Description failed: {str(e)}") from e
+    
+    def _parse_description_response(self, content: str) -> dict[str, str]:
+        """Parse JSON description response from Qwen-VL-Max.
+        
+        Args:
+            content: Raw text response
+            
+        Returns:
+            Dict with color, style, pattern, description
+        """
+        json_str = content.strip()
+        
+        # Remove markdown code blocks
+        if json_str.startswith("```json"):
+            json_str = json_str[7:]
+        elif json_str.startswith("```"):
+            json_str = json_str[3:]
+        
+        if json_str.endswith("```"):
+            json_str = json_str[:-3]
+        
+        json_str = json_str.strip()
+        
+        try:
+            data = json.loads(json_str)
+            
+            # Validate required fields
+            return {
+                "color": data.get("color", "未知"),
+                "style": data.get("style", "未知"),
+                "pattern": data.get("pattern", "纯色"),
+                "description": data.get("description", "服装单品")
+            }
+        except json.JSONDecodeError as e:
+            logger.warning(f"[QwenVision] Failed to parse description JSON: {e}")
+            # Return fallback
+            return {
+                "color": "未知",
+                "style": "未知",
+                "pattern": "纯色",
+                "description": "服装单品"
+            }
+
 
 class QwenVisionError(APIException):
     """Exception raised when Qwen Vision API call fails."""

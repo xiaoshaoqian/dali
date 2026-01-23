@@ -75,11 +75,21 @@ class GarmentAnalysisResult:
 
 
 @dataclass
+class SegmentedClothingItem:
+    """Individual segmented clothing item with transparent background."""
+    
+    category: str  # Alibaba category (e.g., "tops", "coat", "pants")
+    garment_type: GarmentType  # Mapped garment type (e.g., GarmentType.TOP)
+    image_url: str  # URL of segmented image with transparent background
+
+
+@dataclass
 class SegmentationResult:
     """Result from SegmentCloth API."""
 
     mask_url: str
     detected_categories: list[str]  # List of detected garment categories
+    individual_items: list[SegmentedClothingItem]  # Individual segmented items
 
 
 # Predefined color palette for mock responses (Fallback)
@@ -167,27 +177,65 @@ class VisionAPIClient:
                 elif hasattr(element, 'ImageURL'):
                     mask_url = element.ImageURL
 
-                # Extract detected categories from ClassUrl if available
+                # Extract detected categories and individual items from ClassUrl
                 # ClassUrl is a dict like: {'tops': 'url1', 'coat': 'url2', ...}
                 detected_categories = []
+                individual_items = []
+                
                 if hasattr(element, 'class_url'):
                     class_url = element.class_url
-                    # class_url might be a dict or a string representation
+                    
+                    # Parse class_url to extract individual segmented items
                     if isinstance(class_url, dict):
                         detected_categories = list(class_url.keys())
+                        
+                        # Build individual items list
+                        for category, url in class_url.items():
+                            # Map Alibaba category to our GarmentType
+                            garment_type = ALIBABA_CATEGORY_TO_GARMENT_TYPE.get(
+                                category,
+                                GarmentType.ACCESSORY  # Default fallback
+                            )
+                            individual_items.append(SegmentedClothingItem(
+                                category=category,
+                                garment_type=garment_type,
+                                image_url=url
+                            ))
+                    
                     elif isinstance(class_url, str):
                         # Try to parse the string if it's a JSON-like dict
                         import re
-                        # Look for pattern like {'tops':url, 'coat':url}
-                        matches = re.findall(r"'(\w+)'", class_url)
-                        if matches:
-                            detected_categories = matches
+                        import json
+                        
+                        try:
+                            # Try JSON parsing first
+                            parsed = json.loads(class_url.replace("'", '"'))
+                            if isinstance(parsed, dict):
+                                detected_categories = list(parsed.keys())
+                                for category, url in parsed.items():
+                                    garment_type = ALIBABA_CATEGORY_TO_GARMENT_TYPE.get(
+                                        category, GarmentType.ACCESSORY
+                                    )
+                                    individual_items.append(SegmentedClothingItem(
+                                        category=category,
+                                        garment_type=garment_type,
+                                        image_url=url
+                                    ))
+                        except json.JSONDecodeError:
+                            # Fallback to regex for category names only
+                            matches = re.findall(r"'(\w+)'", class_url)
+                            if matches:
+                                detected_categories = matches
 
-                # If no categories from ClassUrl, return empty list
-                # The API automatically detects categories without specifying clothClass
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info(f"[Vision] SegmentCloth parsed {len(individual_items)} individual items: {[item.category for item in individual_items]}")
+
+                # Return result with individual items
                 return SegmentationResult(
                     mask_url=mask_url,
-                    detected_categories=detected_categories
+                    detected_categories=detected_categories,
+                    individual_items=individual_items
                 )
 
             raise VisionAPIError("No segmentation result returned")

@@ -266,9 +266,11 @@ function ProgressIndicator({
 
 export default function AILoadingScreen() {
   const params = useLocalSearchParams<{
-    photoUrl: string;
+    selectedItemUrl: string;
+    selectedItemDescription: string;
+    selectedItemCategory: string;
+    originalImageUrl?: string;
     occasion: string;
-    selectedItem?: string;
     useStreaming?: string;
   }>();
 
@@ -285,9 +287,13 @@ export default function AILoadingScreen() {
   const [stage, setStage] = useState<'analyzing' | 'streaming' | 'generating_image' | 'complete'>('analyzing');
   const [error, setError] = useState<string | null>(null);
 
-  const photoUrl = params.photoUrl
-    ? decodeURIComponent(params.photoUrl)
-    : 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800';
+  const selectedItemUrl = params.selectedItemUrl
+    ? decodeURIComponent(params.selectedItemUrl)
+    : '';
+  const originalImageUrl = params.originalImageUrl
+    ? decodeURIComponent(params.originalImageUrl)
+    : '';
+  const displayImageUrl = originalImageUrl || selectedItemUrl;  // Use original image for hero display
 
   // Connect to SSE stream
   useEffect(() => {
@@ -295,9 +301,11 @@ export default function AILoadingScreen() {
 
     sseService.startGeneration(
       {
-        imageUrl: photoUrl,
+        selectedItemUrl: selectedItemUrl,
+        selectedItemDescription: params.selectedItemDescription || '',
+        selectedItemCategory: params.selectedItemCategory || '',
         occasion: params.occasion || '日常',
-        selectedItem: params.selectedItem,
+        originalImageUrl: originalImageUrl,
       },
       {
         onThinking: (data: ThinkingEventData) => {
@@ -350,7 +358,7 @@ export default function AILoadingScreen() {
                 theoryText: streamedTextRef.current,
                 generatedImageUrl: data.generated_image_url || '',
                 occasion: params.occasion,
-                photoUrl,
+                photoUrl: originalImageUrl,
               },
             });
           }, 800);
@@ -372,7 +380,7 @@ export default function AILoadingScreen() {
       console.log('[AILoading] Cleaning up SSE connection');
       sseService.stopGeneration();
     };
-  }, [photoUrl, params.occasion, params.selectedItem]);
+  }, [selectedItemUrl, params.selectedItemDescription, params.selectedItemCategory, params.occasion, originalImageUrl]);
 
   // Handle back press
   const handleBack = useCallback(() => {
@@ -390,9 +398,11 @@ export default function AILoadingScreen() {
     router.replace({
       pathname: '/ai-loading',
       params: {
-        photoUrl: params.photoUrl,
+        selectedItemUrl: params.selectedItemUrl,
+        selectedItemDescription: params.selectedItemDescription,
+        selectedItemCategory: params.selectedItemCategory,
+        originalImageUrl: params.originalImageUrl,
         occasion: params.occasion,
-        selectedItem: params.selectedItem,
         useStreaming: 'true',
       },
     });
@@ -419,7 +429,7 @@ export default function AILoadingScreen() {
     <View style={styles.container}>
       {/* Hero section with images */}
       <HeroSection
-        imageUrl={photoUrl}
+        imageUrl={displayImageUrl}
         generatedImageUrl={generatedImageUrl}
         isImageReady={isImageReady}
       />

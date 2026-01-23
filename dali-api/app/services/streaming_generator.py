@@ -60,6 +60,7 @@ class StreamingContext:
     generated_image_url: str | None = None
     visual_analysis: VisualAnalysisResult | None = None
     error: str | None = None
+    selected_item_url: str = ""  # URL of selected segmented clothing item (for img2img base)
 
     # Image generation task (runs async)
     image_task: asyncio.Task | None = None
@@ -120,46 +121,36 @@ class StreamingOutfitGenerator:
 
     async def generate_stream(
         self,
-        image_url: str,
+        selected_item_url: str,
+        selected_item_description: str,
+        selected_item_category: str,
         occasion: str,
-        selected_item: str | None = None,
+        original_image_url: str | None = None,
     ) -> AsyncGenerator[SSEEvent, None]:
         """Generate outfit recommendations with streaming SSE events.
 
         Args:
-            image_url: URL of the user's garment photo
+            selected_item_url: URL of the selected segmented clothing item
+            selected_item_description: Description of the selected item (e.g., '蓝色圆领短袖T恤')
+            selected_item_category: Category of the selected item (e.g., '上衣', '裤子')
             occasion: Selected occasion (职场通勤, 约会, etc.)
-            selected_item: Optional specific item to focus on
+            original_image_url: Optional original uploaded image URL for context
 
         Yields:
             SSEEvent objects for frontend consumption
         """
         ctx = StreamingContext()
-        logger.info(f"[StreamGen] Starting generation for outfit_id={ctx.outfit_id}")
+        logger.info(f"[StreamGen] Starting generation for outfit_id={ctx.outfit_id}, selected_item={selected_item_description}")
 
         try:
-            # Step 1: Visual analysis
-            yield SSEEvent(event="thinking", data={"message": "正在分析服装..."})
-            ctx.visual_analysis = await self._analyze_image(image_url)
+            # Step 1: Skip visual analysis (already done during segmentation)
+            yield SSEEvent(event="thinking", data={"message": "正在生成搭配方案..."})
 
-            if ctx.visual_analysis:
-                # Send anchor points to frontend
-                anchors = [
-                    {
-                        "x": ap.x,
-                        "y": ap.y,
-                        "category": ap.category,
-                    }
-                    for ap in ctx.visual_analysis.anchor_points
-                ]
-                yield SSEEvent(event="analysis_complete", data={"anchors": anchors})
-
-            # Step 2: Build user message with context
-            user_message = self._build_user_message(
-                image_url=image_url,
+            # Step 2: Build user message with selected item context
+            user_message = self._build_user_message_with_selected_item(
+                selected_item_description=selected_item_description,
+                selected_item_category=selected_item_category,
                 occasion=occasion,
-                visual_analysis=ctx.visual_analysis,
-                selected_item=selected_item,
             )
 
             # Step 3: Stream LLM response
@@ -179,6 +170,9 @@ class StreamingOutfitGenerator:
                 except Exception as e:
                     logger.error(f"[StreamGen] Image generation failed: {e}")
                     yield SSEEvent(event="image_failed", data={"message": "图片生成失败"})
+            
+            # Store selected_item_url for img2img base
+            ctx.selected_item_url = selected_item_url
 
             # Step 5: Complete
             ctx.state = StreamState.COMPLETE
@@ -204,28 +198,32 @@ class StreamingOutfitGenerator:
             logger.warning(f"[StreamGen] Visual analysis failed: {e}")
             return None
 
-    def _build_user_message(
+    def _build_user_message_with_selected_item(
         self,
-        image_url: str,
+        selected_item_description: str,
+        selected_item_category: str,
         occasion: str,
-        visual_analysis: VisualAnalysisResult | None,
-        selected_item: str | None,
     ) -> str:
-        """Build user message for LLM."""
-        parts = [f"场景：{occasion}"]
+        """Build user message for LLM with selected item context."""
+        return f"""用户选择了一件服装单品，请为其搭配完整的穿搭方案。
 
-        if visual_analysis:
-            items = [f"- {ap.category}" for ap in visual_analysis.anchor_points]
-            if items:
-                parts.append("识别到的服装：\n" + "\n".join(items))
-            if visual_analysis.color_palette:
-                parts.append(f"主要配色：{', '.join(visual_analysis.color_palette)}")
+【用户选中的单品】
+{selected_item_description}
+类别：{selected_item_category}
 
-        if selected_item:
-            parts.append(f"用户选择的单品：{selected_item}")
+【核心要求】
+1. 完整保留这件{selected_item_category}的原样（款式、颜色、材质）
+2. 为其他部位推荐搭配单品
+3. 整体风格适合场合：{occasion}
+4. 提供搭配理论和穿搭建议
 
-        parts.append("请根据以上信息，提供搭配建议。")
-        return "\n\n".join(parts)
+【输出格式】
+请提供：
+1. 搭配理论（为什么这样搭配）
+2. 推荐的其他单品（上装/下装/鞋/配饰等）
+3. 整体效果描述
+
+如果需要生成效果图，请使用 <draw_prompt>标签包裹生成提示词。"""
 
     async def _stream_llm_response(
         self,
@@ -353,7 +351,7 @@ class StreamingOutfitGenerator:
                 # Trigger async image generation
                 logger.info(f"[StreamGen] Detected draw_prompt: {ctx.draw_prompt_buffer[:100]}...")
                 ctx.image_task = asyncio.create_task(
-                    self._generate_image(ctx.draw_prompt_buffer)
+                    self._generate_image(ctx.draw_prompt_buffer, ctx.selected_item_url)
                 )
 
                 yield SSEEvent(event="image_generating", data={"prompt": ctx.draw_prompt_buffer[:50] + "..."})
@@ -366,16 +364,16 @@ class StreamingOutfitGenerator:
                 yield SSEEvent(event="text_chunk", data={"content": ctx.text_buffer})
                 ctx.text_buffer = ""
 
-    async def _generate_image(self, prompt: str) -> Any:
-        """Generate image using SiliconFlow (runs async)."""
+    async def _generate_image(self, prompt: str, base_image_url: str) -> Any:
+        """Generate image using SiliconFlow Img2Img (runs async)."""
         try:
-            # For Img2Img we'd need the original image URL
-            # For now, use text-to-image
-            result = await siliconflow_client.generate_text2img(
+            # Use selected segmented item as base for Img2Img
+            result = await siliconflow_client.generate_img2img(
+                base_image_url=base_image_url,  # Use selected clothing item image
                 prompt=prompt,
-                negative_prompt="blurry, low quality, distorted",
+                strength=0.35,  # Lower strength to better preserve the selected item
             )
-            logger.info(f"[StreamGen] Image generated: {result.image_url[:80]}...")
+            logger.info(f"[StreamGen] Image generated from base: {result.image_url[:80]}...")
             return result
         except SiliconFlowError as e:
             logger.error(f"[StreamGen] Image generation failed: {e}")
