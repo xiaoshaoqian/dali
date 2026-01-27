@@ -158,41 +158,14 @@ class VisionAPIClient:
 
         # Build request with correct parameters
         # Reference: https://help.aliyun.com/zh/viapi/developer-reference/api-clothing-segmentation
-        # IMPORTANT: Must specify cloth_class to get ClassUrl in response
         request = imageseg_models.SegmentClothRequest(
-            image_url=image_url,
-            cloth_class=['tops', 'coat', 'skirt', 'pants', 'bag', 'shoes', 'hat'],  # Request all categories
-            # Don't specify return_form to get transparent PNG (default)
+            image_url=image_url
+            # TODO: Add cloth_class parameter after confirming correct format
         )
 
         try:
             # Call the API (synchronous SDK method in async context)
             response = self.imageseg_client.segment_cloth(request)
-
-            import logging
-            logger = logging.getLogger(__name__)
-            
-            # DEBUG: Log complete response structure
-            logger.info(f"[Vision] DEBUG: Response structure:")
-            logger.info(f"[Vision] DEBUG: response.body exists: {response.body is not None}")
-            if response.body:
-                logger.info(f"[Vision] DEBUG: response.body.data exists: {response.body.data is not None}")
-                if response.body.data:
-                    logger.info(f"[Vision] DEBUG: response.body.data.elements exists: {response.body.data.elements is not None}")
-                    if response.body.data.elements:
-                        logger.info(f"[Vision] DEBUG: Number of elements: {len(response.body.data.elements)}")
-                        element = response.body.data.elements[0]
-                        logger.info(f"[Vision] DEBUG: Element type: {type(element)}")
-                        logger.info(f"[Vision] DEBUG: Element dir: {dir(element)}")
-                        logger.info(f"[Vision] DEBUG: Element attributes:")
-                        for attr in dir(element):
-                            if not attr.startswith('_'):
-                                try:
-                                    value = getattr(element, attr)
-                                    if not callable(value):
-                                        logger.info(f"[Vision] DEBUG:   {attr} = {value}")
-                                except Exception as e:
-                                    logger.info(f"[Vision] DEBUG:   {attr} = <error: {e}>")
 
             # Parse response according to official documentation structure
             # Response: Data.Elements[0].ImageURL, Data.Elements[0].ClassUrl
@@ -213,8 +186,6 @@ class VisionAPIClient:
                 
                 if hasattr(element, 'class_url'):
                     class_url = element.class_url
-                    logger.info(f"[Vision] DEBUG: class_url type: {type(class_url)}")
-                    logger.info(f"[Vision] DEBUG: class_url value: {class_url}")
                     
                     # Parse class_url to extract individual segmented items
                     if isinstance(class_url, dict):
