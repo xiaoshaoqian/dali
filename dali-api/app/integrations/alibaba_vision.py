@@ -141,8 +141,11 @@ class VisionAPIClient:
     async def segment_cloth(self, image_url: str) -> SegmentationResult:
         """Segment cloth from image using Alibaba Cloud SegmentCloth API.
 
+        Downloads the image from the provided URL and sends it as base64 to Vision API.
+        This avoids issues with Vision API accessing private OSS signed URLs.
+
         Args:
-            image_url: URL of the input image.
+            image_url: URL of the input image (can be OSS signed URL).
 
         Returns:
             SegmentationResult with mask URL and detected categories.
@@ -150,16 +153,40 @@ class VisionAPIClient:
         if not settings.ALIBABA_ACCESS_KEY_ID:
             raise VisionAPIError("Alibaba Cloud credentials not configured", code="CONFIG_ERROR")
 
-        # Build request with correct parameters
-        # Reference: https://help.aliyun.com/zh/viapi/developer-reference/api-clothing-segmentation
-        request = imageseg_models.SegmentClothRequest(
-            image_url=image_url,
-            # Don't specify clothClass to auto-detect all categories
-            # Options for return_form:
-            # - "whiteBK": white background
-            # - "mask": single channel mask
-            # - Not set: transparent PNG (default, recommended for clothing)
-        )
+        import base64
+        import httpx
+        import logging
+        logger = logging.getLogger(__name__)
+
+        try:
+            # Download image from the URL (including OSS signed URLs)
+            logger.info(f"[Vision] Downloading image from URL: {image_url[:150]}...")
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(image_url)
+                response.raise_for_status()
+                image_bytes = response.content
+                logger.info(f"[Vision] Downloaded image: {len(image_bytes)} bytes")
+
+            # Convert to base64
+            image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+            logger.info(f"[Vision] Converted to base64: {len(image_base64)} characters")
+
+            # Build request with base64 image data instead of URL
+            # Reference: https://help.aliyun.com/zh/viapi/developer-reference/api-clothing-segmentation
+            request = imageseg_models.SegmentClothRequest(
+                image_data=image_base64,  # Use base64 data instead of URL
+                # Don't specify clothClass to auto-detect all categories
+                # Options for return_form:
+                # - "whiteBK": white background
+                # - "mask": single channel mask
+                # - Not set: transparent PNG (default, recommended for clothing)
+            )
+        except httpx.HTTPError as e:
+            logger.error(f"[Vision] Failed to download image: {str(e)}")
+            raise VisionAPIError(f"Failed to download image from URL: {str(e)}") from e
+        except Exception as e:
+            logger.error(f"[Vision] Error preparing image data: {str(e)}")
+            raise VisionAPIError(f"Error preparing image data: {str(e)}") from e
 
         try:
             # Call the API (synchronous SDK method in async context)
@@ -252,8 +279,11 @@ class VisionAPIClient:
     async def detect_main_body(self, image_url: str) -> dict[str, Any]:
         """Detect main body (person) in the image using Alibaba Cloud DetectMainBody API.
 
+        Downloads the image from the provided URL and sends it as base64 to Vision API.
+        This avoids issues with Vision API accessing private OSS signed URLs.
+
         Args:
-            image_url: URL of the input image.
+            image_url: URL of the input image (can be OSS signed URL).
 
         Returns:
             Dictionary containing detection data (box coordinates).
@@ -262,9 +292,33 @@ class VisionAPIClient:
         if not settings.ALIBABA_ACCESS_KEY_ID:
              raise VisionAPIError("Alibaba Cloud credentials not configured", code="CONFIG_ERROR")
 
-        request = objectdet_models.DetectMainBodyRequest(
-            image_url=image_url
-        )
+        import base64
+        import httpx
+        import logging
+        logger = logging.getLogger(__name__)
+
+        try:
+            # Download image from the URL (including OSS signed URLs)
+            logger.info(f"[Vision] DetectMainBody: Downloading image from URL: {image_url[:150]}...")
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(image_url)
+                response.raise_for_status()
+                image_bytes = response.content
+                logger.info(f"[Vision] DetectMainBody: Downloaded image: {len(image_bytes)} bytes")
+
+            # Convert to base64
+            image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+
+            # Build request with base64 image data
+            request = objectdet_models.DetectMainBodyRequest(
+                image_data=image_base64  # Use base64 data instead of URL
+            )
+        except httpx.HTTPError as e:
+            logger.error(f"[Vision] Failed to download image: {str(e)}")
+            raise VisionAPIError(f"Failed to download image from URL: {str(e)}") from e
+        except Exception as e:
+            logger.error(f"[Vision] Error preparing image data: {str(e)}")
+            raise VisionAPIError(f"Error preparing image data: {str(e)}") from e
 
         try:
             # Assuming main region is what we want
