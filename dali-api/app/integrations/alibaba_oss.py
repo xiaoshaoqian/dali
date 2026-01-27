@@ -98,8 +98,8 @@ class OSSClient:
             expires,
             headers={"Content-Type": content_type},
         )
-        # Ensure signature is properly URL-encoded
-        return self._encode_presigned_url(url)
+        # Return URL as-is from OSS SDK (already properly encoded)
+        return url
 
     def generate_presigned_download_url(
         self,
@@ -116,8 +116,8 @@ class OSSClient:
             Presigned download URL with properly encoded signature
         """
         url = self._bucket.sign_url("GET", object_key, expires)
-        # Ensure signature is properly URL-encoded
-        return self._encode_presigned_url(url)
+        # Return URL as-is from OSS SDK (already properly encoded)
+        return url
 
     def get_public_url(self, object_key: str) -> str:
         """Get the accessible URL for an object.
