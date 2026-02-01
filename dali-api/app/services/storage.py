@@ -78,30 +78,53 @@ class StorageService:
 
         return upload_url, expires_at
 
-    def get_file_url(self, object_key: str) -> str:
+    def get_file_url(self, object_key: str, slash_safe: bool = True) -> str:
         """
         Get the public URL for an uploaded file.
 
         Args:
             object_key: The object key (path) in storage
+            slash_safe: Whether to preserve slashes in path (default: True for App)
 
         Returns:
             Public URL to access the file
         """
         if self._use_real_oss:
-            url = self._oss_client.get_public_url(object_key)
-            # Log URL info (first 150 chars to avoid exposing full signature)
-            logger.info(f"[StorageService] Generated signed URL for {object_key}")
+            # Use presigned URL for private bucket access
+            url = self._oss_client.generate_presigned_download_url(
+                object_key, 
+                expires=3600,
+                slash_safe=slash_safe
+            )
+            
+            # Log URL info
+            logger.info(f"[StorageService] Generated signed URL for {object_key} (slash_safe={slash_safe})")
             logger.info(f"[StorageService] URL preview: {url[:150]}..." if len(url) > 150 else f"[StorageService] URL: {url}")
-            if "Signature=" in url or "signature" in url.lower():
-                logger.info("[StorageService] ✅ URL contains signature")
-            else:
-                logger.warning("[StorageService] ⚠️ URL does NOT contain signature!")
             return url
         else:
             url = f"{self.base_url}/{object_key}"
             logger.info(f"[StorageService] Mock URL (no real OSS): {url}")
             return url
+
+
+
+    def upload_file(self, object_key: str, data: bytes, content_type: str = "image/jpeg") -> bool:
+        """Upload file content directly to storage.
+
+        Args:
+            object_key: The object key (path) in storage
+            data: File content in bytes
+            content_type: MIME type of the file
+
+        Returns:
+            True if upload successful, False otherwise
+        """
+        if self._use_real_oss:
+            return self._oss_client.put_object(object_key, data, content_type)
+        else:
+            # Mock implementation - log and "succeed"
+            logger.info(f"[StorageService] Mock upload to {object_key} ({len(data)} bytes)")
+            return True
 
     def delete_file(self, object_key: str) -> bool:
         """

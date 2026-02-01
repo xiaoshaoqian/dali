@@ -97,6 +97,7 @@ class OSSClient:
             object_key,
             expires,
             headers={"Content-Type": content_type},
+            slash_safe=True,
         )
         # Return URL as-is from OSS SDK (already properly encoded)
         return url
@@ -105,18 +106,35 @@ class OSSClient:
         self,
         object_key: str,
         expires: int = 3600,
+        slash_safe: bool = True,
     ) -> str:
         """Generate a presigned URL for downloading an object.
 
         Args:
             object_key: The object key (path) in OSS
             expires: URL expiration time in seconds (default: 3600 = 1 hour)
+            slash_safe: Whether to preserve slashes in the path (default: True for App compatibility)
 
         Returns:
             Presigned download URL with properly encoded signature
         """
-        url = self._bucket.sign_url("GET", object_key, expires)
-        # Return URL as-is from OSS SDK (already properly encoded)
+        url = self._bucket.sign_url("GET", object_key, expires, slash_safe=slash_safe)
+        
+        # Manually unquote the path to ensure slashes are not encoded
+        # Only needed if slash_safe is True
+        if slash_safe and "%2F" in url:
+            from urllib.parse import urlsplit, urlunsplit, unquote
+            parts = urlsplit(url)
+            # Unquote only the path (users%2F123 -> users/123)
+            new_path = unquote(parts.path)
+            url = urlunsplit((
+                parts.scheme,
+                parts.netloc,
+                new_path,
+                parts.query,
+                parts.fragment,
+            ))
+
         return url
 
     def get_public_url(self, object_key: str) -> str:
@@ -133,6 +151,27 @@ class OSSClient:
         """
         # Use presigned URL to ensure accessibility for private buckets
         return self.generate_presigned_download_url(object_key, expires=3600)
+
+    def put_object(self, object_key: str, data: bytes | str, content_type: str = "image/jpeg") -> bool:
+        """Upload data directly to OSS.
+
+        Args:
+            object_key: The object key (path) in OSS
+            data: File content (bytes or string)
+            content_type: Content type header
+
+        Returns:
+            True if upload successful, False otherwise
+        """
+        try:
+            self._bucket.put_object(
+                object_key,
+                data,
+                headers={"Content-Type": content_type}
+            )
+            return True
+        except oss2.exceptions.OssError:
+            return False
 
     def delete_object(self, object_key: str) -> bool:
         """Delete an object from OSS.

@@ -46,19 +46,110 @@ async def segment_clothing(
     logger.info(f"[Segmentation] User {current_user.id} requesting segmentation for: {request.image_url[:100]}...")
     
     try:
+        # Prepare URL for Vision API
+        vision_image_url = request.image_url
+        
+        # Check if it's our internal OSS URL
+        from app.config import settings
+        if settings.ALIBABA_OSS_ENDPOINT in request.image_url and "Subject to" not in request.image_url:
+            # For internal OSS images, we might have signature issues with Vision API
+            # Strategy: Download image data and pass as Base64 to Vision API
+            # This bypasses all URL encoding/signing compatibility issues
+            import httpx
+            import base64
+            
+            async with httpx.AsyncClient() as client:
+                try:
+                    # Download the image content
+                    # request.image_url is the Presigned URL from frontend (valid for download)
+                    resp = await client.get(request.image_url, timeout=30.0)
+                    if resp.status_code == 200:
+                        image_content = resp.content
+                        # Alibaba Cloud Vision API expects raw image URL or Base64 (depending on SDK)
+                        # SDK `segment_cloth` usually takes URL. But let's check if we can pass Base64.
+                        # If SDK requires URL, we might need to put it to a temporary public path? 
+                        # No, that's unsafe.
+                        # Let's try passing URL first with careful handling, if Base64 isn't supported by the high-level method.
+                        
+                        # WAIT: The SDK `segment_cloth` method takes `SegmentClothRequest`.
+                        # It has `image_url` field.
+                        # Checking documentation: ImageURL supports Base64. Format: protocol header not needed usually, or needed?
+                        # Doc says: "base64 encoding of the image file".
+                        # Let's try standard Base64 string.
+                        
+                        # However, to be safe and avoid SDK validation errors on "Not a URL",
+                        # We will try to use the `body` stream approach if supported, 
+                        # OR, stick to the Base64 in ImageURL field.
+                        
+                        # Let's Assume Base64 works in image_url field as per common AliCloud API behavior.
+                        # Format: "data:image/jpeg;base64,...."? Or just raw?
+                        # Usually Ali APIs accept: "http://..." or "base64code..."
+                        
+                        base64_str = base64.b64encode(image_content).decode('utf-8')
+                        # Some Ali SDKs require protocol prefix
+                        vision_image_url = f"data:image/jpeg;base64,{base64_str}"
+                        logger.info(f"[Segmentation] Using Base64 image content ({len(base64_str)} chars) for Vision API")
+                    else:
+                        logger.warning(f"[Segmentation] Failed to download source image: {resp.status_code}. Using original URL.")
+                except Exception as e:
+                    logger.warning(f"[Segmentation] Download for Base64 failed: {e}. Using original URL.")
+
         # Call SegmentCloth API
-        result = await vision_client.segment_cloth(request.image_url)
+        result = await vision_client.segment_cloth(vision_image_url)
         
         # Build response with individual items
         items = []
         if result.individual_items:
-            for item in result.individual_items:
-                items.append(SegmentedClothingItemSchema(
-                    id=str(uuid.uuid4()),
-                    category=item.category,
-                    garment_type=item.garment_type.value,  # Convert enum to string
-                    image_url=item.image_url
-                ))
+            # Initialize HTTP client for downloading images
+            import httpx
+            from app.services.storage import storage_service
+            
+            async with httpx.AsyncClient() as client:
+                for item in result.individual_items:
+                    # Generic filename for the segmented item
+                    item_id = str(uuid.uuid4())
+                    object_key = f"users/{current_user.id}/segmented/{item_id}.png"
+                    
+                    try:
+                        # Download image from Vision API (temporary URL)
+                        # Use verify=False if necessary, but Alibaba SSL should be trusted
+                        img_resp = await client.get(item.image_url, timeout=10.0)
+                        
+                        final_url = item.image_url # Fallback
+                        
+                        if img_resp.status_code == 200:
+                            content_length = len(img_resp.content)
+                            logger.info(f"[Segmentation] Downloaded {item.category} size: {content_length} bytes")
+                            
+                            if content_length == 0:
+                                logger.warning(f"[Segmentation] ⚠️ Warning: {item.category} image content is empty!")
+
+                            # Upload to our OSS
+                            success = storage_service.upload_file(
+                                object_key=object_key,
+                                data=img_resp.content,
+                                content_type="image/png"
+                            )
+                            
+                            if success:
+                                # Get signed HTTPS URL from our OSS
+                                final_url = storage_service.get_file_url(object_key)
+                                logger.info(f"[Segmentation] Re-uploaded item {item.category} to {object_key}")
+                            else:
+                                logger.error(f"[Segmentation] Failed to upload {item.category} to OSS")
+                        else:
+                            logger.error(f"[Segmentation] Failed to download {item.category} from Vision API: {img_resp.status_code}")
+                            
+                    except Exception as e:
+                        logger.error(f"[Segmentation] Error processing item {item.category}: {e}")
+                        final_url = item.image_url # Fallback to original if anything fails
+
+                    items.append(SegmentedClothingItemSchema(
+                        id=item_id,
+                        category=item.category,
+                        garment_type=item.garment_type.value,  # Convert enum to string
+                        image_url=final_url
+                    ))
         
         logger.info(f"[Segmentation] Successfully segmented {len(items)} items from {len(result.detected_categories)} categories")
         

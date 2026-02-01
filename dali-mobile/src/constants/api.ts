@@ -7,7 +7,8 @@
 
 // Base URL for API calls - update this for different environments
 export const API_BASE_URL = __DEV__
-  ? 'http://dali-api.xiaosq.cn/api/v1'
+  ? 'http://192.168.3.100:8000/api/v1' // Local backend
+  // ? 'http://dali-api.xiaosq.cn/api/v1' // Dev cloud backend
   : 'https://api.dali-app.com/api/v1';
 
 // API version

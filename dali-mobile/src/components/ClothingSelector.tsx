@@ -48,7 +48,7 @@ export function ClothingSelector({
     const handleSelect = (item: SegmentedClothingItem) => {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
         setSelectedId(item.id);
-        
+
         // Call parent callback after a short delay for visual feedback
         setTimeout(() => {
             onSelect(item);
@@ -139,24 +139,24 @@ export function ClothingSelector({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.background,
+        backgroundColor: colors.gray4,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colors.background,
+        backgroundColor: colors.gray4,
     },
     loadingText: {
         marginTop: 16,
         fontSize: 16,
-        color: colors.textSecondary,
+        color: colors.gray2,
     },
     emptyContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colors.background,
+        backgroundColor: colors.gray4,
         paddingHorizontal: 32,
     },
     emptyIcon: {
@@ -166,12 +166,12 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: 18,
         fontWeight: '600',
-        color: colors.text,
+        color: colors.gray1,
         marginBottom: 8,
     },
     emptyHint: {
         fontSize: 14,
-        color: colors.textSecondary,
+        color: colors.gray2,
         textAlign: 'center',
     },
     header: {
@@ -182,12 +182,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontWeight: '700',
-        color: colors.text,
+        color: colors.gray1,
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 14,
-        color: colors.textSecondary,
+        color: colors.gray2,
     },
     scrollView: {
         flex: 1,
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
     card: {
         width: CARD_WIDTH,
         margin: 8,
-        backgroundColor: colors.surface,
+        backgroundColor: colors.gray5,
         borderRadius: 16,
         overflow: 'hidden',
         borderWidth: 2,
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     imageContainer: {
         width: '100%',
         height: CARD_WIDTH * 1.2,  // Taller aspect ratio for clothing
-        backgroundColor: '#F5F5F5',
+        backgroundColor: '#E0E0E0', // Darker gray for better contrast with white clothes
         justifyContent: 'center',
         alignItems: 'center',
         padding: 16,
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     garmentType: {
         fontSize: 16,
         fontWeight: '600',
-        color: colors.text,
+        color: colors.gray1,
     },
     checkMark: {
         position: 'absolute',

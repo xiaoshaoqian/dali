@@ -158,35 +158,45 @@ class VisionAPIClient:
 
         # Build request with correct parameters
         # Reference: https://help.aliyun.com/zh/viapi/developer-reference/api-clothing-segmentation
+        # IMPORTANT: Must specify cloth_class to get ClassUrl in response
         request = imageseg_models.SegmentClothRequest(
-            image_url=image_url
-            # TODO: Add cloth_class parameter after confirming correct format
+            image_url=image_url,
+            cloth_class=['tops', 'coat', 'skirt', 'pants', 'bag', 'shoes', 'hat']  # Request all categories
         )
 
         try:
             # Call the API (synchronous SDK method in async context)
             response = self.imageseg_client.segment_cloth(request)
 
+
+
             # Parse response according to official documentation structure
             # Response: Data.Elements[0].ImageURL, Data.Elements[0].ClassUrl
             if response.body and response.body.data and response.body.data.elements:
-                element = response.body.data.elements[0]
-
-                # Get mask URL
+                elements = response.body.data.elements
+                
+                # Iterate through all elements to find mask_url and class_url
                 mask_url = ""
-                if hasattr(element, 'image_url'):
-                    mask_url = element.image_url
-                elif hasattr(element, 'ImageURL'):
-                    mask_url = element.ImageURL
+                class_url = None
+                
+                for i, element in enumerate(elements):
+                    # Check for mask URL (unconditional)
+                    if not mask_url:
+                        if hasattr(element, 'image_url') and element.image_url:
+                            mask_url = element.image_url
+                        elif hasattr(element, 'ImageURL') and element.ImageURL:
+                             mask_url = element.ImageURL
+                    
+                    # Check for class_url
+                    if hasattr(element, 'class_url') and element.class_url:
+                        class_url = element.class_url
 
-                # Extract detected categories and individual items from ClassUrl
-                # ClassUrl is a dict like: {'tops': 'url1', 'coat': 'url2', ...}
+                
+                 # Extract detected categories and individual items from ClassUrl
                 detected_categories = []
                 individual_items = []
                 
-                if hasattr(element, 'class_url'):
-                    class_url = element.class_url
-                    
+                if class_url:
                     # Parse class_url to extract individual segmented items
                     if isinstance(class_url, dict):
                         detected_categories = list(class_url.keys())
@@ -231,7 +241,11 @@ class VisionAPIClient:
                 else:
                     logger.warning("[Vision] DEBUG: element does NOT have 'class_url' attribute!")
 
-                logger.info(f"[Vision] SegmentCloth parsed {len(individual_items)} individual items: {[item.category for item in individual_items]}")
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.info(f"[Vision] SegmentCloth parsed {len(individual_items)} individual items")
+                for item in individual_items:
+                    logger.info(f"[Vision] Item: {item.category} URL: {item.image_url}")
 
                 # Return result with individual items
                 return SegmentationResult(
